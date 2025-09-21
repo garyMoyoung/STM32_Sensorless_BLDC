@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\LVGL;..\LVGL\src;..\LVGL\examples\porting;..\Bsp;..\Bsp\inc;..\Algorithm\util</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\LVGL;..\LVGL\src;..\LVGL\examples\porting;..\Bsp;..\Bsp\inc;..\Algorithm\util;..\App;..\App\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1741,6 +1741,21 @@
               <FileName>stm32_mpu9250_i2c_fixed.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Algorithm\util\stm32_mpu9250_i2c_fixed.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>App</GroupName>
+          <Files>
+            <File>
+              <FileName>lcd_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\lcd_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_task.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\App\inc\lcd_task.h</FilePath>
             </File>
           </Files>
         </Group>
