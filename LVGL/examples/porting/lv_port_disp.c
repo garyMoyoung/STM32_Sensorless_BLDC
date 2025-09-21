@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include "lcd_init.h"
 #include "lcd.h"
+#include "lcd_dma.h"
 /*********************
  *      DEFINES
  *********************/
@@ -166,7 +167,14 @@ static void disp_flush(lv_disp_drv_t * disp_drv,const lv_area_t * area, lv_color
     if(disp_flush_enabled) 
 	{
         /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
-		LCD_LVGL_Color_Fill(area->x1, area->y1, area->x2, area->y2, color_p);
+		HAL_StatusTypeDef status = LCD_DMA_LVGL_Fill(area->x1, area->y1, area->x2, area->y2, color_p);
+        
+        if(status != HAL_OK)
+        {
+            // 如果DMA失败，使用备用方法
+            LCD_LVGL_Color_Fill(area->x1, area->y1, area->x2, area->y2, color_p);
+        }
+//		LCD_LVGL_Color_Fill(area->x1, area->y1, area->x2, area->y2, color_p);
 //       int32_t x;
 //       int32_t y;
 //       for(y = area->y1; y <= area->y2; y++) {

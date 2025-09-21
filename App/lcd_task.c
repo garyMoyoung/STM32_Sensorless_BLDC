@@ -8,6 +8,7 @@
 #include "lvgl.h"                // 它为整个LVGL提供了更完整的头文件引用
 #include "lv_port_disp.h"        // LVGL的显示支持
 #include "lv_port_indev.h"       // LVGL的触屏支持
+#include "lcd_dma.h"
 /* USER CODE BEGIN Header_LcdTask_Entry */
 /**
 * @brief Function show the informations of five-bar
@@ -19,6 +20,7 @@
 void LcdTask_Entry(void const * argument)
 {
     LCD_Init();
+    LCD_DMA_Init();
     // LCD_Fill(0,0,LCD_W, LCD_H,BLACK);
 	lv_init();                             // LVGL 初始化
 	lv_port_disp_init();                   // 注册LVGL的显示任务
@@ -31,17 +33,17 @@ void LcdTask_Entry(void const * argument)
     // 按钮上的文本
     lv_obj_t *label_btn = lv_label_create(myBtn);                                // 创建文本标签，父对象：上面的btn按钮
     lv_obj_align(label_btn, LV_ALIGN_CENTER, 60, 25);                              // 对齐于：父对象
-    lv_label_set_text(label_btn, "Test");                                        // 设置标签的文本
+    lv_label_set_text(label_btn, "BCS");                                        // 设置标签的文本
  
     // 独立的标签
-    lv_obj_t *myLabel = lv_label_create(lv_scr_act());                           // 创建文本标签; 父对象：当前活动屏幕
-    lv_label_set_text(myLabel, "Hello world!");                                  // 设置标签的文本
-    lv_obj_align(myLabel, LV_ALIGN_CENTER, 0, 0);                                // 对齐于：父对象
-    lv_obj_align_to(myBtn, myLabel, LV_ALIGN_OUT_TOP_MID, 0, -20);               // 对齐于：某对象
-
+	lv_obj_t *myLabel = lv_label_create(lv_scr_act());                           // 创建文本标签; 父对象：当前活动屏幕
+	lv_label_set_text(myLabel, "Hello world!");                                  // 设置标签的文本
+	lv_obj_align(myLabel, LV_ALIGN_CENTER, 140, 80);                                // 对齐于：父对象
+	lv_obj_align_to(myBtn, myLabel, LV_ALIGN_OUT_TOP_MID, 140, 80);               // 对齐于：某对象
     for(;;)
     {
-        osDelay(20);
+		
+        osDelay(1);
     }
 }
 

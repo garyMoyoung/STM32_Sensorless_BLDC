@@ -1743,6 +1743,16 @@
               <FileType>5</FileType>
               <FilePath>..\Bsp\inc\MPU9250-DMP.h</FilePath>
             </File>
+            <File>
+              <FileName>lcd_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\lcd_dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_dma.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\lcd_dma.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
