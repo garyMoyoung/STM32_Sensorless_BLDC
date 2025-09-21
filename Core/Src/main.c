@@ -29,7 +29,23 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "stdarg.h"
+#include "AS5600.h"
+#include "string.h"
+#include "lcd_init.h"
+#include "lcd.h"
+#include "stdarg.h"
+#include <string.h>
+#include "fifo.h"
+#include "MPU9250-DMP.h"
+#include "MPU9250_RegisterMap.h"
+#include "math.h"
+#include "inv_mpu_dmp_motion_driver.h"
+#include "inv_mpu.h"
+#include "stm32_mpu9250_clk.h"
+#include "stm32_mpu9250_i2c.h"
+#include "Algorithmic.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

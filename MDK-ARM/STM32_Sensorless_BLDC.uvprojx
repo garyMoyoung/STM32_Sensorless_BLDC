@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\LVGL;..\LVGL\src;..\LVGL\examples\porting</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\LVGL;..\LVGL\src;..\LVGL\examples\porting;..\Bsp;..\Bsp\inc;..\Algorithm\util</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1611,6 +1611,136 @@
               <FileName>lv_grid.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\LVGL\src\extra\layouts\grid\lv_grid.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Bsp</GroupName>
+          <Files>
+            <File>
+              <FileName>Algorithmic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\Algorithmic.c</FilePath>
+            </File>
+            <File>
+              <FileName>AS5600.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\AS5600.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\lcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\lcd_init.c</FilePath>
+            </File>
+            <File>
+              <FileName>Algorithmic.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\Algorithmic.h</FilePath>
+            </File>
+            <File>
+              <FileName>AS5600.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\AS5600.h</FilePath>
+            </File>
+            <File>
+              <FileName>fifo.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\fifo.h</FilePath>
+            </File>
+            <File>
+              <FileName>lcd.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\lcd.h</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_init.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\lcd_init.h</FilePath>
+            </File>
+            <File>
+              <FileName>lcdfont.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\lcdfont.h</FilePath>
+            </File>
+            <File>
+              <FileName>pic.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\pic.h</FilePath>
+            </File>
+            <File>
+              <FileName>MPU9250-DMP.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\MPU9250-DMP.c</FilePath>
+            </File>
+            <File>
+              <FileName>MPU9250_RegisterMap.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\MPU9250_RegisterMap.h</FilePath>
+            </File>
+            <File>
+              <FileName>MPU9250-DMP.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\MPU9250-DMP.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Algorithm</GroupName>
+          <Files>
+            <File>
+              <FileName>dmpKey.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Algorithm\util\dmpKey.h</FilePath>
+            </File>
+            <File>
+              <FileName>dmpmap.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Algorithm\util\dmpmap.h</FilePath>
+            </File>
+            <File>
+              <FileName>inv_mpu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Algorithm\util\inv_mpu.c</FilePath>
+            </File>
+            <File>
+              <FileName>inv_mpu.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Algorithm\util\inv_mpu.h</FilePath>
+            </File>
+            <File>
+              <FileName>inv_mpu_dmp_motion_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Algorithm\util\inv_mpu_dmp_motion_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>inv_mpu_dmp_motion_driver.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Algorithm\util\inv_mpu_dmp_motion_driver.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32_mpu9250_clk.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Algorithm\util\stm32_mpu9250_clk.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32_mpu9250_clk.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Algorithm\util\stm32_mpu9250_clk.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32_mpu9250_i2c_fixed.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Algorithm\util\stm32_mpu9250_i2c_fixed.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32_mpu9250_i2c_fixed.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Algorithm\util\stm32_mpu9250_i2c_fixed.h</FilePath>
             </File>
           </Files>
         </Group>
