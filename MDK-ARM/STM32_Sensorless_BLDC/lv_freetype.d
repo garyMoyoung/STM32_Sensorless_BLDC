@@ -6,7 +6,7 @@ stm32_sensorless_bldc\lv_freetype.o: ..\LVGL\src\extra\libs\freetype\../../../..
 stm32_sensorless_bldc\lv_freetype.o: ..\LVGL\src\extra\libs\freetype\../../../../src/misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_freetype.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_freetype.o: ..\LVGL\src\extra\libs\freetype\../../../../src/misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_freetype.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_freetype.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_freetype.o: ..\LVGL\src\extra\libs\freetype\../../../../src/misc/lv_types.h
 stm32_sensorless_bldc\lv_freetype.o: ..\LVGL\src\extra\libs\freetype\../../../../src/misc/lv_timer.h
 stm32_sensorless_bldc\lv_freetype.o: ..\LVGL\src\extra\libs\freetype\../../../../src/misc/../hal/lv_hal_tick.h

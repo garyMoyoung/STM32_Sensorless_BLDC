@@ -3,7 +3,7 @@ stm32_sensorless_bldc\lv_img_decoder.o: ..\LVGL\src\draw\lv_img_decoder.h
 stm32_sensorless_bldc\lv_img_decoder.o: ..\LVGL\src\draw\../lv_conf_internal.h
 stm32_sensorless_bldc\lv_img_decoder.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_img_decoder.o: ..\LVGL\src\draw\../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_img_decoder.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_img_decoder.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_img_decoder.o: ..\LVGL\src\draw\lv_img_buf.h
 stm32_sensorless_bldc\lv_img_decoder.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lv_img_decoder.o: ..\LVGL\src\draw\../misc/lv_color.h

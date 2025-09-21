@@ -6,7 +6,7 @@ stm32_sensorless_bldc\lv_draw_sw_line.o: ..\LVGL\src\draw\sw\../../misc/lv_color
 stm32_sensorless_bldc\lv_draw_sw_line.o: ..\LVGL\src\draw\sw\../../misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_draw_sw_line.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_draw_sw_line.o: ..\LVGL\src\draw\sw\../../misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_draw_sw_line.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_draw_sw_line.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_draw_sw_line.o: ..\LVGL\src\draw\sw\../../misc/lv_assert.h
 stm32_sensorless_bldc\lv_draw_sw_line.o: ..\LVGL\src\draw\sw\../../misc/lv_log.h
 stm32_sensorless_bldc\lv_draw_sw_line.o: ..\LVGL\src\draw\sw\../../misc/lv_types.h

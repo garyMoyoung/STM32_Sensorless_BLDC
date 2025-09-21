@@ -1,5 +1,5 @@
 stm32_sensorless_bldc\lcd_init.o: ..\Bsp\lcd_init.c
-stm32_sensorless_bldc\lcd_init.o: ..\Bsp\inc\lcd_init.h
+stm32_sensorless_bldc\lcd_init.o: ../Bsp/inc/lcd_init.h
 stm32_sensorless_bldc\lcd_init.o: ../Core/Inc/main.h
 stm32_sensorless_bldc\lcd_init.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 stm32_sensorless_bldc\lcd_init.o: ../Core/Inc/stm32f4xx_hal_conf.h

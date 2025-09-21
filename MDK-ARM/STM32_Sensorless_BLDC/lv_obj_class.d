@@ -3,7 +3,7 @@ stm32_sensorless_bldc\lv_obj_class.o: ..\LVGL\src\core\lv_obj.h
 stm32_sensorless_bldc\lv_obj_class.o: ..\LVGL\src\core\../lv_conf_internal.h
 stm32_sensorless_bldc\lv_obj_class.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_obj_class.o: ..\LVGL\src\core\../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_obj_class.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_obj_class.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_obj_class.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stddef.h
 stm32_sensorless_bldc\lv_obj_class.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lv_obj_class.o: ..\LVGL\src\core\../misc/lv_style.h

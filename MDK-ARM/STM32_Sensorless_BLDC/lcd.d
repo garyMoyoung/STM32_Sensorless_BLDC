@@ -1,5 +1,5 @@
 stm32_sensorless_bldc\lcd.o: ..\Bsp\lcd.c
-stm32_sensorless_bldc\lcd.o: ..\Bsp\inc\lcd.h
+stm32_sensorless_bldc\lcd.o: ../Bsp/inc/lcd.h
 stm32_sensorless_bldc\lcd.o: ../Core/Inc/main.h
 stm32_sensorless_bldc\lcd.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 stm32_sensorless_bldc\lcd.o: ../Core/Inc/stm32f4xx_hal_conf.h
@@ -39,5 +39,5 @@ stm32_sensorless_bldc\lcd.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_s
 stm32_sensorless_bldc\lcd.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\lcd.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\lcd.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
-stm32_sensorless_bldc\lcd.o: ..\Bsp\inc\lcd_init.h
-stm32_sensorless_bldc\lcd.o: ..\Bsp\inc\lcdfont.h
+stm32_sensorless_bldc\lcd.o: ../Bsp/inc/lcd_init.h
+stm32_sensorless_bldc\lcd.o: ../Bsp/inc/lcdfont.h

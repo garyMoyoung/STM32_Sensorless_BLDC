@@ -46,6 +46,9 @@
 #include "stm32_mpu9250_clk.h"
 #include "stm32_mpu9250_i2c.h"
 #include "Algorithmic.h"
+#include "lvgl.h"                // 它为整个LVGL提供了更完整的头文件引用
+#include "lv_port_disp.h"        // LVGL的显示支持
+#include "lv_port_indev.h"       // LVGL的触屏支持
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -128,6 +131,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -219,6 +223,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   {
     HAL_IncTick();
   }
+  if(htim == (&htim9))
+  {
+	  lv_tick_inc(1);
+  }	  
   /* USER CODE BEGIN Callback 1 */
 
   /* USER CODE END Callback 1 */

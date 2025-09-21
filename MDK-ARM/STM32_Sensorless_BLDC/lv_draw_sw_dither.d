@@ -5,7 +5,7 @@ stm32_sensorless_bldc\lv_draw_sw_dither.o: ..\LVGL\src\draw\sw\../../core/../mis
 stm32_sensorless_bldc\lv_draw_sw_dither.o: ..\LVGL\src\draw\sw\../../core/../misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_draw_sw_dither.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_draw_sw_dither.o: ..\LVGL\src\draw\sw\../../core/../misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_draw_sw_dither.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_draw_sw_dither.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_draw_sw_dither.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lv_draw_sw_dither.o: ..\LVGL\src\draw\sw\lv_draw_sw_gradient.h
 stm32_sensorless_bldc\lv_draw_sw_dither.o: ..\LVGL\src\draw\sw\../../misc/lv_color.h

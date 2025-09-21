@@ -4,7 +4,7 @@ stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: ..\LVGL\src\draw\stm32_dma2d\../../m
 stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: ..\LVGL\src\draw\stm32_dma2d\../../misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: ..\LVGL\src\draw\stm32_dma2d\../../misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: ..\LVGL\src\draw\stm32_dma2d\../../misc/lv_assert.h
 stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: ..\LVGL\src\draw\stm32_dma2d\../../misc/lv_log.h
 stm32_sensorless_bldc\lv_gpu_stm32_dma2d.o: ..\LVGL\src\draw\stm32_dma2d\../../misc/lv_types.h

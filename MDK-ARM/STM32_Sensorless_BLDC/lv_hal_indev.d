@@ -3,7 +3,7 @@ stm32_sensorless_bldc\lv_hal_indev.o: ..\LVGL\src\hal\../misc/lv_assert.h
 stm32_sensorless_bldc\lv_hal_indev.o: ..\LVGL\src\hal\../misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_hal_indev.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_hal_indev.o: ..\LVGL\src\hal\../misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_hal_indev.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_hal_indev.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_hal_indev.o: ..\LVGL\src\hal\../misc/lv_log.h
 stm32_sensorless_bldc\lv_hal_indev.o: ..\LVGL\src\hal\../misc/lv_types.h
 stm32_sensorless_bldc\lv_hal_indev.o: ..\LVGL\src\hal\../misc/lv_mem.h

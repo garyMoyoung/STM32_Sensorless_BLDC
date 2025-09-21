@@ -6,7 +6,7 @@ stm32_sensorless_bldc\lv_imgfont.o: ..\LVGL\src\extra\others\imgfont\../../../..
 stm32_sensorless_bldc\lv_imgfont.o: ..\LVGL\src\extra\others\imgfont\../../../../src/misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_imgfont.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_imgfont.o: ..\LVGL\src\extra\others\imgfont\../../../../src/misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_imgfont.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_imgfont.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_imgfont.o: ..\LVGL\src\extra\others\imgfont\../../../../src/misc/lv_types.h
 stm32_sensorless_bldc\lv_imgfont.o: ..\LVGL\src\extra\others\imgfont\../../../../src/misc/lv_timer.h
 stm32_sensorless_bldc\lv_imgfont.o: ..\LVGL\src\extra\others\imgfont\../../../../src/misc/../hal/lv_hal_tick.h

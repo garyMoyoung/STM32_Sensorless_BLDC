@@ -8,7 +8,7 @@ stm32_sensorless_bldc\lv_hal_disp.o: ..\LVGL\src\hal\lv_hal.h
 stm32_sensorless_bldc\lv_hal_disp.o: ..\LVGL\src\hal\../draw/lv_draw.h
 stm32_sensorless_bldc\lv_hal_disp.o: ..\LVGL\src\hal\../draw/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_hal_disp.o: ..\LVGL\src\hal\../draw/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_hal_disp.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_hal_disp.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_hal_disp.o: ..\LVGL\src\hal\../draw/../misc/lv_style.h
 stm32_sensorless_bldc\lv_hal_disp.o: ..\LVGL\src\hal\../draw/../misc/../font/lv_font.h
 stm32_sensorless_bldc\lv_hal_disp.o: ..\LVGL\src\hal\../draw/../misc/../font/lv_symbol_def.h

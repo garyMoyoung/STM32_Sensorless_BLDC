@@ -6,7 +6,7 @@ stm32_sensorless_bldc\lv_animimg.o: ..\LVGL\src\extra\widgets\animimg\../../../.
 stm32_sensorless_bldc\lv_animimg.o: ..\LVGL\src\extra\widgets\animimg\../../../../src/misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_animimg.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_animimg.o: ..\LVGL\src\extra\widgets\animimg\../../../../src/misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_animimg.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_animimg.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_animimg.o: ..\LVGL\src\extra\widgets\animimg\../../../../src/misc/lv_types.h
 stm32_sensorless_bldc\lv_animimg.o: ..\LVGL\src\extra\widgets\animimg\../../../../src/misc/lv_timer.h
 stm32_sensorless_bldc\lv_animimg.o: ..\LVGL\src\extra\widgets\animimg\../../../../src/misc/../hal/lv_hal_tick.h

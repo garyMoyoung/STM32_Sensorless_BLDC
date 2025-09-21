@@ -7,7 +7,7 @@ stm32_sensorless_bldc\lv_img_buf.o: ..\LVGL\src\draw\../misc/lv_color.h
 stm32_sensorless_bldc\lv_img_buf.o: ..\LVGL\src\draw\../misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_img_buf.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_img_buf.o: ..\LVGL\src\draw\../misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_img_buf.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_img_buf.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_img_buf.o: ..\LVGL\src\draw\../misc/lv_assert.h
 stm32_sensorless_bldc\lv_img_buf.o: ..\LVGL\src\draw\../misc/lv_log.h
 stm32_sensorless_bldc\lv_img_buf.o: ..\LVGL\src\draw\../misc/lv_types.h

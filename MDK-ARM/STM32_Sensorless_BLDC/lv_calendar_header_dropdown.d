@@ -4,7 +4,7 @@ stm32_sensorless_bldc\lv_calendar_header_dropdown.o: ..\LVGL\src\extra\widgets\c
 stm32_sensorless_bldc\lv_calendar_header_dropdown.o: ..\LVGL\src\extra\widgets\calendar\../../../core/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_calendar_header_dropdown.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_calendar_header_dropdown.o: ..\LVGL\src\extra\widgets\calendar\../../../core/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_calendar_header_dropdown.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_calendar_header_dropdown.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_calendar_header_dropdown.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stddef.h
 stm32_sensorless_bldc\lv_calendar_header_dropdown.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lv_calendar_header_dropdown.o: ..\LVGL\src\extra\widgets\calendar\../../../core/../misc/lv_style.h

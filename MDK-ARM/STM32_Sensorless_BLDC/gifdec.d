@@ -4,7 +4,7 @@ stm32_sensorless_bldc\gifdec.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\gifdec.o: ..\LVGL\src\extra\libs\gif\../../../misc/lv_fs.h
 stm32_sensorless_bldc\gifdec.o: ..\LVGL\src\extra\libs\gif\../../../misc/../lv_conf_internal.h
 stm32_sensorless_bldc\gifdec.o: ..\LVGL\src\extra\libs\gif\../../../misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\gifdec.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\gifdec.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\gifdec.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\gifdec.o: ..\LVGL\src\extra\libs\gif\../../../misc/lv_log.h
 stm32_sensorless_bldc\gifdec.o: ..\LVGL\src\extra\libs\gif\../../../misc/lv_types.h

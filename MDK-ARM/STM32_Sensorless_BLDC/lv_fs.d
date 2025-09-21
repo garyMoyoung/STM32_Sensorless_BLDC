@@ -3,7 +3,7 @@ stm32_sensorless_bldc\lv_fs.o: ..\LVGL\src\misc\lv_fs.h
 stm32_sensorless_bldc\lv_fs.o: ..\LVGL\src\misc\../lv_conf_internal.h
 stm32_sensorless_bldc\lv_fs.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_fs.o: ..\LVGL\src\misc\../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_fs.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_fs.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_fs.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lv_fs.o: ..\LVGL\src\misc\../misc/lv_assert.h
 stm32_sensorless_bldc\lv_fs.o: ..\LVGL\src\misc\../misc/lv_log.h

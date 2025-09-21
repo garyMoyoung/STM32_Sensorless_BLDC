@@ -3,7 +3,7 @@ stm32_sensorless_bldc\lv_draw_label.o: ..\LVGL\src\draw\lv_draw.h
 stm32_sensorless_bldc\lv_draw_label.o: ..\LVGL\src\draw\../lv_conf_internal.h
 stm32_sensorless_bldc\lv_draw_label.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_draw_label.o: ..\LVGL\src\draw\../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_draw_label.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_draw_label.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_draw_label.o: ..\LVGL\src\draw\../misc/lv_style.h
 stm32_sensorless_bldc\lv_draw_label.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lv_draw_label.o: ..\LVGL\src\draw\../misc/../font/lv_font.h

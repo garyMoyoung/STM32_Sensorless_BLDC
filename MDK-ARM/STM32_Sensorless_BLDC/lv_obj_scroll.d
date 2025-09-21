@@ -4,7 +4,7 @@ stm32_sensorless_bldc\lv_obj_scroll.o: ..\LVGL\src\core\../misc/lv_area.h
 stm32_sensorless_bldc\lv_obj_scroll.o: ..\LVGL\src\core\../misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_obj_scroll.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_obj_scroll.o: ..\LVGL\src\core\../misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_obj_scroll.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_obj_scroll.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_obj_scroll.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lv_obj_scroll.o: ..\LVGL\src\core\../misc/lv_anim.h
 stm32_sensorless_bldc\lv_obj_scroll.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stddef.h

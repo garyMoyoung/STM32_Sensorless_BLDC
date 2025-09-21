@@ -4,7 +4,7 @@ stm32_sensorless_bldc\lv_group.o: ..\LVGL\src\core\lv_group.h
 stm32_sensorless_bldc\lv_group.o: ..\LVGL\src\core\../lv_conf_internal.h
 stm32_sensorless_bldc\lv_group.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_group.o: ..\LVGL\src\core\../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_group.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_group.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_group.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lv_group.o: ..\LVGL\src\core\../misc/lv_ll.h
 stm32_sensorless_bldc\lv_group.o: ..\LVGL\src\core\../misc/lv_types.h

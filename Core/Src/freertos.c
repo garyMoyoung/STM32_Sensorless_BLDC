@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "lcd_task.h"
 
 /* USER CODE END Includes */
 
@@ -40,7 +41,12 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+osThreadId_t LcdTaskHandle;
+const osThreadAttr_t Lcd_task_attributes = {
+  .name = "LcdTask",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -55,9 +61,16 @@ const osThreadAttr_t defaultTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 
+osThreadId_t LvglTimerTaskHandle;
+const osThreadAttr_t LvglTimer_task_attributes = {
+  .name = "LvglTimerTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+void LcdTask_Entry(void const * argument);
+void LvglTimerTask_Entry(void const * argument);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -96,7 +109,9 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  
+  LcdTaskHandle = osThreadNew(LcdTask_Entry,NULL,&Lcd_task_attributes);
+  LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, NULL, &LvglTimer_task_attributes);
+
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -125,6 +140,30 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+__weak void LcdTask_Entry(void const * argument)
+{
+  /* USER CODE BEGIN LcdTask_Entry */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END LcdTask_Entry */
+}
 
+void LvglTimerTask_Entry(void const * argument)
+{
+  /* USER CODE BEGIN LvglTimerTask_Entry */
+  /* Infinite loop */
+  for(;;)
+  {
+    /* 调用LVGL定时器处理函数 */
+    lv_timer_handler();
+    
+    /* 延时5ms，实现5ms周期调用 */
+    osDelay(5);
+  }
+  /* USER CODE END LvglTimerTask_Entry */
+}
 /* USER CODE END Application */
 

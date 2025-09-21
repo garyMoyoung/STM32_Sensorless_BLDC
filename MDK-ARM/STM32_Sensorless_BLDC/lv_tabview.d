@@ -6,7 +6,7 @@ stm32_sensorless_bldc\lv_tabview.o: ..\LVGL\src\extra\widgets\tabview\../../../.
 stm32_sensorless_bldc\lv_tabview.o: ..\LVGL\src\extra\widgets\tabview\../../../../src/misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_tabview.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_tabview.o: ..\LVGL\src\extra\widgets\tabview\../../../../src/misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_tabview.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_tabview.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_tabview.o: ..\LVGL\src\extra\widgets\tabview\../../../../src/misc/lv_types.h
 stm32_sensorless_bldc\lv_tabview.o: ..\LVGL\src\extra\widgets\tabview\../../../../src/misc/lv_timer.h
 stm32_sensorless_bldc\lv_tabview.o: ..\LVGL\src\extra\widgets\tabview\../../../../src/misc/../hal/lv_hal_tick.h

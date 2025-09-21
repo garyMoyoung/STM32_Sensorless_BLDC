@@ -4,7 +4,7 @@ stm32_sensorless_bldc\lv_keyboard.o: ..\LVGL\src\extra\widgets\keyboard\../../..
 stm32_sensorless_bldc\lv_keyboard.o: ..\LVGL\src\extra\widgets\keyboard\../../../widgets/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_keyboard.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_keyboard.o: ..\LVGL\src\extra\widgets\keyboard\../../../widgets/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_keyboard.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_keyboard.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_keyboard.o: ..\LVGL\src\extra\widgets\keyboard\../../../widgets/../core/lv_obj.h
 stm32_sensorless_bldc\lv_keyboard.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stddef.h
 stm32_sensorless_bldc\lv_keyboard.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h

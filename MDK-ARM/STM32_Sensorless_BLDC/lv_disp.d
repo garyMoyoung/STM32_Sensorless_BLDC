@@ -8,7 +8,7 @@ stm32_sensorless_bldc\lv_disp.o: ..\LVGL\src\core\../hal/lv_hal.h
 stm32_sensorless_bldc\lv_disp.o: ..\LVGL\src\core\../hal/../draw/lv_draw.h
 stm32_sensorless_bldc\lv_disp.o: ..\LVGL\src\core\../hal/../draw/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_disp.o: ..\LVGL\src\core\../hal/../draw/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_disp.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_disp.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_disp.o: ..\LVGL\src\core\../hal/../draw/../misc/lv_style.h
 stm32_sensorless_bldc\lv_disp.o: ..\LVGL\src\core\../hal/../draw/../misc/../font/lv_font.h
 stm32_sensorless_bldc\lv_disp.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stddef.h

@@ -41,4 +41,4 @@ stm32_sensorless_bldc\algorithmic.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4
 stm32_sensorless_bldc\algorithmic.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
 stm32_sensorless_bldc\algorithmic.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h
 stm32_sensorless_bldc\algorithmic.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
-stm32_sensorless_bldc\algorithmic.o: ..\Bsp\inc\Algorithmic.h
+stm32_sensorless_bldc\algorithmic.o: ../Bsp/inc/Algorithmic.h

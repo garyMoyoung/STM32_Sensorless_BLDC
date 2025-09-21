@@ -3,7 +3,7 @@ stm32_sensorless_bldc\lv_img_cache.o: ..\LVGL\src\draw\../misc/lv_assert.h
 stm32_sensorless_bldc\lv_img_cache.o: ..\LVGL\src\draw\../misc/../lv_conf_internal.h
 stm32_sensorless_bldc\lv_img_cache.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\lv_img_cache.o: ..\LVGL\src\draw\../misc/../lv_conf_kconfig.h
-stm32_sensorless_bldc\lv_img_cache.o: ..\LVGL\examples\porting\../../lv_conf.h
+stm32_sensorless_bldc\lv_img_cache.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lv_img_cache.o: ..\LVGL\src\draw\../misc/lv_log.h
 stm32_sensorless_bldc\lv_img_cache.o: ..\LVGL\src\draw\../misc/lv_types.h
 stm32_sensorless_bldc\lv_img_cache.o: ..\LVGL\src\draw\../misc/lv_mem.h
