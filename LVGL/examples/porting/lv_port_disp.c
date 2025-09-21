@@ -35,7 +35,7 @@
  **********************/
 static void disp_init(void);
 
-static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p);
+static void disp_flush(lv_disp_drv_t * disp_drv,const lv_area_t * area, lv_color_t * color_p);
 //static void gpu_fill(lv_disp_drv_t * disp_drv, lv_color_t * dest_buf, lv_coord_t dest_width,
 //        const lv_area_t * fill_area, lv_color_t color);
 
@@ -46,7 +46,7 @@ static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_colo
 /**********************
  *      MACROS
  **********************/
-
+lv_disp_drv_t * disp_drv1;
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
@@ -161,29 +161,29 @@ void disp_disable_update(void)
 /*Flush the content of the internal buffer the specific area on the display
  *You can use DMA or any hardware acceleration to do this operation in the background but
  *'lv_disp_flush_ready()' has to be called when finished.*/
-static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
+static void disp_flush(lv_disp_drv_t * disp_drv,const lv_area_t * area, lv_color_t * color_p)
 {
     if(disp_flush_enabled) 
 	{
         /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
-
-//        int32_t x;
-//        int32_t y;
-//        for(y = area->y1; y <= area->y2; y++) {
-//            for(x = area->x1; x <= area->x2; x++) {
-//                /*Put a pixel to the display. For example:*/
+		LCD_LVGL_Color_Fill(area->x1, area->y1, area->x2, area->y2, color_p);
+//       int32_t x;
+//       int32_t y;
+//       for(y = area->y1; y <= area->y2; y++) {
+//           for(x = area->x1; x <= area->x2; x++) {
+//               /*Put a pixel to the display. For example:*/
 //				LCD_DrawPoint(x,y,color_p->full);
-//                /*put_px(x, y, *color_p)*/
-//                color_p++;
-//            }
-//        }
-		
+//               /*put_px(x, y, *color_p)*/
+//               color_p++;
+//           }
+//       }
+
     }
 
     /*IMPORTANT!!!
      *Inform the graphics library that you are ready with the flushing*/
-	LCD_Fill(area->x1,area->y1,area->x2,area->y2,(uint16_t )color_p->full);
     lv_disp_flush_ready(disp_drv);
+    // lv_disp_flush_ready(disp_drv1);
 }
 
 /*OPTIONAL: GPU INTERFACE*/

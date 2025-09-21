@@ -52,8 +52,6 @@ stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/lcd.h
-stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/pic.h
-stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/lvgl.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_log.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/../lv_conf_internal.h
@@ -181,5 +179,9 @@ stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/extra/widgets/colorwheel/lv_colorw
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/extra/widgets/led/lv_led.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/extra/widgets/imgbtn/lv_imgbtn.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/extra/widgets/span/lv_span.h
+stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_disp.h
+stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_indev.h
+stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/pic.h
+stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_indev.h

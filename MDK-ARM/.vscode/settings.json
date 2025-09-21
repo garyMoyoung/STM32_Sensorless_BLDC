@@ -4,6 +4,8 @@
         "cmsis_os2.h": "c",
         "math.h": "c",
         "lcd_init.h": "c",
-        "lcd.h": "c"
+        "lcd.h": "c",
+        "as5600.h": "c",
+        "lvgl.h": "c"
     }
 }

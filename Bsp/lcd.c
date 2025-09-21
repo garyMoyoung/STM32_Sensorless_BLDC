@@ -1,9 +1,16 @@
 #include "lcd.h"
 #include "lcd_init.h"
 #include "lcdfont.h"
-
-
-
+#include "lvgl.h"                // 它为整个LVGL提供了更完整的头文件引用
+#include "lv_port_disp.h"        // LVGL的显示支持
+#include "lv_port_indev.h"       // LVGL的触屏支持
+#include "main.h"
+/* DMA传输完成标志 */
+extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi2;
+extern DMA_HandleTypeDef hdma_spi2_tx;
+extern DMA_HandleTypeDef hdma_spi2_rx;
+volatile uint8_t dma_transfer_complete = 1;
 /******************************************************************************
       函数说明：在指定区域填充颜色
       入口数据：xsta,ysta   起始坐标
@@ -22,6 +29,64 @@ void LCD_Fill(u16 xsta,u16 ysta,u16 xend,u16 yend,u16 color)
 			LCD_WR_DATA(color);
 		}
 	} 					  	    
+}
+
+void LCD_LVGL_Color_Fill(u16 sx, u16 sy, u16 ex, u16 ey, lv_color_t *color)
+{
+	uint32_t y = 0;
+	u16 height, width;
+	width = ex - sx + 1;  //得到填充的宽度
+	height = ey - sy + 1; //高度
+
+	LCD_Address_Set(sx, sy, ex, ey);
+
+	for (y = 0; y < width * height; y++)
+	{
+		LCD_WR_DATA(color->full);
+		color++;
+	}
+}
+
+void LCD_LVGL_Color_Fill_DMA(u16 sx, u16 sy, u16 ex, u16 ey, lv_color_t *color)
+{
+    u16 width = ex - sx + 1;
+    u16 height = ey - sy + 1;
+    u32 total_pixels = width * height;
+    
+    LCD_Address_Set(sx, sy, ex, ey);
+    
+    // 检查数据大小，如果太大则分批传输
+    const u32 max_dma_size = 65535;  // DMA最大传输长度
+    
+    if(total_pixels * 2 <= max_dma_size)
+    {
+        // 一次性传输
+        dma_transfer_complete = 0;
+        HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)color, total_pixels * 2);
+        
+        // 等待传输完成
+        while(dma_transfer_complete == 0);
+    }
+    else
+    {
+        // 分批传输
+        u32 remaining = total_pixels;
+        u32 offset = 0;
+        
+        while(remaining > 0)
+        {
+            u32 chunk_size = (remaining > max_dma_size/2) ? max_dma_size/2 : remaining;
+            
+            dma_transfer_complete = 0;
+            HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)(color + offset), chunk_size * 2);
+            
+            // 等待传输完成
+            // while(dma_transfer_complete == 0);
+            
+            offset += chunk_size;
+            remaining -= chunk_size;
+        }
+    }
 }
 
 /******************************************************************************

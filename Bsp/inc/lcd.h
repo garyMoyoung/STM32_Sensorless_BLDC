@@ -1,7 +1,11 @@
 #ifndef __LCD_H
 #define __LCD_H		
 #include "main.h"
-void LCD1_Fill(u16 xsta,u16 ysta,u16 xend,u16 yend,u16 color);
+#include "lvgl.h"                // 它为整个LVGL提供了更完整的头文件引用
+#include "lv_port_disp.h"        // LVGL的显示支持
+#include "lv_port_indev.h"       // LVGL的触屏支持
+void LCD_LVGL_Color_Fill(u16 sx, u16 sy, u16 ex, u16 ey, lv_color_t *color);
+void LCD_LVGL_Color_Fill_DMA(u16 sx, u16 sy, u16 ex, u16 ey, lv_color_t *color);
 void LCD_Fill(u16 xsta,u16 ysta,u16 xend,u16 yend,u16 color);//指定区域填充颜色
 void LCD_DrawPoint(u16 x,u16 y,u16 color);//在指定位置画一个点
 void LCD_DrawLine(u16 x1,u16 y1,u16 x2,u16 y2,u16 color);//在指定位置画一条线

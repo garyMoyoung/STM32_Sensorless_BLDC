@@ -5,6 +5,7 @@
 "stm32_sensorless_bldc\freertos.o"
 "stm32_sensorless_bldc\adc.o"
 "stm32_sensorless_bldc\can.o"
+"stm32_sensorless_bldc\dma.o"
 "stm32_sensorless_bldc\i2c.o"
 "stm32_sensorless_bldc\spi.o"
 "stm32_sensorless_bldc\tim.o"

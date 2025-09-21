@@ -47,6 +47,12 @@ const osThreadAttr_t Lcd_task_attributes = {
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+osThreadId_t LvglTimerTaskHandle;
+const osThreadAttr_t LvglTimer_task_attributes = {
+  .name = "LvglTimerTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -61,12 +67,6 @@ const osThreadAttr_t defaultTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 
-osThreadId_t LvglTimerTaskHandle;
-const osThreadAttr_t LvglTimer_task_attributes = {
-  .name = "LvglTimerTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
-};
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 void LcdTask_Entry(void const * argument);

@@ -51,6 +51,7 @@ stm32_sensorless_bldc\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include
 stm32_sensorless_bldc\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/adc.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/can.h
+stm32_sensorless_bldc\main.o: ../Core/Inc/dma.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/i2c.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/spi.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/tim.h
@@ -64,15 +65,6 @@ stm32_sensorless_bldc\main.o: ../Bsp/inc/AS5600.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd_init.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd.h
-stm32_sensorless_bldc\main.o: ../Bsp/inc/fifo.h
-stm32_sensorless_bldc\main.o: ../Bsp/inc/MPU9250-DMP.h
-stm32_sensorless_bldc\main.o: ../Algorithm/util/inv_mpu.h
-stm32_sensorless_bldc\main.o: ../Algorithm/util/inv_mpu_dmp_motion_driver.h
-stm32_sensorless_bldc\main.o: ../Bsp/inc/MPU9250_RegisterMap.h
-stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
-stm32_sensorless_bldc\main.o: ../Algorithm/util/stm32_mpu9250_clk.h
-stm32_sensorless_bldc\main.o: ../Algorithm/util/stm32_mpu9250_i2c.h
-stm32_sensorless_bldc\main.o: ../Bsp/inc/Algorithmic.h
 stm32_sensorless_bldc\main.o: ../LVGL/lvgl.h
 stm32_sensorless_bldc\main.o: ../LVGL/src/misc/lv_log.h
 stm32_sensorless_bldc\main.o: ../LVGL/src/misc/../lv_conf_internal.h
@@ -197,5 +189,16 @@ stm32_sensorless_bldc\main.o: ../LVGL/src/extra/widgets/colorwheel/lv_colorwheel
 stm32_sensorless_bldc\main.o: ../LVGL/src/extra/widgets/led/lv_led.h
 stm32_sensorless_bldc\main.o: ../LVGL/src/extra/widgets/imgbtn/lv_imgbtn.h
 stm32_sensorless_bldc\main.o: ../LVGL/src/extra/widgets/span/lv_span.h
+stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_disp.h
+stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_indev.h
+stm32_sensorless_bldc\main.o: ../Bsp/inc/fifo.h
+stm32_sensorless_bldc\main.o: ../Bsp/inc/MPU9250-DMP.h
+stm32_sensorless_bldc\main.o: ../Algorithm/util/inv_mpu.h
+stm32_sensorless_bldc\main.o: ../Algorithm/util/inv_mpu_dmp_motion_driver.h
+stm32_sensorless_bldc\main.o: ../Bsp/inc/MPU9250_RegisterMap.h
+stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
+stm32_sensorless_bldc\main.o: ../Algorithm/util/stm32_mpu9250_clk.h
+stm32_sensorless_bldc\main.o: ../Algorithm/util/stm32_mpu9250_i2c.h
+stm32_sensorless_bldc\main.o: ../Bsp/inc/Algorithmic.h
 stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_indev.h

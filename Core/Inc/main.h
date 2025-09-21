@@ -71,6 +71,12 @@ void Error_Handler(void);
 #define Toggle_GPIO_Port GPIOE
 #define SPI1_CS_Pin GPIO_PIN_15
 #define SPI1_CS_GPIO_Port GPIOG
+#define RGBA_Pin GPIO_PIN_8
+#define RGBA_GPIO_Port GPIOB
+#define RGB_B_Pin GPIO_PIN_9
+#define RGB_B_GPIO_Port GPIOB
+#define RGB_C_Pin GPIO_PIN_0
+#define RGB_C_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 
