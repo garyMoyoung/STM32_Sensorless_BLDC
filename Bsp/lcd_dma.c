@@ -1,375 +1,581 @@
+#include "lcdfont.h"
+#include "lvgl.h"                // 它为整个LVGL提供了更完整的头文件引用
+#include "lv_port_disp.h"        // LVGL的显示支持
+#include "lv_port_indev.h"       // LVGL的触屏支持
+#include "main.h"
 #include "lcd_dma.h"
-#include "lcd.h"
-#include "lcd_init.h"
-#include <string.h>
-
-/* 私有变量 */
-static LCD_DMA_Handle_t lcd_dma_handle;
-static uint16_t dma_color_buffer[LCD_DMA_MAX_BUFFER_SIZE/2]; // 颜色缓冲区
-static volatile uint8_t dma_transfer_complete = 1;
-
-/* 外部变量 */
-extern SPI_HandleTypeDef hspi2;  // 假设使用SPI2连接LCD
-
-/**
- * @brief  初始化LCD DMA驱动
- * @param  None
- * @retval None
- */
-void LCD_DMA_Init(void)
-{
-    memset(&lcd_dma_handle, 0, sizeof(LCD_DMA_Handle_t));
-    lcd_dma_handle.state = LCD_DMA_IDLE;
-    lcd_dma_handle.callback = NULL;
-    dma_transfer_complete = 1;
+#include "lcd_init_dma.h"
+/* DMA传输完成标志 */
+extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi2;
+extern DMA_HandleTypeDef hdma_spi2_tx;
+extern DMA_HandleTypeDef hdma_spi2_rx;
+extern uint8_t dma_transfer_complete;
+/******************************************************************************
+      函数说明：在指定区域填充颜色
+      入口数据：xsta,ysta   起始坐标
+                xend,yend   终止坐标
+								color       要填充的颜色
+      返回值：  无
+******************************************************************************/
+void LCD_Fill_DMA(u16 xsta,u16 ysta,u16 xend,u16 yend,u16 color)
+{          
+	u16 i,j; 
+	LCD_Address_Set_DMA(xsta,ysta,xend-1,yend-1);//设置显示范围
+	for(i=ysta;i<yend;i++)
+	{													   	 	
+		for(j=xsta;j<xend;j++)
+		{
+			LCD_WR_DATA_DMA(color);
+		}
+	} 					  	    
 }
 
-/**
- * @brief  获取DMA传输状态
- * @param  None
- * @retval LCD_DMA_State_t 当前DMA状态
- */
-LCD_DMA_State_t LCD_DMA_GetState(void)
+void LCD_LVGL_Color_Fill_DMA(u16 sx, u16 sy, u16 ex, u16 ey, lv_color_t *color)
 {
-    return lcd_dma_handle.state;
+	uint32_t y = 0;
+	u16 height, width;
+	width = ex - sx + 1;  //得到填充的宽度
+	height = ey - sy + 1; //高度
+
+	LCD_Address_Set_DMA(sx, sy, ex, ey);
+
+	for (y = 0; y < width * height; y++)
+	{
+		LCD_WR_DATA_DMA(color->full);
+		color++;
+	}
 }
 
-/**
- * @brief  使用DMA填充单色矩形区域
- * @param  xsta: 起始X坐标
- * @param  ysta: 起始Y坐标
- * @param  xend: 结束X坐标
- * @param  yend: 结束Y坐标
- * @param  color: 填充颜色
- * @retval HAL_StatusTypeDef
- */
-HAL_StatusTypeDef LCD_DMA_Fill(uint16_t xsta, uint16_t ysta, uint16_t xend, uint16_t yend, uint16_t color)
+/******************************************************************************
+      函数说明：在指定位置画点
+      入口数据：x,y 画点坐标
+                color 点的颜色
+      返回值：  无
+******************************************************************************/
+void LCD_DrawPoint_DMA(u16 x,u16 y,u16 color)
 {
-    if(lcd_dma_handle.state == LCD_DMA_BUSY)
-    {
-        return HAL_BUSY;
-    }
-    
-    uint16_t width = xend - xsta;
-    uint16_t height = yend - ysta;
-    uint32_t total_pixels = width * height;
-    
-    // 设置显示窗口
-    LCD_Address_Set(xsta, ysta, xend-1, yend-1);
-    
-    // 准备颜色数据
-    uint16_t buffer_size = (total_pixels > LCD_DMA_MAX_BUFFER_SIZE/2) ? LCD_DMA_MAX_BUFFER_SIZE/2 : total_pixels;
-    
-    for(uint16_t i = 0; i < buffer_size; i++)
-    {
-        dma_color_buffer[i] = color;
-    }
-    
-    lcd_dma_handle.state = LCD_DMA_BUSY;
-    lcd_dma_handle.transfer_size = total_pixels;
-    
-    // 如果数据量小于缓冲区，一次性传输
-    if(total_pixels <= LCD_DMA_MAX_BUFFER_SIZE/2)
-    {
-        dma_transfer_complete = 0;
-        return HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)dma_color_buffer, total_pixels * 2);
-    }
-    else
-    {
-        // 分批传输
-        uint32_t remaining = total_pixels;
-        uint32_t transmitted = 0;
-        
-        while(remaining > 0)
-        {
-            uint32_t chunk_size = (remaining > LCD_DMA_MAX_BUFFER_SIZE/2) ? LCD_DMA_MAX_BUFFER_SIZE/2 : remaining;
-            
-            dma_transfer_complete = 0;
-            HAL_StatusTypeDef status = HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)dma_color_buffer, chunk_size * 2);
-            
-            if(status != HAL_OK)
-            {
-                lcd_dma_handle.state = LCD_DMA_ERROR;
-                return status;
-            }
-            
-            // 等待传输完成
-            while(!dma_transfer_complete);
-            
-            transmitted += chunk_size;
-            remaining -= chunk_size;
-        }
-        
-        lcd_dma_handle.state = LCD_DMA_COMPLETE;
-        return HAL_OK;
-    }
+	LCD_Address_Set_DMA(x,y,x,y);//设置光标位置 
+	LCD_WR_DATA_DMA(color);
+} 
+
+
+/******************************************************************************
+      函数说明：画线
+      入口数据：x1,y1   起始坐标
+                x2,y2   终止坐标
+                color   线的颜色
+      返回值：  无
+******************************************************************************/
+void LCD_DrawLine_DMA(u16 x1,u16 y1,u16 x2,u16 y2,u16 color)
+{
+	u16 t; 
+	int xerr=0,yerr=0,delta_x,delta_y,distance;
+	int incx,incy,uRow,uCol;
+	delta_x=x2-x1; //计算坐标增量 
+	delta_y=y2-y1;
+	uRow=x1;//画线起点坐标
+	uCol=y1;
+	if(delta_x>0)incx=1; //设置单步方向 
+	else if (delta_x==0)incx=0;//垂直线 
+	else {incx=-1;delta_x=-delta_x;}
+	if(delta_y>0)incy=1;
+	else if (delta_y==0)incy=0;//水平线 
+	else {incy=-1;delta_y=-delta_y;}
+	if(delta_x>delta_y)distance=delta_x; //选取基本增量坐标轴 
+	else distance=delta_y;
+	for(t=0;t<distance+1;t++)
+	{
+		LCD_DrawPoint_DMA(uRow,uCol,color);//画点
+		xerr+=delta_x;
+		yerr+=delta_y;
+		if(xerr>distance)
+		{
+			xerr-=distance;
+			uRow+=incx;
+		}
+		if(yerr>distance)
+		{
+			yerr-=distance;
+			uCol+=incy;
+		}
+	}
 }
 
-/**
- * @brief  使用DMA填充指定颜色数据的区域
- * @param  x: 起始X坐标
- * @param  y: 起始Y坐标
- * @param  width: 宽度
- * @param  height: 高度
- * @param  color_data: 颜色数据数组
- * @retval HAL_StatusTypeDef
- */
-HAL_StatusTypeDef LCD_DMA_FillArea(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t *color_data)
+
+/******************************************************************************
+      函数说明：画矩形
+      入口数据：x1,y1   起始坐标
+                x2,y2   终止坐标
+                color   矩形的颜色
+      返回值：  无
+******************************************************************************/
+void LCD_DrawRectangle_DMA(u16 x1, u16 y1, u16 x2, u16 y2,u16 color)
 {
-    if(lcd_dma_handle.state == LCD_DMA_BUSY)
-    {
-        return HAL_BUSY;
-    }
-    
-    uint32_t total_pixels = width * height;
-    
-    // 设置显示窗口
-    LCD_Address_Set(x, y, x + width - 1, y + height - 1);
-    
-    lcd_dma_handle.state = LCD_DMA_BUSY;
-    lcd_dma_handle.transfer_size = total_pixels;
-    
-    // 检查数据大小
-    const uint32_t max_dma_transfer = 65535;
-    
-    if(total_pixels * 2 <= max_dma_transfer)
-    {
-        // 一次性传输
-        dma_transfer_complete = 0;
-        return HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)color_data, total_pixels * 2);
-    }
-    else
-    {
-        // 分批传输
-        uint32_t remaining = total_pixels;
-        uint32_t offset = 0;
-        
-        while(remaining > 0)
-        {
-            uint32_t chunk_size = (remaining * 2 > max_dma_transfer) ? max_dma_transfer/2 : remaining;
-            
-            dma_transfer_complete = 0;
-            HAL_StatusTypeDef status = HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)(color_data + offset), chunk_size * 2);
-            
-            if(status != HAL_OK)
-            {
-                lcd_dma_handle.state = LCD_DMA_ERROR;
-                return status;
-            }
-            
-            // 等待传输完成
-            while(!dma_transfer_complete);
-            
-            offset += chunk_size;
-            remaining -= chunk_size;
-        }
-        
-        lcd_dma_handle.state = LCD_DMA_COMPLETE;
-        return HAL_OK;
-    }
+	LCD_DrawLine_DMA(x1,y1,x2,y1,color);
+	LCD_DrawLine_DMA(x1,y1,x1,y2,color);
+	LCD_DrawLine_DMA(x1,y2,x2,y2,color);
+	LCD_DrawLine_DMA(x2,y1,x2,y2,color);
 }
 
-/**
- * @brief  LVGL专用DMA颜色填充（同步版本）
- * @param  sx: 起始X坐标
- * @param  sy: 起始Y坐标
- * @param  ex: 结束X坐标
- * @param  ey: 结束Y坐标
- * @param  color: LVGL颜色数组
- * @retval HAL_StatusTypeDef
- */
-HAL_StatusTypeDef LCD_DMA_LVGL_Fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, lv_color_t *color)
+
+/******************************************************************************
+      函数说明：画圆
+      入口数据：x0,y0   圆心坐标
+                r       半径
+                color   圆的颜色
+      返回值：  无
+******************************************************************************/
+void Draw_Circle_DMA(u16 x0,u16 y0,u8 r,u16 color)
 {
-    if(lcd_dma_handle.state == LCD_DMA_BUSY)
-    {
-        return HAL_BUSY;
-    }
-    
-    uint16_t width = ex - sx + 1;
-    uint16_t height = ey - sy + 1;
-    uint32_t total_pixels = width * height;
-    
-    // 设置显示窗口
-    LCD_Address_Set(sx, sy, ex, ey);
-    
-    lcd_dma_handle.state = LCD_DMA_BUSY;
-    
-    // 转换LVGL颜色格式到LCD格式（如果需要）
-    // 假设LVGL和LCD使用相同的RGB565格式
-    
-    const uint32_t max_dma_transfer = 65535;
-    
-    if(total_pixels * sizeof(lv_color_t) <= max_dma_transfer)
-    {
-        // 一次性传输
-        dma_transfer_complete = 0;
-        HAL_StatusTypeDef status = HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)color, total_pixels * sizeof(lv_color_t));
-        
-        if(status == HAL_OK)
-        {
-            // 等待传输完成
-            while(!dma_transfer_complete);
-            lcd_dma_handle.state = LCD_DMA_COMPLETE;
-        }
-        else
-        {
-            lcd_dma_handle.state = LCD_DMA_ERROR;
-        }
-        
-        return status;
-    }
-    else
-    {
-        // 分批传输
-        uint32_t remaining = total_pixels;
-        uint32_t offset = 0;
-        
-        while(remaining > 0)
-        {
-            uint32_t chunk_size = (remaining * sizeof(lv_color_t) > max_dma_transfer) ? max_dma_transfer/sizeof(lv_color_t) : remaining;
-            
-            dma_transfer_complete = 0;
-            HAL_StatusTypeDef status = HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)(color + offset), chunk_size * sizeof(lv_color_t));
-            
-            if(status != HAL_OK)
-            {
-                lcd_dma_handle.state = LCD_DMA_ERROR;
-                return status;
-            }
-            
-            // 等待传输完成
-            while(!dma_transfer_complete);
-            
-            offset += chunk_size;
-            remaining -= chunk_size;
-        }
-        
-        lcd_dma_handle.state = LCD_DMA_COMPLETE;
-        return HAL_OK;
-    }
+	int a,b;
+	a=0;b=r;	  
+	while(a<=b)
+	{
+		LCD_DrawPoint_DMA(x0-b,y0-a,color);             //3           
+		LCD_DrawPoint_DMA(x0+b,y0-a,color);             //0           
+		LCD_DrawPoint_DMA(x0-a,y0+b,color);             //1                
+		LCD_DrawPoint_DMA(x0-a,y0-b,color);             //2             
+		LCD_DrawPoint_DMA(x0+b,y0+a,color);             //4               
+		LCD_DrawPoint_DMA(x0+a,y0-b,color);             //5
+		LCD_DrawPoint_DMA(x0+a,y0+b,color);             //6 
+		LCD_DrawPoint_DMA(x0-b,y0+a,color);             //7
+		a++;
+		if((a*a+b*b)>(r*r))//判断要画的点是否过远
+		{
+			b--;
+		}
+	}
 }
 
-/**
- * @brief  LVGL专用DMA颜色填充（异步版本）
- * @param  sx: 起始X坐标
- * @param  sy: 起始Y坐标
- * @param  ex: 结束X坐标
- * @param  ey: 结束Y坐标
- * @param  color: LVGL颜色数组
- * @param  callback: 传输完成回调函数
- * @retval HAL_StatusTypeDef
- */
-HAL_StatusTypeDef LCD_DMA_LVGL_Fill_Async(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, lv_color_t *color, LCD_DMA_Callback_t callback)
+/******************************************************************************
+      函数说明：显示汉字串
+      入口数据：x,y显示坐标
+                *s 要显示的汉字串
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号 可选 16 24 32
+                mode:  0非叠加模式  1叠加模式
+      返回值：  无
+******************************************************************************/
+void LCD_ShowChinese_DMA(u16 x,u16 y,u8 *s,u16 fc,u16 bc,u8 sizey,u8 mode)
 {
-    if(lcd_dma_handle.state == LCD_DMA_BUSY)
-    {
-        return HAL_BUSY;
-    }
-    
-    uint16_t width = ex - sx + 1;
-    uint16_t height = ey - sy + 1;
-    uint32_t total_pixels = width * height;
-    
-    // 设置显示窗口
-    LCD_Address_Set(sx, sy, ex, ey);
-    
-    lcd_dma_handle.state = LCD_DMA_BUSY;
-    lcd_dma_handle.callback = callback;
-    lcd_dma_handle.data_ptr = (uint8_t*)color;
-    lcd_dma_handle.transfer_size = total_pixels;
-    
-    // 启动异步传输
-    dma_transfer_complete = 0;
-    return HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)color, total_pixels * sizeof(lv_color_t));
+	while(*s!=0)
+	{
+		if(sizey==12) LCD_ShowChinese12x12_DMA(x,y,s,fc,bc,sizey,mode);
+		else if(sizey==16) LCD_ShowChinese16x16_DMA(x,y,s,fc,bc,sizey,mode);
+		else if(sizey==24) LCD_ShowChinese24x24_DMA(x,y,s,fc,bc,sizey,mode);
+		else if(sizey==32) LCD_ShowChinese32x32_DMA(x,y,s,fc,bc,sizey,mode);
+		else return;
+		s+=2;
+		x+=sizey;
+	}
 }
 
-/**
- * @brief  使用DMA绘制位图
- * @param  x: 起始X坐标
- * @param  y: 起始Y坐标
- * @param  width: 位图宽度
- * @param  height: 位图高度
- * @param  bitmap: 位图数据
- * @retval HAL_StatusTypeDef
- */
-HAL_StatusTypeDef LCD_DMA_DrawBitmap(uint16_t x, uint16_t y, uint16_t width, uint16_t height, const uint16_t *bitmap)
+/******************************************************************************
+      函数说明：显示单个12x12汉字
+      入口数据：x,y显示坐标
+                *s 要显示的汉字
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号
+                mode:  0非叠加模式  1叠加模式
+      返回值：  无
+******************************************************************************/
+void LCD_ShowChinese12x12_DMA(u16 x,u16 y,u8 *s,u16 fc,u16 bc,u8 sizey,u8 mode)
 {
-    return LCD_DMA_FillArea(x, y, width, height, (uint16_t*)bitmap);
+	u8 i,j,m=0;
+	u16 k;
+	u16 HZnum;//汉字数目
+	u16 TypefaceNum;//一个字符所占字节大小
+	u16 x0=x;
+	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
+	                         
+	HZnum=sizeof(tfont12)/sizeof(typFNT_GB12);	//统计汉字数目
+	for(k=0;k<HZnum;k++) 
+	{
+		if((tfont12[k].Index[0]==*(s))&&(tfont12[k].Index[1]==*(s+1)))
+		{ 	
+			LCD_Address_Set_DMA(x,y,x+sizey-1,y+sizey-1);
+			for(i=0;i<TypefaceNum;i++)
+			{
+				for(j=0;j<8;j++)
+				{	
+					if(!mode)//非叠加方式
+					{
+						if(tfont12[k].Msk[i]&(0x01<<j))LCD_WR_DATA_DMA(fc);
+						else LCD_WR_DATA_DMA(bc);
+						m++;
+						if(m%sizey==0)
+						{
+							m=0;
+							break;
+						}
+					}
+					else//叠加方式
+					{
+						if(tfont12[k].Msk[i]&(0x01<<j))	LCD_DrawPoint_DMA(x,y,fc);//画一个点
+						x++;
+						if((x-x0)==sizey)
+						{
+							x=x0;
+							y++;
+							break;
+						}
+					}
+				}
+			}
+		}				  	
+		continue;  //查找到对应点阵字库立即退出，防止多个汉字重复取模带来影响
+	}
+} 
+
+/******************************************************************************
+      函数说明：显示单个16x16汉字
+      入口数据：x,y显示坐标
+                *s 要显示的汉字
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号
+                mode:  0非叠加模式  1叠加模式
+      返回值：  无
+******************************************************************************/
+void LCD_ShowChinese16x16_DMA(u16 x,u16 y,u8 *s,u16 fc,u16 bc,u8 sizey,u8 mode)
+{
+	u8 i,j,m=0;
+	u16 k;
+	u16 HZnum;//汉字数目
+	u16 TypefaceNum;//一个字符所占字节大小
+	u16 x0=x;
+    TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
+	HZnum=sizeof(tfont16)/sizeof(typFNT_GB16);	//统计汉字数目
+	for(k=0;k<HZnum;k++) 
+	{
+		if ((tfont16[k].Index[0]==*(s))&&(tfont16[k].Index[1]==*(s+1)))
+		{ 	
+			LCD_Address_Set_DMA(x,y,x+sizey-1,y+sizey-1);
+			for(i=0;i<TypefaceNum;i++)
+			{
+				for(j=0;j<8;j++)
+				{	
+					if(!mode)//非叠加方式
+					{
+						if(tfont16[k].Msk[i]&(0x01<<j))LCD_WR_DATA_DMA(fc);
+						else LCD_WR_DATA_DMA(bc);
+						m++;
+						if(m%sizey==0)
+						{
+							m=0;
+							break;
+						}
+					}
+					else//叠加方式
+					{
+						if(tfont16[k].Msk[i]&(0x01<<j))	LCD_DrawPoint_DMA(x,y,fc);//画一个点
+						x++;
+						if((x-x0)==sizey)
+						{
+							x=x0;
+							y++;
+							break;
+						}
+					}
+				}
+			}
+		}				  	
+		continue;  //查找到对应点阵字库立即退出，防止多个汉字重复取模带来影响
+	}
+} 
+
+
+/******************************************************************************
+      函数说明：显示单个24x24汉字
+      入口数据：x,y显示坐标
+                *s 要显示的汉字
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号
+                mode:  0非叠加模式  1叠加模式
+      返回值：  无
+******************************************************************************/
+void LCD_ShowChinese24x24_DMA(u16 x,u16 y,u8 *s,u16 fc,u16 bc,u8 sizey,u8 mode)
+{
+	u8 i,j,m=0;
+	u16 k;
+	u16 HZnum;//汉字数目
+	u16 TypefaceNum;//一个字符所占字节大小
+	u16 x0=x;
+	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
+	HZnum=sizeof(tfont24)/sizeof(typFNT_GB24);	//统计汉字数目
+	for(k=0;k<HZnum;k++) 
+	{
+		if ((tfont24[k].Index[0]==*(s))&&(tfont24[k].Index[1]==*(s+1)))
+		{ 	
+			LCD_Address_Set_DMA(x,y,x+sizey-1,y+sizey-1);
+			for(i=0;i<TypefaceNum;i++)
+			{
+				for(j=0;j<8;j++)
+				{	
+					if(!mode)//非叠加方式
+					{
+						if(tfont24[k].Msk[i]&(0x01<<j))LCD_WR_DATA_DMA(fc);
+						else LCD_WR_DATA_DMA(bc);
+						m++;
+						if(m%sizey==0)
+						{
+							m=0;
+							break;
+						}
+					}
+					else//叠加方式
+					{
+						if(tfont24[k].Msk[i]&(0x01<<j))	LCD_DrawPoint_DMA(x,y,fc);//画一个点
+						x++;
+						if((x-x0)==sizey)
+						{
+							x=x0;
+							y++;
+							break;
+						}
+					}
+				}
+			}
+		}				  	
+		continue;  //查找到对应点阵字库立即退出，防止多个汉字重复取模带来影响
+	}
+} 
+
+/******************************************************************************
+      函数说明：显示单个32x32汉字
+      入口数据：x,y显示坐标
+                *s 要显示的汉字
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号
+                mode:  0非叠加模式  1叠加模式
+      返回值：  无
+******************************************************************************/
+void LCD_ShowChinese32x32_DMA(u16 x,u16 y,u8 *s,u16 fc,u16 bc,u8 sizey,u8 mode)
+{
+	u8 i,j,m=0;
+	u16 k;
+	u16 HZnum;//汉字数目
+	u16 TypefaceNum;//一个字符所占字节大小
+	u16 x0=x;
+	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
+	HZnum=sizeof(tfont32)/sizeof(typFNT_GB32);	//统计汉字数目
+	for(k=0;k<HZnum;k++) 
+	{
+		if ((tfont32[k].Index[0]==*(s))&&(tfont32[k].Index[1]==*(s+1)))
+		{ 	
+			LCD_Address_Set_DMA(x,y,x+sizey-1,y+sizey-1);
+			for(i=0;i<TypefaceNum;i++)
+			{
+				for(j=0;j<8;j++)
+				{	
+					if(!mode)//非叠加方式
+					{
+						if(tfont32[k].Msk[i]&(0x01<<j))LCD_WR_DATA_DMA(fc);
+						else LCD_WR_DATA_DMA(bc);
+						m++;
+						if(m%sizey==0)
+						{
+							m=0;
+							break;
+						}
+					}
+					else//叠加方式
+					{
+						if(tfont32[k].Msk[i]&(0x01<<j))	LCD_DrawPoint_DMA(x,y,fc);//画一个点
+						x++;
+						if((x-x0)==sizey)
+						{
+							x=x0;
+							y++;
+							break;
+						}
+					}
+				}
+			}
+		}				  	
+		continue;  //查找到对应点阵字库立即退出，防止多个汉字重复取模带来影响
+	}
 }
 
-/**
- * @brief  设置DMA传输完成回调函数
- * @param  callback: 回调函数指针
- * @retval None
- */
-void LCD_DMA_SetCallback(LCD_DMA_Callback_t callback)
+
+/******************************************************************************
+      函数说明：显示单个字符
+      入口数据：x,y显示坐标
+                num 要显示的字符
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号
+                mode:  0非叠加模式  1叠加模式
+      返回值：  无
+******************************************************************************/
+void LCD_ShowChar_DMA(u16 x,u16 y,u8 num,u16 fc,u16 bc,u8 sizey,u8 mode)
 {
-    lcd_dma_handle.callback = callback;
+	u8 temp,sizex,t,m=0;
+	u16 i,TypefaceNum;//一个字符所占字节大小
+	u16 x0=x;
+	sizex=sizey/2;
+	TypefaceNum=(sizex/8+((sizex%8)?1:0))*sizey;
+	num=num-' ';    //得到偏移后的值
+	LCD_Address_Set_DMA(x,y,x+sizex-1,y+sizey-1);  //设置光标位置 
+	for(i=0;i<TypefaceNum;i++)
+	{ 
+		if(sizey==12)temp=ascii_1206[num][i];		       //调用6x12字体
+		else if(sizey==16)temp=ascii_1608[num][i];		 //调用8x16字体
+		else if(sizey==24)temp=ascii_2412[num][i];		 //调用12x24字体
+		else if(sizey==32)temp=ascii_3216[num][i];		 //调用16x32字体
+		else return;
+		for(t=0;t<8;t++)
+		{
+			if(!mode)//非叠加模式
+			{
+				if(temp&(0x01<<t))LCD_WR_DATA_DMA(fc);
+				else LCD_WR_DATA_DMA(bc);
+				m++;
+				if(m%sizex==0)
+				{
+					m=0;
+					break;
+				}
+			}
+			else//叠加模式
+			{
+				if(temp&(0x01<<t))LCD_DrawPoint_DMA(x,y,fc);//画一个点
+				x++;
+				if((x-x0)==sizex)
+				{
+					x=x0;
+					y++;
+					break;
+				}
+			}
+		}
+	}   	 	  
 }
 
-/**
- * @brief  等待DMA传输完成
- * @param  timeout_ms: 超时时间（毫秒）
- * @retval HAL_StatusTypeDef
- */
-HAL_StatusTypeDef LCD_DMA_WaitForComplete(uint32_t timeout_ms)
-{
-    uint32_t start_tick = HAL_GetTick();
-    
-    while(lcd_dma_handle.state == LCD_DMA_BUSY)
-    {
-        if(HAL_GetTick() - start_tick > timeout_ms)
-        {
-            return HAL_TIMEOUT;
-        }
-    }
-    
-    if(lcd_dma_handle.state == LCD_DMA_ERROR)
-    {
-        return HAL_ERROR;
-    }
-    
-    return HAL_OK;
+
+/******************************************************************************
+      函数说明：显示字符串
+      入口数据：x,y显示坐标
+                *p 要显示的字符串
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号
+                mode:  0非叠加模式  1叠加模式
+      返回值：  无
+******************************************************************************/
+void LCD_ShowString_DMA(u16 x,u16 y,const u8 *p,u16 fc,u16 bc,u8 sizey,u8 mode)
+{         
+	while(*p!='\0')
+	{       
+		LCD_ShowChar_DMA(x,y,*p,fc,bc,sizey,mode);
+		x+=sizey/2;
+		p++;
+	}  
 }
 
-/**
- * @brief  SPI DMA传输完成回调函数
- * @param  hspi: SPI句柄
- * @retval None
- */
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+
+/******************************************************************************
+      函数说明：显示数字
+      入口数据：m底数，n指数
+      返回值：  无
+******************************************************************************/
+u32 mypow_DMA(u8 m,u8 n)
 {
-    if(hspi->Instance == SPI2)
-    {
-        dma_transfer_complete = 1;
-        lcd_dma_handle.state = LCD_DMA_COMPLETE;
-        
-        // 调用用户回调函数
-        if(lcd_dma_handle.callback != NULL)
-        {
-            lcd_dma_handle.callback();
-            lcd_dma_handle.callback = NULL;
-        }
-    }
+	u32 result=1;	 
+	while(n--)result*=m;
+	return result;
 }
 
-/**
- * @brief  SPI DMA传输错误回调函数
- * @param  hspi: SPI句柄
- * @retval None
- */
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
-{
-    if(hspi->Instance == SPI2)
-    {
-        dma_transfer_complete = 1;
-        lcd_dma_handle.state = LCD_DMA_ERROR;
-        
-        // 错误处理
-        if(lcd_dma_handle.callback != NULL)
-        {
-            lcd_dma_handle.callback();
-            lcd_dma_handle.callback = NULL;
-        }
-    }
+
+/******************************************************************************
+      函数说明：显示整数变量
+      入口数据：x,y显示坐标
+                num 要显示整数变量
+                len 要显示的位数
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号
+      返回值：  无
+******************************************************************************/
+void LCD_ShowIntNum_DMA(u16 x,u16 y,u16 num,u8 len,u16 fc,u16 bc,u8 sizey)
+{         	
+	u8 t,temp;
+	u8 enshow=0;
+	u8 sizex=sizey/2;
+	for(t=0;t<len;t++)
+	{
+		temp=(num/mypow_DMA(10,len-t-1))%10;
+		if(enshow==0&&t<(len-1))
+		{
+			if(temp==0)
+			{
+				LCD_ShowChar_DMA(x+t*sizex,y,' ',fc,bc,sizey,0);
+				continue;
+			}else enshow=1; 
+		 	 
+		}
+	 	LCD_ShowChar_DMA(x+t*sizex,y,temp+48,fc,bc,sizey,0);
+	}
+} 
+
+
+/******************************************************************************
+      函数说明：显示两位小数变量
+      入口数据：x,y显示坐标
+                num 要显示小数变量
+                len 要显示的位数
+                fc 字的颜色
+                bc 字的背景色
+                sizey 字号
+      返回值：  无
+******************************************************************************/
+void LCD_ShowFloatNum1_DMA(u16 x,u16 y,float num,u8 len,u16 fc,u16 bc,u8 sizey)
+{         	
+	u8 t,temp,sizex;
+	u16 num1;
+	sizex=sizey/2;
+	num1=num*100;
+	for(t=0;t<len;t++)
+	{
+		temp=(num1/mypow_DMA(10,len-t-1))%10;
+		if(t==(len-2))
+		{
+			LCD_ShowChar_DMA(x+(len-2)*sizex,y,'.',fc,bc,sizey,0);
+			t++;
+			len+=1;
+		}
+	 	LCD_ShowChar_DMA(x+t*sizex,y,temp+48,fc,bc,sizey,0);
+	}
 }
+
+
+/******************************************************************************
+      函数说明：显示图片
+      入口数据：x,y起点坐标
+                length 图片长度
+                width  图片宽度
+                pic[]  图片数组    
+      返回值：  无
+******************************************************************************/
+void LCD_ShowPicture_DMA(u16 x,u16 y,u16 length,u16 width,const u8 pic[])
+{
+	u16 i,j;
+	u32 k=0;
+	LCD_Address_Set_DMA(x,y,x+length-1,y+width-1);
+	for(i=0;i<length;i++)
+	{
+		for(j=0;j<width;j++)
+		{
+			LCD_WR_DATA8_DMA(pic[k*2]);
+			LCD_WR_DATA8_DMA(pic[k*2+1]);
+			k++;
+		}
+	}			
+}
+
+

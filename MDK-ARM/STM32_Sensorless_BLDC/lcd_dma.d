@@ -1,5 +1,5 @@
 stm32_sensorless_bldc\lcd_dma.o: ..\Bsp\lcd_dma.c
-stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd_dma.h
+stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcdfont.h
 stm32_sensorless_bldc\lcd_dma.o: ../Core/Inc/main.h
 stm32_sensorless_bldc\lcd_dma.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 stm32_sensorless_bldc\lcd_dma.o: ../Core/Inc/stm32f4xx_hal_conf.h
@@ -166,8 +166,9 @@ stm32_sensorless_bldc\lcd_dma.o: ../LVGL/src/extra/widgets/colorwheel/lv_colorwh
 stm32_sensorless_bldc\lcd_dma.o: ../LVGL/src/extra/widgets/led/lv_led.h
 stm32_sensorless_bldc\lcd_dma.o: ../LVGL/src/extra/widgets/imgbtn/lv_imgbtn.h
 stm32_sensorless_bldc\lcd_dma.o: ../LVGL/src/extra/widgets/span/lv_span.h
-stm32_sensorless_bldc\lcd_dma.o: ../Core/Inc/spi.h
-stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd.h
 stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_indev.h
-stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd_init.h
+stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd_dma.h
+stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_disp.h
+stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_indev.h
+stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd_init_dma.h
