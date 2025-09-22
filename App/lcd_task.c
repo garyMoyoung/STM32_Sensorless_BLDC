@@ -20,7 +20,6 @@
 void LcdTask_Entry(void const * argument)
 {
     LCD_Init();
-    LCD_DMA_Init();
     // LCD_Fill(0,0,LCD_W, LCD_H,BLACK);
 	lv_init();                             // LVGL 初始化
 	lv_port_disp_init();                   // 注册LVGL的显示任务
