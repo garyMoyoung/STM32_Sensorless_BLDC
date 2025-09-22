@@ -40,3 +40,12 @@ stm32_sensorless_bldc\lcd_init.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_
 stm32_sensorless_bldc\lcd_init.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\lcd_init.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 stm32_sensorless_bldc\lcd_init.o: ../Core/Inc/spi.h
+stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+stm32_sensorless_bldc\lcd_init.o: ../Core/Inc/FreeRTOSConfig.h
+stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h

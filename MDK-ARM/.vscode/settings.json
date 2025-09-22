@@ -7,6 +7,7 @@
         "lcd.h": "c",
         "as5600.h": "c",
         "lvgl.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "lcd_task.h": "c"
     }
 }

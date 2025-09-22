@@ -61,3 +61,4 @@ stm32_sensorless_bldc\lv_refr.o: ..\LVGL\src\core\lv_theme.h
 stm32_sensorless_bldc\lv_refr.o: ..\LVGL\src\core\../misc/lv_gc.h
 stm32_sensorless_bldc\lv_refr.o: ..\LVGL\src\core\../font/lv_font_fmt_txt.h
 stm32_sensorless_bldc\lv_refr.o: ..\LVGL\src\core\../extra/others/snapshot/lv_snapshot.h
+stm32_sensorless_bldc\lv_refr.o: ..\LVGL\src\core\../widgets/lv_label.h

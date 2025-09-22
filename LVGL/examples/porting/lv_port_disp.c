@@ -174,7 +174,7 @@ static void disp_flush(lv_disp_drv_t * disp_drv,const lv_area_t * area, lv_color
         //     // 如果DMA失败，使用备用方法
         //     LCD_LVGL_Color_Fill(area->x1, area->y1, area->x2, area->y2, color_p);
         // }
-		LCD_LVGL_Color_Fill(area->x1, area->y1, area->x2, area->y2, color_p);
+		LCD_LVGL_Color_Fill_DMA(area->x1, area->y1, area->x2, area->y2, color_p);
 //       int32_t x;
 //       int32_t y;
 //       for(y = area->y1; y <= area->y2; y++) {
