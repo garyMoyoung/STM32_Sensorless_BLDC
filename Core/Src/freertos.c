@@ -44,14 +44,14 @@
 osThreadId_t LcdTaskHandle;
 const osThreadAttr_t Lcd_task_attributes = {
   .name = "LcdTask",
-  .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 1024 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 osThreadId_t LvglTimerTaskHandle;
 const osThreadAttr_t LvglTimer_task_attributes = {
   .name = "LvglTimerTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* USER CODE END PM */
 

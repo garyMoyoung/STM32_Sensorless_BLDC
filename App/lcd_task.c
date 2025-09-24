@@ -9,6 +9,7 @@
 #include "lv_port_disp.h"        // LVGL的显示支持
 #include "lv_port_indev.h"       // LVGL的触屏支持
 #include "lcd_dma.h"
+
 /* USER CODE BEGIN Header_LcdTask_Entry */
 /**
 * @brief Function show the informations of five-bar
@@ -17,6 +18,7 @@
 */
 /* USER CODE END Header_LcdTask_Entry */
 
+
 void LcdTask_Entry(void const * argument)
 {
     LCD_Init_DMA();
@@ -24,25 +26,32 @@ void LcdTask_Entry(void const * argument)
 	lv_init();                             // LVGL 初始化
 	lv_port_disp_init();                   // 注册LVGL的显示任务
 
-        // 按钮
-    lv_obj_t *myBtn = lv_btn_create(lv_scr_act());                               // 创建按钮; 父对象：当前活动屏幕
-    lv_obj_set_pos(myBtn, 10, 10);                                               // 设置坐标
-    lv_obj_set_size(myBtn, 120, 50);                                             // 设置大小
-   
-    // 按钮上的文本
-    lv_obj_t *label_btn = lv_label_create(myBtn);                                // 创建文本标签，父对象：上面的btn按钮
-    lv_obj_align(label_btn, LV_ALIGN_CENTER, 60, 25);                              // 对齐于：父对象
-    lv_label_set_text(label_btn, "BCS");                                        // 设置标签的文本
- 
-    // 独立的标签
-	lv_obj_t *myLabel = lv_label_create(lv_scr_act());                           // 创建文本标签; 父对象：当前活动屏幕
-	lv_label_set_text(myLabel, "Hello world!");                                  // 设置标签的文本
-	lv_obj_align(myLabel, LV_ALIGN_CENTER, 140, 80);                                // 对齐于：父对象
-	lv_obj_align_to(myBtn, myLabel, LV_ALIGN_OUT_TOP_MID, 140, 80);               // 对齐于：某对象
+   // 创建一个按钮
+   lv_obj_t *btn = lv_btn_create(lv_scr_act());
+   lv_obj_set_size(btn, 100, 40);
+   lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, 20);
+
+   lv_obj_t *btn_label = lv_label_create(btn);
+   lv_label_set_text(btn_label, "Click Me");
+   lv_obj_center(btn_label);
+
+   // 创建一个标签
+   lv_obj_t *hello_label = lv_label_create(lv_scr_act());
+   lv_label_set_text(hello_label, "Hello LVGL!");
+   lv_obj_align(hello_label, LV_ALIGN_TOP_MID, 0, 70);
+
+    // anim_btn = lv_btn_create(lv_scr_act());
+    // lv_obj_set_size(anim_btn, 80, 40);
+    // lv_obj_align(anim_btn, LV_ALIGN_TOP_LEFT, 0, 40);
+
+    // lv_obj_t *btn_label = lv_label_create(anim_btn);
+    // lv_label_set_text(btn_label, "动画按钮");
+    // lv_obj_center(btn_label);
+
     for(;;)
     {
-		
-        osDelay(1);
+
+        osDelay(10);
     }
 }
 
