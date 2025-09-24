@@ -1753,6 +1753,16 @@
               <FileType>5</FileType>
               <FilePath>..\Bsp\inc\lcd_dma.h</FilePath>
             </File>
+            <File>
+              <FileName>lcd_init_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\lcd_init_dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_init_dma.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\lcd_init_dma.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
