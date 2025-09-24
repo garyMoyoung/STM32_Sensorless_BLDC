@@ -185,7 +185,3 @@ stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/pic.h
 stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_indev.h
-stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/lcd_dma.h
-stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_disp.h
-stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_indev.h
-stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/lcdfont.h

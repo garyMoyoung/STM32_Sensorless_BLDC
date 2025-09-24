@@ -13,7 +13,7 @@
 #include <stdbool.h>
 #include "lcd_init.h"
 #include "lcd.h"
-#include "lcd_dma.h"
+
 /*********************
  *      DEFINES
  *********************/

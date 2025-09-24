@@ -1743,26 +1743,6 @@
               <FileType>5</FileType>
               <FilePath>..\Bsp\inc\MPU9250-DMP.h</FilePath>
             </File>
-            <File>
-              <FileName>lcd_dma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Bsp\lcd_dma.c</FilePath>
-            </File>
-            <File>
-              <FileName>lcd_dma.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Bsp\inc\lcd_dma.h</FilePath>
-            </File>
-            <File>
-              <FileName>lcd_init_dma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Bsp\lcd_init_dma.c</FilePath>
-            </File>
-            <File>
-              <FileName>lcd_init_dma.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Bsp\inc\lcd_init_dma.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -1832,6 +1812,16 @@
               <FileName>lcd_task.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\App\inc\lcd_task.h</FilePath>
+            </File>
+            <File>
+              <FileName>IMU_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\IMU_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>IMU_task.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\App\inc\IMU_task.h</FilePath>
             </File>
           </Files>
         </Group>

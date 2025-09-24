@@ -202,7 +202,3 @@ stm32_sensorless_bldc\main.o: ../Algorithm/util/stm32_mpu9250_i2c.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/Algorithmic.h
 stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_indev.h
-stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd_dma.h
-stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_disp.h
-stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_indev.h
-stm32_sensorless_bldc\main.o: ../Bsp/inc/lcdfont.h

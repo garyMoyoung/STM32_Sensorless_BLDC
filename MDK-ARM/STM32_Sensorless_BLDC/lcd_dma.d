@@ -171,4 +171,7 @@ stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_indev.h
 stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd_dma.h
 stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_indev.h
-stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd_init_dma.h
+stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd.h
+stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_disp.h
+stm32_sensorless_bldc\lcd_dma.o: ../LVGL/examples/porting/lv_port_indev.h
+stm32_sensorless_bldc\lcd_dma.o: ../Bsp/inc/lcd_init.h
