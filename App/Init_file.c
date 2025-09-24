@@ -1,0 +1,41 @@
+#include "lcd_task.h"
+#include "main.h"
+#include "lvgl.h"                // 它为整个LVGL提供了更完整的头文件引用
+#include "lv_port_disp.h"        // LVGL的显示支持
+#include "lv_port_indev.h"       // LVGL的触屏支持
+#include "cmsis_os.h"
+#include "IMU_task.h"
+#include "MPU9250-DMP.h"
+#include "MPU9250_RegisterMap.h"
+#include "math.h"
+#include "inv_mpu_dmp_motion_driver.h"
+#include "inv_mpu.h"
+#include "stdio.h"
+
+void Init_All(void)
+{
+	__disable_irq();
+	
+
+	/*MPU9250 BEGIN*/
+    if (MPU9250_begin() != INV_SUCCESS) 
+    {
+        printf("Unable to initialize MPU9250\n");
+        // return -1;
+    }
+    // 启用DMP特�?�和设置FIFO采样�????????
+    unsigned short dmpFeatures = DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
+    if (MPU9250_dmpBegin(dmpFeatures, 100) != INV_SUCCESS)  // 100Hz FIFO rate
+    {
+        printf("Failed to initialize DMP\n");
+        // return -1;
+    }
+    // 启用中断，这样每当有新数据可读时，MPU9250会�?�知MCU
+    if (MPU9250_enableInterrupt(1) != INV_SUCCESS) 
+    {
+        printf("Failed to enable interrupts\n");
+        // return -1;
+    }
+    /*MPU9250 END*/
+	__enable_irq();
+}

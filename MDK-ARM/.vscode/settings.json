@@ -8,6 +8,7 @@
         "as5600.h": "c",
         "lvgl.h": "c",
         "string.h": "c",
-        "lcd_task.h": "c"
+        "lcd_task.h": "c",
+        "mpu9250_registermap.h": "c"
     }
 }

@@ -5,7 +5,7 @@
 
 
 
-
+void IMU9250Task_Entry(void const * argument);
 
 
 

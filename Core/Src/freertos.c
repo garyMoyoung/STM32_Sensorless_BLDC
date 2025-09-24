@@ -26,7 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lcd_task.h"
-
+#include "IMU_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +57,7 @@ osThreadId_t IMU9250TaskHandle;
 const osThreadAttr_t IMU9250_task_attributes = {
   .name = "IMU9250Task",
   .stack_size = 1024 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE END PM */
 
@@ -117,7 +117,7 @@ void MX_FREERTOS_Init(void) {
   /* add threads, ... */
   LcdTaskHandle = osThreadNew(LcdTask_Entry,NULL,&Lcd_task_attributes);
   LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, NULL, &LvglTimer_task_attributes);
-  // IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
+  IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

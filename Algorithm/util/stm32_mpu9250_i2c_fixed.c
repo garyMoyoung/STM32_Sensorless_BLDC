@@ -2,7 +2,7 @@
 #include "stm32_mpu9250_i2c_fixed.h"
 #include "i2c.h"
 
-extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c3;
 
 static void delay_us(uint32_t us)
 {
@@ -27,7 +27,7 @@ int stm32_i2c_write(unsigned char slave_addr, unsigned char reg_addr,
         buffer[i + 1] = data[i];
     }
     
-    status = HAL_I2C_Master_Transmit(&hi2c1, slave_addr << 1, buffer, length + 1, 1000);
+    status = HAL_I2C_Master_Transmit(&hi2c3, slave_addr << 1, buffer, length + 1, 1000);
     
     if(status != HAL_OK)
     {
@@ -43,7 +43,7 @@ int stm32_i2c_read(unsigned char slave_addr, unsigned char reg_addr,
     HAL_StatusTypeDef status;
     
     // Write register address
-    status = HAL_I2C_Master_Transmit(&hi2c1, slave_addr << 1, &reg_addr, 1, 1000);
+    status = HAL_I2C_Master_Transmit(&hi2c3, slave_addr << 1, &reg_addr, 1, 1000);
     if(status != HAL_OK)
     {
         return -1;
@@ -52,7 +52,7 @@ int stm32_i2c_read(unsigned char slave_addr, unsigned char reg_addr,
     delay_us(10);
     
     // Read data
-    status = HAL_I2C_Master_Receive(&hi2c1, slave_addr << 1, data, length, 1000);
+    status = HAL_I2C_Master_Receive(&hi2c3, slave_addr << 1, data, length, 1000);
     if(status != HAL_OK)
     {
         return -1;
