@@ -39,6 +39,58 @@ extern "C" {
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint8_t u8;
+typedef struct
+{
+    float Uq;
+    float Ud;
+}Udq_Struct;
+typedef struct
+{
+    float U_alpha;
+    float U_beta;
+}Ualpbe_Struct;
+typedef struct
+{
+    float Ia;
+    float Ib;
+    float Ic;
+}Iabc_Struct;
+typedef struct
+{
+    float I_alpha;
+    float I_beta; 
+}Ialpbe_Struct;
+typedef struct
+{
+    float Id;
+    float Iq;
+}Iqd_Struct;
+typedef struct
+{
+    int sector;
+    float U1;
+    float U2;
+    float U3;  
+
+    float Ux;
+    float Uy;
+    float Uz;
+
+    float ta;
+    float tb;
+    float tc;
+
+    float Ts;   
+    float t0;
+    float t1;
+    float t2;
+    float t3;
+    float t4;
+    float t5;
+    float t6;
+    float t7;
+}SVPWM_Struct;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -48,6 +100,7 @@ typedef uint8_t u8;
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+
 
 /* USER CODE END EM */
 

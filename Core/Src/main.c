@@ -71,11 +71,64 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+// float Init_Iabc[3] , Iabc[3];//predict
+Udq_Struct Udq_M0;
+Ualpbe_Struct Ualpbe_M0;
+Iabc_Struct Iabc_M0;
+Ialpbe_Struct Ialpbe_M0;
+Ialpbe_Struct Ialpbe_M0_last;
+Iqd_Struct Iqd_M0;
+SVPWM_Struct SVPWM_M0;
 
+uint16_t ucAdc[3];
+uint8_t Flag;
+float Udq[2] = {0 , 10};
+float Uab[2];
+float Iab[2] , Iab_Last[2];
+float Idq[2];
+double sincos[2];
+uint32_t CNT;
+uint16_t Counter;
+
+float I_Target[2] = {0 , 0.55};
+float C_Kp=0.7535 , C_Ki=0.000475;
+float Speed , Speed_sum , Speed_New;
+float Iq_sum;
+uint16_t Speed_Target = 1000;
+float S_Kp = 0.0125, S_Ki = 0.00028 , S_Kd = 0.021;
+const float fc = 5000;
+const float Ts = 0.00005;
+float b = 2*3.1415926f*fc*Ts;
+float a=0.1556;//b/(b+1)
+uint8_t SpeedLoopCounter;
+float We;
+float R = 0.6 , Ld = 0.000558 , Lq = 0.000558 , T = 0.0007255 , flux = 0.005753;
+float Iab_fore_New[2] , Iab_fore_Last[2];
+float h = 2.5 , Vab[2] , Vab_Filter[2];
+float Eab[2];
+
+float Vab_alpha = 0.286;
+
+
+float Theta_fore_New , Theta_fore_Last , We_fore;
+float PLL_Kp =0.034 , PLL_Ki= 2.12;
+
+float Alpha;
+
+uint16_t CCNNTT;
+uint16_t Start_Flag = 1, Start_CNT = 0;
 /* USER CODE END PV */
+
+
+
+
+void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
+/* USER CODE BEGIN PFP */
 
 /* Private function prototypes -----------------------------------------------*/
 /* ------------------通过重定向将printf函数映射到串口1上-------------------*/
+
 #if !defined(__MICROLIB)
 
 //#pragma import(__use_no_semihosting)
@@ -109,11 +162,6 @@ PUTCHAR_PROTOTYPE
 	HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
     return ch;
 }
-
-void SystemClock_Config(void);
-void MX_FREERTOS_Init(void);
-/* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/

@@ -33,14 +33,14 @@ void IMU9250Task_Entry(void const * argument)
         printf("Unable to initialize MPU9250\n");
         // return -1;
     }
-    // 启用DMP特�?�和设置FIFO采样�????????
+
     unsigned short dmpFeatures = DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL;
     if (MPU9250_dmpBegin(dmpFeatures, 100) != INV_SUCCESS)  // 100Hz FIFO rate
     {
         printf("Failed to initialize DMP\n");
         // return -1;
     }
-    // 启用中断，这样每当有新数据可读时，MPU9250会�?�知MCU
+
     if (MPU9250_enableInterrupt(1) != INV_SUCCESS) 
     {
         printf("Failed to enable interrupts\n");
@@ -54,12 +54,10 @@ void IMU9250Task_Entry(void const * argument)
         // printf("get in IMU9250Task_Entry\r\n");
         if (MPU9250_dataReady())
         {
-            // 读取DMP FIFO并更新四元数、加速度、陀螺仪
+
             if (MPU9250_dmpUpdateFifo() == INV_SUCCESS)
             {
-                // 读取磁力计
                 MPU9250_updateCompass();
-                // 计算欧拉角（pitch_inside, roll_inside, yaw_inside)
                 MPU9250_computeEulerAnglesWithMag(true);
                 printf("Pitch:Roll:Yaw:%.4f,%.4f,%.4f\n", 
                     pitch_inside, roll_inside, yaw_inside);

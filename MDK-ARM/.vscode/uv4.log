@@ -1,13 +1,23 @@
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
-compiling lcd_init.c...
-..\Bsp\lcd_init.c(141): warning:  #223-D: function "vTaskDelay" declared implicitly
-  	vTaskDelay(100);
-..\Bsp\lcd_init.c(331): warning:  #223-D: function "vTaskDelay" declared implicitly
-  	vTaskDelay(100);
-..\Bsp\lcd_init.c: 2 warnings, 0 errors
+compiling IMU_task.c...
+../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
+  int MPU9250_DMP();
+../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
+  
+ool MPU9250_dataReady();
+..\App\IMU_task.c: 2 warnings, 0 errors
+compiling Init_file.c...
+../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
+  int MPU9250_DMP();
+../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
+  
+ool MPU9250_dataReady();
+..\App\Init_file.c(41): warning:  #1-D: last line of file ends without a newline
+  }
+..\App\Init_file.c: 3 warnings, 0 errors
 linking...
-Program Size: Code=22448 RO-data=15220 RW-data=224 ZI-data=45328  
+Program Size: Code=176492 RO-data=22448 RW-data=840 ZI-data=107852  
 FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 2 Warning(s).
-Build Time Elapsed:  00:00:07
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 5 Warning(s).
+Build Time Elapsed:  00:00:13
