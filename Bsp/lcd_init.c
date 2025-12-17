@@ -44,7 +44,7 @@ void LCD_GPIO_Init(void)
 void LCD_Writ_Bus(u8 dat) 
 {	
 	LCD_CS_Clr();
-	HAL_SPI_Transmit(&hspi2,&dat,1, 1000);  
+	HAL_SPI_Transmit(&hspi1,&dat,1, 1000);  
 	LCD_CS_Set();	
 }
 
@@ -231,8 +231,8 @@ void LCD_Init(void)
 void LCD_WriteData_DMA(uint8_t* pData, uint16_t Size)
 {
     LCD_CS_Clr();
-    HAL_SPI_Transmit_DMA(&hspi2, pData, Size);
-    while(HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY){}
+    HAL_SPI_Transmit_DMA(&hspi1, pData, Size);
+    while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY){}
     LCD_CS_Set();
 }
 

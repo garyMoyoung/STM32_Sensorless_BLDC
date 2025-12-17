@@ -119,9 +119,7 @@ uint16_t CCNNTT;
 uint16_t Start_Flag = 1, Start_CNT = 0;
 /* USER CODE END PV */
 
-
-
-
+/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */

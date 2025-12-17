@@ -67,3 +67,4 @@ void IMU9250Task_Entry(void const * argument)
     }
     /* USER CODE END IMU9250Task_Entry */
 }
+
