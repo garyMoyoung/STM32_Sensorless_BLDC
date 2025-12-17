@@ -21,12 +21,119 @@ Target DLL:      CMSIS_AGDI.dll V1.33.18.0
 Dialog DLL:      TCM.DLL V1.56.4.0
  
 <h2>Project:</h2>
-d:\2025\STM32_project\STM32_Sensorless_BLDC\MDK-ARM\STM32_Sensorless_BLDC.uvprojx
+D:\2025\STM32_project\STM32_Sensorless_BLDC\MDK-ARM\STM32_Sensorless_BLDC.uvprojx
 Project File Date:  09/24/2025
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
+compiling spi.c...
+compiling main.c...
+../Bsp/inc/AS5600.h(35): warning:  #1295-D: Deprecated declaration AS5600_GetVelocity - give arg types
+  float AS5600_GetVelocity();
+../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
+  int MPU9250_DMP();
+../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
+  
+ool MPU9250_dataReady();
+../Algorithm/util/stm32_mpu9250_clk.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_CLK_H_
+../Algorithm/util/stm32_mpu9250_i2c.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_I2C_H_
+../Core/Src/main.c: 5 warnings, 0 errors
+compiling can.c...
+compiling tim.c...
+compiling stm32f4xx_it.c...
+compiling stm32f4xx_hal_msp.c...
+compiling gpio.c...
+compiling i2c.c...
+compiling adc.c...
+compiling usart.c...
+compiling freertos.c...
+../Core/Src/freertos.c(118): warning:  #167-D: argument of type "void (*)(const void *)" is incompatible with parameter of type "osThreadFunc_t"
+    LcdTaskHandle = osThreadNew(LcdTask_Entry,
+ULL,&Lcd_task_attributes);
+../Core/Src/freertos.c(119): warning:  #167-D: argument of type "void (*)(const void *)" is incompatible with parameter of type "osThreadFunc_t"
+    LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, 
+ULL, &LvglTimer_task_attributes);
+../Core/Src/freertos.c(120): warning:  #167-D: argument of type "void (*)(const void *)" is incompatible with parameter of type "osThreadFunc_t"
+    IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, 
+ULL, &IMU9250_task_attributes);
+../Core/Src/freertos.c(167): warning:  #223-D: function "lv_timer_handler" declared implicitly
+      lv_timer_handler();
+../Core/Src/freertos.c: 4 warnings, 0 errors
+compiling lv_port_disp.c...
+..\LVGL\examples\porting\lv_port_disp.c(21): warning:  #1215-D: #warning directive: Please define or replace the macro MY_DISP_HOR_RES with the actual screen width, default value 320 is used for now.
+      #warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen width, default value 320 is used for now.
+..\LVGL\examples\porting\lv_port_disp.c(26): warning:  #1215-D: #warning directive: Please define or replace the macro MY_DISP_HOR_RES with the actual screen height, default value 240 is used for now.
+      #warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen height, default value 240 is used for now.
+..\LVGL\examples\porting\lv_port_disp.c: 2 warnings, 0 errors
+compiling dma.c...
+compiling Algorithmic.c...
+compiling AS5600.c...
+../Bsp/inc/AS5600.h(35): warning:  #1295-D: Deprecated declaration AS5600_GetVelocity - give arg types
+  float AS5600_GetVelocity();
+..\Bsp\AS5600.c(33): warning:  #68-D: integer conversion resulted in a change of sign
+  sta = HAL_I2C_Master_Transmit(&hi2c1, dev_addr, data, size, -1);
+..\Bsp\AS5600.c(40): warning:  #68-D: integer conversion resulted in a change of sign
+  sta = HAL_I2C_Master_Receive(&hi2c1, (dev_addr | 1), data, size, -1);
+..\Bsp\AS5600.c(103): warning:  #1-D: last line of file ends without a newline
+    }
+..\Bsp\AS5600.c: 4 warnings, 0 errors
+compiling stm32_mpu9250_clk.c...
+..\Algorithm\util\stm32_mpu9250_clk.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_CLK_H_
+..\Algorithm\util\stm32_mpu9250_clk.c(13): warning:  #1-D: last line of file ends without a newline
+  }
+..\Algorithm\util\stm32_mpu9250_clk.c: 2 warnings, 0 errors
+compiling stm32_mpu9250_i2c_fixed.c...
+..\Algorithm\util\stm32_mpu9250_i2c_fixed.h(13): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_I2C_H_
+..\Algorithm\util\stm32_mpu9250_i2c_fixed.c(72): warning:  #1-D: last line of file ends without a newline
+  }
+..\Algorithm\util\stm32_mpu9250_i2c_fixed.c(65): warning:  #177-D: function "delay_ms"  was declared but never referenced
+  static void delay_ms(uint32_t ms)
+..\Algorithm\util\stm32_mpu9250_i2c_fixed.c: 3 warnings, 0 errors
+compiling inv_mpu_dmp_motion_driver.c...
+..\Algorithm\util\stm32_mpu9250_i2c.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_I2C_H_
+..\Algorithm\util\stm32_mpu9250_clk.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_CLK_H_
+..\Algorithm\util\inv_mpu_dmp_motion_driver.c: 2 warnings, 0 errors
+compiling MPU9250-DMP.c...
+../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
+  int MPU9250_DMP();
+../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
+  
+ool MPU9250_dataReady();
+../Algorithm/util/stm32_mpu9250_clk.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_CLK_H_
+../Algorithm/util/stm32_mpu9250_i2c.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_I2C_H_
+..\Bsp\MPU9250-DMP.c(67): warning:  #223-D: function "printf" declared implicitly
+  	printf("MPU9250 init result: %d\n", result);
+..\Bsp\MPU9250-DMP.c(679): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if (pitch_inside < 0) pitch_inside = 360.0 + pitch_inside;
+..\Bsp\MPU9250-DMP.c(680): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if (roll_inside < 0) roll_inside = 360.0 + roll_inside;
+..\Bsp\MPU9250-DMP.c(681): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		if (yaw_inside < 0) yaw_inside = 360.0 + yaw_inside;
+..\Bsp\MPU9250-DMP.c(692): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  	if (heading > 
+I) heading -= (2 * PI);
+..\Bsp\MPU9250-DMP.c(763): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          pitch = pitch * 
+I / 180.0f;
+..\Bsp\MPU9250-DMP.c(764): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          roll = roll * 
+I / 180.0f;
+..\Bsp\MPU9250-DMP.c(778): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          if (pitch_inside < 0) pitch_inside += 360.0;
+..\Bsp\MPU9250-DMP.c(779): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          if (roll_inside < 0) roll_inside += 360.0;
+..\Bsp\MPU9250-DMP.c(780): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+          if (yaw_inside < 0) yaw_inside += 360.0;
+..\Bsp\MPU9250-DMP.c: 14 warnings, 0 errors
 compiling IMU_task.c...
 ../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
   int MPU9250_DMP();
@@ -34,6 +141,14 @@ compiling IMU_task.c...
   
 ool MPU9250_dataReady();
 ..\App\IMU_task.c: 2 warnings, 0 errors
+compiling lcd_init.c...
+compiling inv_mpu.c...
+..\Algorithm\util\stm32_mpu9250_i2c.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_I2C_H_
+..\Algorithm\util\stm32_mpu9250_clk.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_CLK_H_
+..\Algorithm\util\inv_mpu.c: 2 warnings, 0 errors
+compiling lcd_task.c...
 compiling Init_file.c...
 ../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
   int MPU9250_DMP();
@@ -43,10 +158,11 @@ ool MPU9250_dataReady();
 ..\App\Init_file.c(41): warning:  #1-D: last line of file ends without a newline
   }
 ..\App\Init_file.c: 3 warnings, 0 errors
+compiling lcd.c...
 linking...
 Program Size: Code=176492 RO-data=22448 RW-data=840 ZI-data=107852  
 FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 5 Warning(s).
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 43 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -69,7 +185,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@6.1.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:13
+Build Time Elapsed:  00:01:00
 </pre>
 </body>
 </html>
