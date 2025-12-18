@@ -1,8 +1,20 @@
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
-compiling lcd_task.c...
+compiling main.c...
+../Bsp/inc/AS5600.h(35): warning:  #1295-D: Deprecated declaration AS5600_GetVelocity - give arg types
+  float AS5600_GetVelocity();
+../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
+  int MPU9250_DMP();
+../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
+  
+ool MPU9250_dataReady();
+../Algorithm/util/stm32_mpu9250_clk.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_CLK_H_
+../Algorithm/util/stm32_mpu9250_i2c.h(11): warning:  #1-D: last line of file ends without a newline
+  #endif // _STM32_MPU9250_I2C_H_
+../Core/Src/main.c: 5 warnings, 0 errors
 linking...
-Program Size: Code=176628 RO-data=22448 RW-data=840 ZI-data=107948  
+Program Size: Code=181296 RO-data=22452 RW-data=876 ZI-data=108148  
 FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 0 Warning(s).
-Build Time Elapsed:  00:00:08
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 5 Warning(s).
+Build Time Elapsed:  00:00:10

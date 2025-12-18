@@ -203,3 +203,4 @@ stm32_sensorless_bldc\main.o: ../Bsp/inc/Algorithmic.h
 stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_indev.h
 stm32_sensorless_bldc\main.o: ../App/inc/init_file.h
+stm32_sensorless_bldc\main.o: ../Bsp/inc/foc_drv.h

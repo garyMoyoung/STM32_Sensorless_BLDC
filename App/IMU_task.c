@@ -59,8 +59,7 @@ void IMU9250Task_Entry(void const * argument)
             {
                 MPU9250_updateCompass();
                 MPU9250_computeEulerAnglesWithMag(true);
-                printf("Pitch:Roll:Yaw:%.4f,%.4f,%.4f\n", 
-                    pitch_inside, roll_inside, yaw_inside);
+                
             }
         }
         osDelay(1);

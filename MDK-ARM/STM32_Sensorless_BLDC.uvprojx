@@ -1743,6 +1743,16 @@
               <FileType>5</FileType>
               <FilePath>..\Bsp\inc\MPU9250-DMP.h</FilePath>
             </File>
+            <File>
+              <FileName>foc_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\foc_drv.c</FilePath>
+            </File>
+            <File>
+              <FileName>foc_drv.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\foc_drv.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

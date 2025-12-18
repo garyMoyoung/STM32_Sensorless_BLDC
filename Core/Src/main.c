@@ -51,6 +51,7 @@
 #include "lv_port_disp.h"        // LVGL的显示支持
 #include "lv_port_indev.h"       // LVGL的触屏支持
 #include "init_file.h"
+#include "foc_drv.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,6 +80,10 @@ Ialpbe_Struct Ialpbe_M0;
 Ialpbe_Struct Ialpbe_M0_last;
 Iqd_Struct Iqd_M0;
 SVPWM_Struct SVPWM_M0;
+float Udc = 12.6f;
+uint16_t ADC_Value[3] = {0};
+uint32_t ADC_buff[3] = {0};
+uint16_t ad_val_orig[3] = {0};
 
 uint16_t ucAdc[3];
 uint8_t Flag;
@@ -117,6 +122,9 @@ float Alpha;
 
 uint16_t CCNNTT;
 uint16_t Start_Flag = 1, Start_CNT = 0;
+
+extern float pitch_inside, roll_inside, yaw_inside;
+float angle = 0.0f;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -217,6 +225,26 @@ int main(void)
   MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   // Init_All();
+  __HAL_TIM_CLEAR_IT(&htim3,TIM_IT_UPDATE);
+  HAL_TIM_Base_Start_IT(&htim3);
+  __HAL_TIM_CLEAR_IT(&htim9,TIM_IT_UPDATE);
+  HAL_TIM_Base_Start_IT(&htim9);
+
+  HAL_ADCEx_InjectedStart(&hadc1);
+  __HAL_ADC_ENABLE_IT(&hadc1,ADC_IT_JEOC);
+  //HAL_ADC_Start_DMA(&hadc3,(uint32_t *)ADC_buff,15);
+  HAL_ADC_Start_IT(&hadc1);
+  HAL_ADC_Start_DMA(&hadc1,(uint32_t *)ADC_buff,12);
+  HAL_ADC_PollForConversion(&hadc1, 50);
+  HAL_ADC_Start(&hadc1);
+
+  HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
+
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
+  svpwm_init(&Udq_M0,0.0f,0.5f);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -286,6 +314,12 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void PWM_TIM2_Set(uint16_t pwm_a,uint16_t pwm_b,uint16_t pwm_c)
+{
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwm_a);//4
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);//2
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);//3
+}
 
 /* USER CODE END 4 */
 
@@ -300,7 +334,26 @@ void SystemClock_Config(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
+  if (htim->Instance == TIM9)
+  {
+    ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
+    ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
+    ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+    Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*2.0f;
+    Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*2.0f;
+    Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*2.0f;
 
+    angle += 0.01f;
+    if(angle > 6.2831853f) angle = 0.0f;
+    _normalizeAngle(angle*7.0f);
+    inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle*7.0f);
+    svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
+    SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
+    PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
+    printf("ta:tb:tc:ia:ib:ic:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n", 
+                    SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc,
+                    Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic);
+  }
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM5)
   {
