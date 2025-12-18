@@ -21,6 +21,13 @@ typedef struct {
     float K;  // 卡尔曼增益
     float x;  // 估计值
 } Kalman_Filter_t;
+void Idq_LPF_Filter(float*data);
+float LPF_Filter(float data);
+float Vab_LPF_Filter(float data);
+float We_Filter(float data);
+float Limit(float value,float lim);
+void SMO(void);
+void PLL_SMO(float*Vin);
 
 void ADC_Filter_Init(ADC_Filter_t *filter);
 uint16_t ADC_Moving_Average_Filter(ADC_Filter_t *filter, uint16_t new_value);
