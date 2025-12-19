@@ -343,7 +343,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-    if(++TIM9_100Hz_CNT >= 10) // 100Hz
+    if(++TIM9_100Hz_CNT >= 5) // 500Hz
     {
       TIM9_100Hz_CNT = 0;
       ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
@@ -358,7 +358,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       Mech_Angle = AS5600_GetOnceAngle(&AS5600);
       Mech_RPM = AS5600_GetVelocity_RPM(&AS5600);
 
-      angle += 0.01f;
+      angle += 0.08f;
       if(angle > 6.2831853f) angle = 0.0f;
       _normalizeAngle(angle*7.0f);
       inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle*7.0f);
@@ -369,9 +369,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       float pitch = pitch_inside;
       float roll = roll_inside;
       float yaw = yaw_inside;
-      printf("pitch:roll:yaw:ia:ib:ic:Ang:Rpm:Counter:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%lu\n", 
-                      pitch,roll,yaw,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic,
-                      Mech_Angle,Mech_RPM,imu_task_counter);
+      // printf("pitch:roll:yaw:ia:ib:ic:Ang:Rpm:Counter:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%lu\n", 
+      //                 pitch,roll,yaw,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic,
+      //                 Mech_Angle,Mech_RPM,imu_task_counter);
+      // printf("Ualpha:Ubeta:%.4f,%.4f\n",Ualpbe_M0.U_alpha,Ualpbe_M0.U_beta);
+      printf("ta:tb:tc:%.4f,%.4f,%.4f\n",SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc);
       osMutexRelease(imuDataMutexHandle);
     }
     
