@@ -1,13 +1,27 @@
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
-compiling Algorithmic.c...
-..\Bsp\Algorithmic.c(104): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  		Speed = We_fore*7.5/3.1416;
-..\Bsp\Algorithmic.c(144): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  	if(Theta_fore_New > 6.283)
-..\Bsp\Algorithmic.c: 2 warnings, 0 errors
+compiling freertos.c...
+../Core/Src/freertos.c(119): warning:  #167-D: argument of type "void (*)(const void *)" is incompatible with parameter of type "osThreadFunc_t"
+    LcdTaskHandle = osThreadNew(LcdTask_Entry,
+ULL,&Lcd_task_attributes);
+../Core/Src/freertos.c(120): warning:  #167-D: argument of type "void (*)(const void *)" is incompatible with parameter of type "osThreadFunc_t"
+    LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, 
+ULL, &LvglTimer_task_attributes);
+../Core/Src/freertos.c(121): warning:  #167-D: argument of type "void (*)(const void *)" is incompatible with parameter of type "osThreadFunc_t"
+    IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, 
+ULL, &IMU9250_task_attributes);
+../Core/Src/freertos.c(168): warning:  #223-D: function "lv_timer_handler" declared implicitly
+      lv_timer_handler();
+../Core/Src/freertos.c: 4 warnings, 0 errors
+compiling IMU_task.c...
+../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
+  int MPU9250_DMP();
+../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
+  
+ool MPU9250_dataReady();
+..\App\IMU_task.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=181568 RO-data=22452 RW-data=876 ZI-data=108148  
+Program Size: Code=183504 RO-data=22528 RW-data=896 ZI-data=108176  
 FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 2 Warning(s).
-Build Time Elapsed:  00:00:08
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 6 Warning(s).
+Build Time Elapsed:  00:00:07

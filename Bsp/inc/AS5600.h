@@ -17,7 +17,8 @@ typedef struct {
     unsigned long vel_prev_angle_ts;  // 计算速度使用的时间记录
   
 } AS5600_T;
-
+HAL_StatusTypeDef _WriteData(I2C_HandleTypeDef *hi2c, uint16_t dev_addr,uint8_t *data, uint16_t size);
+HAL_StatusTypeDef _ReadData(I2C_HandleTypeDef *hi2c, uint16_t dev_addr,uint8_t *data, uint16_t size);
 #define AS5600_RAW_ADDR 0x36
 #define AS5600_ADDR (AS5600_RAW_ADDR << 1)
 #define AS5600_WRITE_ADDR (AS5600_RAW_ADDR << 1)
@@ -32,8 +33,8 @@ uint16_t AS5600_GetRawAngle(AS5600_T *a);
 float AS5600_GetOnceAngle(AS5600_T *a);
 float AS5600_GetAngle(AS5600_T *a);
 void AS5600_Update(AS5600_T *a);
-float AS5600_GetVelocity();
-
+float AS5600_GetVelocity(AS5600_T *a);
+float AS5600_GetVelocity_RPM(AS5600_T *a);
 
 
 #endif

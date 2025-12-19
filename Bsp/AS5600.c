@@ -14,13 +14,14 @@
 #define AS5600_RESOLUTION 4096  // 12bit Resolution
 
 extern I2C_HandleTypeDef hi2c1;
-
+extern I2C_HandleTypeDef hi2c2;
 // typedef struct {
 //     I2C_HandleTypeDef *i2c_ins;
 //     float prev_angle;
 //     unsigned long prev_angle_ts;
 //     float rotation_offset;
   
+
 //     float vel_rotation_offset;        // 计算速度使用的圈数累加
 //     float vel_prev_angle;             // 计算速度使用的角度
 //     unsigned long vel_prev_angle_ts;  // 计算速度使用的时间记录
@@ -30,14 +31,14 @@ extern I2C_HandleTypeDef hi2c1;
 HAL_StatusTypeDef _WriteData(I2C_HandleTypeDef *hi2c, uint16_t dev_addr,
     uint8_t *data, uint16_t size) {
 HAL_StatusTypeDef sta = HAL_ERROR;
-sta = HAL_I2C_Master_Transmit(&hi2c1, dev_addr, data, size, -1);
+sta = HAL_I2C_Master_Transmit(&hi2c2, dev_addr, data, size, -1);
 return sta;
 }
 
 HAL_StatusTypeDef _ReadData(I2C_HandleTypeDef *hi2c, uint16_t dev_addr,
     uint8_t *data, uint16_t size) {
 HAL_StatusTypeDef sta = HAL_ERROR;
-sta = HAL_I2C_Master_Receive(&hi2c1, (dev_addr | 1), data, size, -1);
+sta = HAL_I2C_Master_Receive(&hi2c2, (dev_addr | 1), data, size, -1);
 return sta;
 }
 
@@ -101,3 +102,9 @@ float AS5600_GetVelocity(AS5600_T *a) {
     a->vel_prev_angle_ts = a->prev_angle_ts;
     return vel;
   }
+// 新增: 计算速度(单位: RPM)
+float AS5600_GetVelocity_RPM(AS5600_T *a) {
+    float vel_rad_s = AS5600_GetVelocity(a);
+    // rad/s -> RPM: (rad/s) / (2π) * 60
+    return vel_rad_s * 9.5493f;  // 60/(2π) ≈ 9.5493
+}

@@ -49,19 +49,7 @@ void LcdTask_Entry(void const * argument)
 
     for(;;)
     {
-        lv_obj_t *btn = lv_btn_create(lv_scr_act());
-        lv_obj_set_size(btn, 100, 40);
-        lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, 20);
-
-        lv_obj_t *btn_label = lv_label_create(btn);
-        lv_label_set_text(btn_label, "Click Me");
-        lv_obj_center(btn_label);
-
-        // 创建一个标签
-        lv_obj_t *hello_label = lv_label_create(lv_scr_act());
-        lv_label_set_text(hello_label, "Hello LVGL!");
-        lv_obj_align(hello_label, LV_ALIGN_TOP_MID, 0, 70);
-        osDelay(10);
+        osDelay(20);
     }
 }
 

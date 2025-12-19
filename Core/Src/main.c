@@ -84,6 +84,9 @@ float Udc = 12.6f;
 uint16_t ADC_Value[3] = {0};
 uint32_t ADC_buff[3] = {0};
 uint16_t ad_val_orig[3] = {0};
+AS5600_T AS5600;
+float Mech_Angle = 0.0f;  
+float Mech_RPM = 0.0f;
 
 uint16_t ucAdc[3];
 uint8_t Flag;
@@ -123,7 +126,10 @@ float Alpha;
 uint16_t CCNNTT;
 uint16_t Start_Flag = 1, Start_CNT = 0;
 
+extern osMutexId imuDataMutexHandle;
 extern float pitch_inside, roll_inside, yaw_inside;
+extern uint32_t imu_task_counter;  // 引入IMU任务计数器
+uint32_t TIM9_100Hz_CNT = 0;  // 100Hz定时器计数器
 float angle = 0.0f;
 /* USER CODE END PV */
 
@@ -245,6 +251,7 @@ int main(void)
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
   svpwm_init(&Udq_M0,0.0f,0.5f);
+  AS5600_Init(&AS5600,&hi2c2);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -336,23 +343,38 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-    ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
-    ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-    ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
-    Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*2.0f;
-    Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*2.0f;
-    Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*2.0f;
+    if(++TIM9_100Hz_CNT >= 10) // 100Hz
+    {
+      TIM9_100Hz_CNT = 0;
+      ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
+      ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
+      ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+      Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
+      Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
+      Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
+      Clarke_transform(&Iabc_M0,&Ialpbe_M0);
 
-    angle += 0.01f;
-    if(angle > 6.2831853f) angle = 0.0f;
-    _normalizeAngle(angle*7.0f);
-    inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle*7.0f);
-    svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
-    SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
-    PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
-    printf("ta:tb:tc:ia:ib:ic:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n", 
-                    SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc,
-                    Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic);
+      AS5600_Update(&AS5600);
+      Mech_Angle = AS5600_GetOnceAngle(&AS5600);
+      Mech_RPM = AS5600_GetVelocity_RPM(&AS5600);
+
+      angle += 0.01f;
+      if(angle > 6.2831853f) angle = 0.0f;
+      _normalizeAngle(angle*7.0f);
+      inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle*7.0f);
+      svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
+      SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
+      PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
+      osMutexAcquire(imuDataMutexHandle, osWaitForever);
+      float pitch = pitch_inside;
+      float roll = roll_inside;
+      float yaw = yaw_inside;
+      printf("pitch:roll:yaw:ia:ib:ic:Ang:Rpm:Counter:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%lu\n", 
+                      pitch,roll,yaw,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic,
+                      Mech_Angle,Mech_RPM,imu_task_counter);
+      osMutexRelease(imuDataMutexHandle);
+    }
+    
   }
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM5)
