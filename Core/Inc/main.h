@@ -81,13 +81,9 @@ typedef struct
     float tc;
 
     float Ts;   
-    float t0;
     float t1;
     float t2;
-    float t3;
-    float t4;
-    float t5;
-    float t6;
+    float t0;
     float t7;
 }SVPWM_Struct;
 
