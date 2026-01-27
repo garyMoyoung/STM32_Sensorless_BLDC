@@ -57,12 +57,16 @@ stm32_sensorless_bldc\main.o: ../Core/Inc/spi.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/tim.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/usart.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/gpio.h
+stm32_sensorless_bldc\main.o: ../Middlewares/ST/ARM/DSP/Inc/arm_math.h
+stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h
+stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
+stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\float.h
+stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\limits.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdarg.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/AS5600.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/AS5600.h
-stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd_init.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd.h
 stm32_sensorless_bldc\main.o: ../LVGL/lvgl.h
@@ -196,7 +200,6 @@ stm32_sensorless_bldc\main.o: ../Bsp/inc/MPU9250-DMP.h
 stm32_sensorless_bldc\main.o: ../Algorithm/util/inv_mpu.h
 stm32_sensorless_bldc\main.o: ../Algorithm/util/inv_mpu_dmp_motion_driver.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/MPU9250_RegisterMap.h
-stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
 stm32_sensorless_bldc\main.o: ../Algorithm/util/stm32_mpu9250_clk.h
 stm32_sensorless_bldc\main.o: ../Algorithm/util/stm32_mpu9250_i2c.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/Algorithmic.h

@@ -30,6 +30,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "arm_math.h"
 #include "stdio.h"
 #include "stdarg.h"
 #include "AS5600.h"
