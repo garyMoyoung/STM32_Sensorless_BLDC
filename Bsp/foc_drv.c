@@ -2,7 +2,7 @@
 #include "main.h"
 #include "foc_drv.h"
 extern float Udc;
-
+extern Key_Struct_init Key[3];
 void Clarke_transform(Iabc_Struct *I_abc,Ialpbe_Struct *I_alpbe)
 {
     // ??Clarke??(??????)
@@ -186,4 +186,32 @@ void SVPWM_timer_period_set(SVPWM_Struct *svpwm,Ualpbe_Struct *U_alphaBeta)
     svpwm->ta = svpwm->t7 + svpwm->t5 + svpwm->t4;
       break; 
   }
+}
+
+void  Key_read(void)
+{
+    if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_RESET)
+    {
+        Key[0].Key_State =  0;
+    }
+    else  if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_SET)
+    {
+        Key[0].Key_State =  1;
+    }
+    if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
+    {
+        Key[1].Key_State =  0;
+    }
+    else  if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_SET)
+    {
+        Key[1].Key_State =  1;
+    }
+    if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4) == GPIO_PIN_RESET)
+    {
+        Key[2].Key_State =  0;
+    }
+    else  if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4) == GPIO_PIN_SET)
+    {
+        Key[2].Key_State =  1;
+    }
 }

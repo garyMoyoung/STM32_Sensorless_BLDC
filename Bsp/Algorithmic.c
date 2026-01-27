@@ -71,7 +71,6 @@ float Limit(float value,float lim)
 }
 void SMO(void)
 {
-
 	if(Iab_fore_Last[0] - Iab_Last[0] > 1.0f)
 		Vab[0] = h;
 	else if(Iab_fore_Last[0] - Iab_Last[0] < -1.0f)
@@ -124,7 +123,7 @@ void SMO(void)
 //	h1 = -R*fabs(Iab_fore_New[0] - Iab[0])+Eab[0]*signa;
 //	h2 = -R*fabs(Iab_fore_New[1] - Iab[1])+Eab[1]*signb;
 //	printf("%5.2f,%5.2f\n" , h1 , h2);
-	
+
 	Iab_fore_Last[0] = Iab_fore_New[0];
 	Iab_fore_Last[1] = Iab_fore_New[1];
 	Iab_Last[0] = Iab[0];

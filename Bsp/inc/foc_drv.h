@@ -12,6 +12,6 @@ float _normalizeAngle(float angle);
 void inverseParkTransform(Udq_Struct *U_dq,Ualpbe_Struct *U_alphaBeta,float angle);
 void svpwm_sector_choice(SVPWM_Struct *svpwm,Ualpbe_Struct *U_alphaBeta);
 void SVPWM_timer_period_set(SVPWM_Struct *svpwm,Ualpbe_Struct *U_alphaBeta);
-
+void  Key_read(void);
 
 #endif

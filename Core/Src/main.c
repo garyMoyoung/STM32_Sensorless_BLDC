@@ -52,6 +52,7 @@
 #include "lv_port_indev.h"       // LVGL的触屏支持
 #include "init_file.h"
 #include "foc_drv.h"
+#include "pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -85,7 +86,8 @@ uint16_t ADC_Value[3] = {0};
 uint32_t ADC_buff[3] = {0};
 uint16_t ad_val_orig[3] = {0};
 AS5600_T AS5600;
-float Mech_Angle = 0.0f;  
+float Mech_Angle = 0.0f; 
+float Elec_Angle = 0.0f;   
 float Mech_RPM = 0.0f;
 
 uint16_t ucAdc[3];
@@ -130,7 +132,21 @@ extern osMutexId imuDataMutexHandle;
 extern float pitch_inside, roll_inside, yaw_inside;
 extern uint32_t imu_task_counter;  // 引入IMU任务计数器
 uint32_t TIM9_100Hz_CNT = 0;  // 100Hz定时器计数器
+uint32_t TIM10_task_CNT = 0;
 float angle = 0.0f;
+PIDController PID_Current_D;
+PIDController PID_Current_Q;
+Key_Struct_init Key[3];
+// PID Q 参数备用变量（用于按键调整）
+float PID_Q_Kp = 0.0f;
+float PID_Q_Ki = 0.0f;
+float PID_Q_Kd = 0.0f;
+// 更灵敏的阈值（单位：ms），适配1kHz采样
+const uint16_t DEBOUNCE_MS = 5;       // 5ms 消抖
+const uint16_t SHORT_MS = 200;        // 短按判定 200ms
+const uint16_t LONG_MS = 500;         // 长按判定 500ms（更灵敏）
+const uint16_t DOUBLE_MS = 300;       // 双击最大间隔 300ms
+const uint16_t SINGLE_MS = 150;       // 单击确认阈值 150ms
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -229,13 +245,16 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_TIM9_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
   // Init_All();
   __HAL_TIM_CLEAR_IT(&htim3,TIM_IT_UPDATE);
   HAL_TIM_Base_Start_IT(&htim3);
   __HAL_TIM_CLEAR_IT(&htim9,TIM_IT_UPDATE);
   HAL_TIM_Base_Start_IT(&htim9);
-
+  __HAL_TIM_CLEAR_IT(&htim10,TIM_IT_UPDATE);
+  HAL_TIM_Base_Start_IT(&htim10);
+  
   HAL_ADCEx_InjectedStart(&hadc1);
   __HAL_ADC_ENABLE_IT(&hadc1,ADC_IT_JEOC);
   //HAL_ADC_Start_DMA(&hadc3,(uint32_t *)ADC_buff,15);
@@ -250,8 +269,16 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
-  svpwm_init(&Udq_M0,0.0f,0.5f);
+  svpwm_init(&Udq_M0,0.0f,0.8f);
   AS5600_Init(&AS5600,&hi2c2);
+  PID_Init(&PID_Current_D,3.0f,-3.0f,100.0f);
+  PID_Init(&PID_Current_Q,3.0f,-3.0f,100.0f);
+  PID_param_set(&PID_Current_D,0.0f,0.0f,0.0f);
+  PID_param_set(&PID_Current_Q,0.0f,0.0f,0.0f);
+  // 初始化 PID Q 参数本地副本
+  PID_Q_Kp = 0.0f;
+  PID_Q_Ki = 0.0f;
+  PID_Q_Kd = 0.0f;
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -352,16 +379,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
       Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
       Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
-      Clarke_transform(&Iabc_M0,&Ialpbe_M0);
 
       AS5600_Update(&AS5600);
       Mech_Angle = AS5600_GetOnceAngle(&AS5600);
+      Elec_Angle = Mech_Angle*7.0f;
       Mech_RPM = AS5600_GetVelocity_RPM(&AS5600);
+      Clarke_transform(&Iabc_M0,&Ialpbe_M0);
+      Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-      angle += 0.08f;
-      if(angle > 6.2831853f) angle = 0.0f;
-      _normalizeAngle(angle*7.0f);
-      inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle*7.0f);
+      // angle += 0.04f;
+      // if(angle > 6.2831853f) angle = 0.0f;
+      Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
+      Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,1.0f,Iqd_M0.Iq);
+      inverseParkTransform(&Udq_M0,&Ualpbe_M0,Elec_Angle);
       svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
       SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
       PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
@@ -369,14 +399,116 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       float pitch = pitch_inside;
       float roll = roll_inside;
       float yaw = yaw_inside;
+      // 处理按键调整 PID_Current_Q.Kp/Ki/Kd
+
       // printf("pitch:roll:yaw:ia:ib:ic:Ang:Rpm:Counter:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%lu\n", 
       //                 pitch,roll,yaw,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic,
       //                 Mech_Angle,Mech_RPM,imu_task_counter);
-      // printf("Ualpha:Ubeta:%.4f,%.4f\n",Ualpbe_M0.U_alpha,Ualpbe_M0.U_beta);
-      printf("ta:tb:tc:%.4f,%.4f,%.4f\n",SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc);
+      printf("Ang:Rpm:ia:ib:ic:id:iq:kp:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
+      ,Mech_Angle,Mech_RPM,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic
+      ,Iqd_M0.Id,Iqd_M0.Iq,PID_Current_Q.kp,Udq_M0.Uq,Udq_M0.Ud);
+      // printf("ta:tb:tc:key1:key2:key3:%.4f,%.4f,%.4f,%d,%d,%d,%lu\n"
+      //   ,SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc
+      //   ,Key[0].mode,Key[1].mode,Key[2].mode,TIM10_task_CNT);
       osMutexRelease(imuDataMutexHandle);
     }
     
+  }
+  if (htim->Instance == TIM10) // 1ms tick
+  {
+    Key_read();  // 只调用一次
+    if(++TIM10_task_CNT >= 1000)
+    {
+      TIM10_task_CNT = 0;
+      
+    }
+    if (Key[0].mode_now == 1) {
+        PID_Q_Kp += 0.001f;
+      }
+      if (Key[1].mode_now == 1) {
+        PID_Q_Kp -= 0.001f;
+      }
+    PID_Current_Q.kp = PID_Q_Kp;
+    PID_Current_D.kp = PID_Q_Kp;
+    // 将按键计数视为毫秒（每次中断 +1 ms）
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        if (Key[i].Time_Count_Flag == 1)
+        {
+            Key[i].Press_Time_Count++; // 单位：ms
+        }
+        else
+        {
+            Key[i].Press_Time_Count = 0;
+        }
+
+        
+
+        // 如果按键持续按下且超过长按阈值，立即判定为长按（无需等待释放）
+        if (Key[i].Time_Count_Flag == 1 && Key[i].Press_Time_Count >= LONG_MS && Key[i].Key_Long_Flag == 0) {
+          Key[i].Key_Long_Flag = 1;
+          Key[i].mode = 2;
+          Key[i].mode_now = 2;
+          Key[i].Step = 0;
+          Key[i].Time_Count_Flag = 0;
+        }
+
+        switch (Key[i].Step)
+        {
+            case 0:
+            {
+                if (Key[i].Key_State == 0) {
+                    Key[i].Step = 1;
+                    Key[i].Time_Count_Flag = 1;
+                } else {
+                    Key[i].mode_now = 0;
+                }
+            } break;
+            case 1:
+            {
+                if (Key[i].Press_Time_Count > DEBOUNCE_MS && Key[i].Key_State == 0) {
+                    Key[i].Step = 2;
+                }
+            } break;
+            case 2:
+            {
+                if (Key[i].Key_State == 1) {
+                    if (Key[i].Press_Time_Count < SHORT_MS) {
+                        Key[i].Step = 3;
+                    }
+                    if (Key[i].Press_Time_Count > LONG_MS) {
+                        Key[i].Step = 0;
+                        Key[i].Time_Count_Flag = 0;
+                        Key[i].Key_Long_Flag = 1;
+                        Key[i].mode = 2;
+                        Key[i].mode_now = 2;
+                    }
+                }
+            } break;
+            case 3:
+            {
+                if (Key[i].Key_State == 0 && Key[i].Press_Time_Count < DOUBLE_MS) {
+                    Key[i].Step = 4;
+                    Key[i].Time_Count_Flag = 0;
+                    Key[i].Key_Double_Flag = 1;
+                    Key[i].mode = 3;
+                    Key[i].mode_now = 3;
+                } else if (Key[i].Key_State == 1 && Key[i].Press_Time_Count >= SINGLE_MS) {
+                    Key[i].Step = 4;
+                    Key[i].Time_Count_Flag = 0;
+                    Key[i].Key_Single_Flag = 1;
+                    Key[i].mode = 1;
+                    Key[i].mode_now = 1;
+                }
+            } break;
+            case 4:
+            {
+                if (Key[i].Key_State == 1) {
+                    Key[i].Step = 0;
+                }
+            } break;
+        }
+    }
   }
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM5)

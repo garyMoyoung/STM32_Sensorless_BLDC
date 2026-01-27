@@ -91,6 +91,35 @@ typedef struct
     float t7;
 }SVPWM_Struct;
 
+typedef struct {
+    float kp;        // ????
+    float ki;        // ???? 
+    float kd;        // ????
+    
+    float error;     // ????
+    float lastError; // ????
+    float preError;  // ????
+    
+    float integral;  // ???????
+    float output;    // PID???????
+    
+    float maxOutput; // ??????
+    float minOutput; // ??????
+    float maxIntegral; // ????
+} PIDController;
+
+typedef struct Key_Struct
+{
+	uint8_t Step;
+	uint8_t Key_State;
+	uint8_t Key_Single_Flag;//单击标志
+	uint8_t Key_Long_Flag;//长按标志
+	uint8_t Key_Double_Flag;//双击标志
+	uint8_t Time_Count_Flag;//计时标志
+	uint8_t Press_Time_Count;//按下时间计数
+	uint8_t mode;//模式标志
+	uint8_t mode_now;
+}Key_Struct_init;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

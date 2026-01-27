@@ -240,6 +240,7 @@
 "stm32_sensorless_bldc\lcd_init.o"
 "stm32_sensorless_bldc\mpu9250-dmp.o"
 "stm32_sensorless_bldc\foc_drv.o"
+"stm32_sensorless_bldc\pid.o"
 "stm32_sensorless_bldc\inv_mpu.o"
 "stm32_sensorless_bldc\inv_mpu_dmp_motion_driver.o"
 "stm32_sensorless_bldc\stm32_mpu9250_clk.o"
