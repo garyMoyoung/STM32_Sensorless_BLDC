@@ -19,14 +19,14 @@ stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_
 stm32_sensorless_bldc\lcd_task.o: ../Core/Inc/stm32f4xx_hal_conf.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
-stm32_sensorless_bldc\lcd_task.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
-stm32_sensorless_bldc\lcd_task.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h
+stm32_sensorless_bldc\lcd_task.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h
+stm32_sensorless_bldc\lcd_task.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f407xx.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/CMSIS/Include/core_cm4.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/CMSIS/Include/cmsis_version.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/CMSIS/Include/mpu_armv7.h
-stm32_sensorless_bldc\lcd_task.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h
+stm32_sensorless_bldc\lcd_task.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h
@@ -51,6 +51,11 @@ stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\lcd_task.o: ../Middlewares/ST/ARM/DSP/Inc/arm_math.h
+stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h
+stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
+stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\float.h
+stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\limits.h
 stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/lcd.h
@@ -64,7 +69,6 @@ stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_timer.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/../hal/lv_hal_tick.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_math.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_mem.h
-stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_async.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_anim_timeline.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_anim.h
@@ -183,6 +187,5 @@ stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/extra/widgets/span/lv_span.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_indev.h
 stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/pic.h
-stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/lv_port_indev.h

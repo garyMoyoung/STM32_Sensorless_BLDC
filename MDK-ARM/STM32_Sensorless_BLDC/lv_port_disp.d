@@ -135,14 +135,14 @@ stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f
 stm32_sensorless_bldc\lv_port_disp.o: ../Core/Inc/stm32f4xx_hal_conf.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
-stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
-stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h
+stm32_sensorless_bldc\lv_port_disp.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h
+stm32_sensorless_bldc\lv_port_disp.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f407xx.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/CMSIS/Include/core_cm4.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/CMSIS/Include/cmsis_version.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/CMSIS/Include/mpu_armv7.h
-stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h
+stm32_sensorless_bldc\lv_port_disp.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h
@@ -167,6 +167,10 @@ stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\lv_port_disp.o: ../Middlewares/ST/ARM/DSP/Inc/arm_math.h
+stm32_sensorless_bldc\lv_port_disp.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
+stm32_sensorless_bldc\lv_port_disp.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\float.h
+stm32_sensorless_bldc\lv_port_disp.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\limits.h
 stm32_sensorless_bldc\lv_port_disp.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Bsp/inc/lcd.h
 stm32_sensorless_bldc\lv_port_disp.o: ../LVGL/examples/porting/lv_port_disp.h

@@ -836,10 +836,10 @@ nc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Middlewares/Third_Party/Fr
 eeRTOS/Source/include -I../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V
 2 -I../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I../Driv
 ers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I../Middlewar
-es/ST/ARM/DSP/Inc -I.\RTE\_STM32_Sensorless_BLDC -I"D:\Keil MDK\ARM\CMSIS\6.1.0
-\CMSIS\Core\Include" --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VER
-SION SETA 540" --predefine="STM32F407xx SETA 1" --predefine="_RTE_ SETA 1" --li
-st=startup_stm32f407xx.lst startup_stm32f407xx.s
+es/ST/ARM/DSP/Inc -I..\Drivers\CMSIS\DSP\Include -I.\RTE\_STM32_Sensorless_BLDC
+ -I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include" --predefine="__MICROLIB SET
+A 1" --predefine="__UVISION_VERSION SETA 540" --predefine="STM32F407xx SETA 1" 
+--predefine="_RTE_ SETA 1" --list=startup_stm32f407xx.lst startup_stm32f407xx.s
 
 
 
