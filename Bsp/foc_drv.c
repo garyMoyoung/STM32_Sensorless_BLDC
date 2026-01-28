@@ -140,21 +140,20 @@ void SVPWM_timer_period_set(SVPWM_Struct *svpwm, Ualpbe_Struct *U_alphaBeta)
     default:
         break;
     }
-    
+
     sum = svpwm->t1 + svpwm->t2;
-    
     // 过调制处理
     if (sum > svpwm->Ts)
     {
         k_svpwm = svpwm->Ts / sum;
         svpwm->t1 *= k_svpwm;
-        svpwm->t2 *= k_svpwm;
+        svpwm->t2 = svpwm->Ts - svpwm->t1;
     }
     
     // 计算PWM占空比
     svpwm->ta = (svpwm->Ts - svpwm->t1 - svpwm->t2) / 4.0f;
-    svpwm->tb = svpwm->ta + svpwm->t1 / 2.0f;
-    svpwm->tc = svpwm->tb + svpwm->t2 / 2.0f;
+    svpwm->tb = svpwm->ta + svpwm->t1 / 2.0f;//svpwm->ta + svpwm->t1 / 2.0f
+    svpwm->tc = svpwm->tb + svpwm->t2 / 2.0f;//svpwm->tb + svpwm->t2 / 2.0f
 }
 
 /**

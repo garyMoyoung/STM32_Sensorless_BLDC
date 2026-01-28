@@ -294,7 +294,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
-  svpwm_init(&Udq_M0,0.0f,0.8f);
+  svpwm_init(&Udq_M0,0.0f,1.5f);
   AS5600_Init(&AS5600,&hi2c2);
   PID_Init(&PID_Current_D,3.0f,-3.0f,100.0f);
   PID_Init(&PID_Current_Q,3.0f,-3.0f,100.0f);
@@ -409,25 +409,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-    if(++TIM9_100Hz_CNT >= 5) // 500Hz
-    {
-      TIM9_100Hz_CNT = 0;
-
-      AS5600_Update(&AS5600);
-      Mech_Angle = AS5600_GetOnceAngle(&AS5600);
-      Elec_Angle = Mech_Angle*7.0f;
-      Mech_RPM = AS5600_GetVelocity_RPM(&AS5600);
-      Clarke_transform(&Iabc_M0,&Ialpbe_M0);
-      Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
+      // AS5600_Update(&AS5600);
+      // Mech_Angle = AS5600_GetOnceAngle(&AS5600);
+      // Elec_Angle = Mech_Angle*7.0f;
+      // Mech_RPM = AS5600_GetVelocity_RPM(&AS5600);
+      // Clarke_transform(&Iabc_M0,&Ialpbe_M0);
+      // Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
       angle += 0.04f;
       if(angle > 6.2831853f) angle = 0.0f;
-      // Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
-      // Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,1.0f,Iqd_M0.Iq);
-      inverseParkTransform(&Udq_M0,&Ualpbe_M0,Elec_Angle);
+      inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle);
       svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
       SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
-      PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
+      // PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
 
       // 处理按键调整 PID_Current_Q.Kp/Ki/Kd
 
@@ -437,10 +431,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       // printf("Ang:Rpm:ia:ib:ic:id:iq:kp:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
       // ,Mech_Angle,Mech_RPM,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic
       // ,Iqd_M0.Id,Iqd_M0.Iq,PID_Current_Q.kp,Udq_M0.Uq,Udq_M0.Ud);
-      printf("ta:tb:tc:key1:key2:key3:%.4f,%.4f,%.4f,%d,%d,%d,%lu\n"
+      printf("ta:tb:tc:Ualpha:Ubeta:sector:T1:T2:Ux,Uy,Uz:%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.4f,%.4f,%.4f,%.4f,%.4f\n"
         ,SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc
-        ,Key[0].mode,Key[1].mode,Key[2].mode,TIM10_task_CNT);
-    }
+        ,Ualpbe_M0.U_alpha,Ualpbe_M0.U_beta,SVPWM_M0.sector
+        ,SVPWM_M0.t1,SVPWM_M0.t2,SVPWM_M0.Ux,SVPWM_M0.Uy,SVPWM_M0.Uz);
     
   }
   if (htim->Instance == TIM10) // 1ms tick

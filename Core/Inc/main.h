@@ -187,7 +187,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 #define BUFFER_SIZE     256
-
+#define PI 3.1415926f
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
