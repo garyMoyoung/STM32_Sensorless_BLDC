@@ -96,6 +96,9 @@ typedef struct
     float t2;
     float t0;
     float t7;
+    float tcm1;
+    float tcm2;
+    float tcm3;
 }SVPWM_Struct;
 
 typedef struct {

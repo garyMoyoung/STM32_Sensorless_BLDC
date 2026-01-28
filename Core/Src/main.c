@@ -294,7 +294,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
-  svpwm_init(&Udq_M0,0.0f,1.5f);
+  svpwm_init(&Udq_M0,0.0f,2.5f);
   AS5600_Init(&AS5600,&hi2c2);
   PID_Init(&PID_Current_D,3.0f,-3.0f,100.0f);
   PID_Init(&PID_Current_Q,3.0f,-3.0f,100.0f);
@@ -418,7 +418,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
       angle += 0.04f;
       if(angle > 6.2831853f) angle = 0.0f;
-      inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle);
+      inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle*7);
       svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
       SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
       // PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
@@ -431,10 +431,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       // printf("Ang:Rpm:ia:ib:ic:id:iq:kp:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
       // ,Mech_Angle,Mech_RPM,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic
       // ,Iqd_M0.Id,Iqd_M0.Iq,PID_Current_Q.kp,Udq_M0.Uq,Udq_M0.Ud);
-      printf("ta:tb:tc:Ualpha:Ubeta:sector:T1:T2:Ux,Uy,Uz:%.4f,%.4f,%.4f,%.4f,%.4f,%d,%.4f,%.4f,%.4f,%.4f,%.4f\n"
-        ,SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc
-        ,Ualpbe_M0.U_alpha,Ualpbe_M0.U_beta,SVPWM_M0.sector
-        ,SVPWM_M0.t1,SVPWM_M0.t2,SVPWM_M0.Ux,SVPWM_M0.Uy,SVPWM_M0.Uz);
+      printf("ta:tb:tc:%.4f,%.4f,%.4f\n"
+        ,SVPWM_M0.tcm1,SVPWM_M0.tcm2,SVPWM_M0.tcm3);
     
   }
   if (htim->Instance == TIM10) // 1ms tick

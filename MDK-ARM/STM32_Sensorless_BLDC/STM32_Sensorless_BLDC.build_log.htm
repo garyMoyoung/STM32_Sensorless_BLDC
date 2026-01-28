@@ -27,14 +27,19 @@ Project File Date:  01/28/2026
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
-compiling foc_drv.c...
-../Core/Inc/main.h(190): warning:  #47-D: incompatible redefinition of macro "PI"  (declared at line 475 of "../Middlewares/ST/ARM/DSP/Inc/arm_math.h")
+compiling main.c...
+../Core/Inc/main.h(193): warning:  #47-D: incompatible redefinition of macro "PI"  (declared at line 475 of "../Middlewares/ST/ARM/DSP/Inc/arm_math.h")
   #define PI 3.1415926f
-..\Bsp\foc_drv.c: 1 warning, 0 errors
+../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
+  int MPU9250_DMP();
+../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
+  
+ool MPU9250_dataReady();
+../Core/Src/main.c: 3 warnings, 0 errors
 linking...
-Program Size: Code=185340 RO-data=24596 RW-data=916 ZI-data=108868  
+Program Size: Code=185292 RO-data=24500 RW-data=916 ZI-data=108880  
 FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 1 Warning(s).
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 3 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -57,7 +62,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@6.1.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:05
+Build Time Elapsed:  00:00:07
 </pre>
 </body>
 </html>

@@ -99,7 +99,7 @@ void svpwm_sector_choice(SVPWM_Struct *svpwm, Ualpbe_Struct *U_alphaBeta)
 void SVPWM_timer_period_set(SVPWM_Struct *svpwm, Ualpbe_Struct *U_alphaBeta)
 {
     float32_t sum, k_svpwm;
-    
+
     svpwm->Ts = 1.0f;
     
     // 使用常数而不是计算
@@ -109,37 +109,37 @@ void SVPWM_timer_period_set(SVPWM_Struct *svpwm, Ualpbe_Struct *U_alphaBeta)
     svpwm->Ux = U_alphaBeta->U_beta * K;
     svpwm->Uy = (0.8660254f * U_alphaBeta->U_alpha + 0.5f * U_alphaBeta->U_beta) * K;
     svpwm->Uz = (-0.8660254f * U_alphaBeta->U_alpha + 0.5f * U_alphaBeta->U_beta) * K;
-    
+
     // 扇区判断与时间计算
     switch (svpwm->sector)
     {
-    case 1:
-        svpwm->t1 = svpwm->Uz;
-        svpwm->t2 = svpwm->Uy;
-        break;
-    case 2:
-        svpwm->t1 = svpwm->Uy;
-        svpwm->t2 = -svpwm->Ux;
-        break;
-    case 3:
-        svpwm->t1 = -svpwm->Uz;
-        svpwm->t2 = svpwm->Ux;
-        break;
-    case 4:
-        svpwm->t1 = -svpwm->Ux;
-        svpwm->t2 = svpwm->Uz;
-        break;
-    case 5:
-        svpwm->t1 = svpwm->Ux;
-        svpwm->t2 = -svpwm->Uy;
-        break;
-    case 6:
-        svpwm->t1 = -svpwm->Uy;
-        svpwm->t2 = -svpwm->Uz;
-        break;
-    default:
-        break;
-    }
+      case 1:
+          svpwm->t1 = svpwm->Uz;
+          svpwm->t2 = svpwm->Uy;
+          break;
+      case 2:
+          svpwm->t1 = svpwm->Uy;
+          svpwm->t2 = -svpwm->Ux;
+          break;
+      case 3:
+          svpwm->t1 = -svpwm->Uz;
+          svpwm->t2 = svpwm->Ux;
+          break;
+      case 4:
+          svpwm->t1 = -svpwm->Ux;
+          svpwm->t2 = svpwm->Uz;
+          break;      
+      case 5:
+          svpwm->t1 = svpwm->Ux;
+          svpwm->t2 = -svpwm->Uy;
+          break;   
+      case 6:
+          svpwm->t1 = -svpwm->Uy;
+          svpwm->t2 = -svpwm->Uz;
+          break;
+      default:
+          break;
+      }
 
     sum = svpwm->t1 + svpwm->t2;
     // 过调制处理
@@ -154,9 +154,43 @@ void SVPWM_timer_period_set(SVPWM_Struct *svpwm, Ualpbe_Struct *U_alphaBeta)
     svpwm->ta = (svpwm->Ts - svpwm->t1 - svpwm->t2) / 4.0f;
     svpwm->tb = svpwm->ta + svpwm->t1 / 2.0f;//svpwm->ta + svpwm->t1 / 2.0f
     svpwm->tc = svpwm->tb + svpwm->t2 / 2.0f;//svpwm->tb + svpwm->t2 / 2.0f
+
+    switch(svpwm->sector)
+    {
+      case 1:
+          svpwm->tcm1 = svpwm->tb;
+          svpwm->tcm2 = svpwm->ta;
+          svpwm->tcm3 = svpwm->tc;
+          break;
+      case 2:
+          svpwm->tcm1 = svpwm->ta;
+          svpwm->tcm2 = svpwm->tc;
+          svpwm->tcm3 = svpwm->tb;
+          break;
+      case 3:
+          svpwm->tcm1 = svpwm->ta;
+          svpwm->tcm2 = svpwm->tb;
+          svpwm->tcm3 = svpwm->tc;
+          break;
+      case 4:
+          svpwm->tcm1 = svpwm->tc;
+          svpwm->tcm2 = svpwm->tb;
+          svpwm->tcm3 = svpwm->ta;
+          break;
+      case 5:
+          svpwm->tcm1 = svpwm->tc;
+          svpwm->tcm2 = svpwm->ta;
+          svpwm->tcm3 = svpwm->tb;
+          break;
+      case 6:
+          svpwm->tcm1 = svpwm->tb;
+          svpwm->tcm2 = svpwm->tc;
+          svpwm->tcm3 = svpwm->ta;
+          break;
+    }
 }
 
-/**
+/** 
  * @brief SVPWM初始化
  * @param U_dq: dq轴电压
  * @param Ud: d轴电压初值

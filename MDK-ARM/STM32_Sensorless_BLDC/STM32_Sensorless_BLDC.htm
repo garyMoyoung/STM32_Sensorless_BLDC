@@ -3,7 +3,7 @@
 <title>Static Call Graph - [STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060422: Last Updated: Wed Jan 28 15:04:55 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060422: Last Updated: Wed Jan 28 15:41:15 2026
 <BR><P>
 <H3>Maximum Stack Usage =       1032 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -306,12 +306,12 @@ Function Pointers
  <LI><a href="#[11e]">lv_tileview_constructor</a> from lv_tileview.o(i.lv_tileview_constructor) referenced from lv_tileview.o(.constdata)
  <LI><a href="#[11f]">lv_tileview_tile_constructor</a> from lv_tileview.o(i.lv_tileview_tile_constructor) referenced from lv_tileview.o(.constdata)
  <LI><a href="#[7]">lv_txt_unicode_to_utf8</a> from lv_txt.o(i.lv_txt_unicode_to_utf8) referenced 2 times from lv_txt.o(.data)
- <LI><a href="#[4]">lv_txt_utf8_get_byte_id</a> from lv_txt.o(i.lv_txt_utf8_get_byte_id) referenced 2 times from lv_txt.o(.data)
+ <LI><a href="#[6]">lv_txt_utf8_get_byte_id</a> from lv_txt.o(i.lv_txt_utf8_get_byte_id) referenced 2 times from lv_txt.o(.data)
  <LI><a href="#[8]">lv_txt_utf8_get_char_id</a> from lv_txt.o(i.lv_txt_utf8_get_char_id) referenced 2 times from lv_txt.o(.data)
- <LI><a href="#[6]">lv_txt_utf8_get_length</a> from lv_txt.o(i.lv_txt_utf8_get_length) referenced 2 times from lv_txt.o(.data)
- <LI><a href="#[3]">lv_txt_utf8_next</a> from lv_txt.o(i.lv_txt_utf8_next) referenced 2 times from lv_txt.o(.data)
- <LI><a href="#[5]">lv_txt_utf8_prev</a> from lv_txt.o(i.lv_txt_utf8_prev) referenced 2 times from lv_txt.o(.data)
- <LI><a href="#[2]">lv_txt_utf8_size</a> from lv_txt.o(i.lv_txt_utf8_size) referenced 2 times from lv_txt.o(.data)
+ <LI><a href="#[3]">lv_txt_utf8_get_length</a> from lv_txt.o(i.lv_txt_utf8_get_length) referenced 2 times from lv_txt.o(.data)
+ <LI><a href="#[5]">lv_txt_utf8_next</a> from lv_txt.o(i.lv_txt_utf8_next) referenced 2 times from lv_txt.o(.data)
+ <LI><a href="#[2]">lv_txt_utf8_prev</a> from lv_txt.o(i.lv_txt_utf8_prev) referenced 2 times from lv_txt.o(.data)
+ <LI><a href="#[4]">lv_txt_utf8_size</a> from lv_txt.o(i.lv_txt_utf8_size) referenced 2 times from lv_txt.o(.data)
  <LI><a href="#[120]">lv_win_constructor</a> from lv_win.o(i.lv_win_constructor) referenced from lv_win.o(.constdata)
  <LI><a href="#[64]">main</a> from main.o(i.main) referenced from entry9a.o(.ARM.Collect$$$$0000000B)
  <LI><a href="#[cb]">month_event_cb</a> from lv_calendar_header_arrow.o(i.month_event_cb) referenced 2 times from lv_calendar_header_arrow.o(i.my_constructor)
@@ -1560,7 +1560,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[17d]"></a>HAL_TIM_IRQHandler</STRONG> (Thumb, 304 bytes, Stack size 24 bytes, stm32f4xx_hal_tim.o(i.HAL_TIM_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = HAL_TIM_IRQHandler &rArr; HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
+<BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = HAL_TIM_IRQHandler &rArr; HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
 </UL>
 <BR>[Calls]<UL><LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_TriggerCallback
 <LI><a href="#[180]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PWM_PulseFinishedCallback
@@ -1630,8 +1630,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[181]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 574 bytes, Stack size 120 bytes, main.o(i.HAL_TIM_PeriodElapsedCallback))
-<BR><BR>[Stack]<UL><LI>Max Depth = 144<LI>Call Chain = HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
+<P><STRONG><a name="[181]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 462 bytes, Stack size 48 bytes, main.o(i.HAL_TIM_PeriodElapsedCallback))
+<BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
 </UL>
 <BR>[Calls]<UL><LI><a href="#[190]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;svpwm_sector_choice
 <LI><a href="#[18f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;inverseParkTransform
@@ -2247,7 +2247,7 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[191]"></a>SVPWM_timer_period_set</STRONG> (Thumb, 318 bytes, Stack size 0 bytes, foc_drv.o(i.SVPWM_timer_period_set))
+<P><STRONG><a name="[191]"></a>SVPWM_timer_period_set</STRONG> (Thumb, 358 bytes, Stack size 0 bytes, foc_drv.o(i.SVPWM_timer_period_set))
 <BR><BR>[Called By]<UL><LI><a href="#[181]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PeriodElapsedCallback
 </UL>
 
@@ -2284,21 +2284,21 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(.text)
 </UL>
 <P><STRONG><a name="[2b]"></a>TIM1_BRK_TIM9_IRQHandler</STRONG> (Thumb, 18 bytes, Stack size 8 bytes, stm32f4xx_it.o(i.TIM1_BRK_TIM9_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 176<LI>Call Chain = TIM1_BRK_TIM9_IRQHandler &rArr; HAL_TIM_IRQHandler &rArr; HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
+<BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = TIM1_BRK_TIM9_IRQHandler &rArr; HAL_TIM_IRQHandler &rArr; HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
 </UL>
 <BR>[Calls]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IRQHandler
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
 <P><STRONG><a name="[2c]"></a>TIM1_UP_TIM10_IRQHandler</STRONG> (Thumb, 18 bytes, Stack size 8 bytes, stm32f4xx_it.o(i.TIM1_UP_TIM10_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 176<LI>Call Chain = TIM1_UP_TIM10_IRQHandler &rArr; HAL_TIM_IRQHandler &rArr; HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
+<BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = TIM1_UP_TIM10_IRQHandler &rArr; HAL_TIM_IRQHandler &rArr; HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
 </UL>
 <BR>[Calls]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IRQHandler
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
 <P><STRONG><a name="[45]"></a>TIM5_IRQHandler</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f4xx_it.o(i.TIM5_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = TIM5_IRQHandler &rArr; HAL_TIM_IRQHandler &rArr; HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
+<BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = TIM5_IRQHandler &rArr; HAL_TIM_IRQHandler &rArr; HAL_TIM_PeriodElapsedCallback &rArr; inverseParkTransform
 </UL>
 <BR>[Calls]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IRQHandler
 </UL>
@@ -2604,9 +2604,9 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[245]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_lv_inv_area
 <LI><a href="#[4bb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_obj_area_is_visible
 <LI><a href="#[3dd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;layer_get_area
+<LI><a href="#[2da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;decode_and_draw
 <LI><a href="#[505]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_obj_redraw
 <LI><a href="#[30e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_draw_label
-<LI><a href="#[2da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;decode_and_draw
 <LI><a href="#[301]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_draw_sw_blend
 <LI><a href="#[381]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;draw_quarter_3
 <LI><a href="#[380]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;draw_quarter_2
@@ -4049,8 +4049,8 @@ Global Symbols
 <P><STRONG><a name="[310]"></a>lv_draw_img</STRONG> (Thumb, 54 bytes, Stack size 16 bytes, lv_draw_img.o(i.lv_draw_img))
 <BR><BR>[Stack]<UL><LI>Max Depth = 712<LI>Call Chain = lv_draw_img &rArr; decode_and_draw &rArr; show_error &rArr; lv_draw_label &rArr; lv_txt_get_size &rArr; _lv_txt_get_next_line &rArr; lv_txt_get_next_word &rArr; lv_font_get_glyph_width &rArr; lv_font_get_glyph_dsc
 </UL>
-<BR>[Calls]<UL><LI><a href="#[2dd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;show_error
-<LI><a href="#[2da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;decode_and_draw
+<BR>[Calls]<UL><LI><a href="#[2da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;decode_and_draw
+<LI><a href="#[2dd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;show_error
 </UL>
 <BR>[Called By]<UL><LI><a href="#[5d5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;refr_area_part
 <LI><a href="#[a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_draw_sw_layer_blend
@@ -5780,8 +5780,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[4b4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_obj_set_state
 <LI><a href="#[4ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_obj_draw
 <LI><a href="#[31f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;draw_buf_rotate
-<LI><a href="#[2cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;circ_calc_aa4
 <LI><a href="#[2da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;decode_and_draw
+<LI><a href="#[2cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;circ_calc_aa4
 <LI><a href="#[47f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_img_decoder_built_in_line_indexed
 <LI><a href="#[47c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_img_decoder_built_in_line_alpha
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_draw_sw_polygon
@@ -5807,8 +5807,8 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[4b4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_obj_set_state
 <LI><a href="#[4ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_obj_draw
 <LI><a href="#[31f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;draw_buf_rotate
-<LI><a href="#[2cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;circ_calc_aa4
 <LI><a href="#[2da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;decode_and_draw
+<LI><a href="#[2cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;circ_calc_aa4
 <LI><a href="#[47f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_img_decoder_built_in_line_indexed
 <LI><a href="#[47c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_img_decoder_built_in_line_alpha
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_draw_sw_polygon
@@ -12021,8 +12021,8 @@ Local Symbols
 <LI><a href="#[30e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_draw_label
 <LI><a href="#[43a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_color_make
 </UL>
-<BR>[Called By]<UL><LI><a href="#[310]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_draw_img
-<LI><a href="#[2da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;decode_and_draw
+<BR>[Called By]<UL><LI><a href="#[2da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;decode_and_draw
+<LI><a href="#[310]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lv_draw_img
 </UL>
 
 <P><STRONG><a name="[43f]"></a>hex_char_to_num</STRONG> (Thumb, 64 bytes, Stack size 0 bytes, lv_draw_label.o(i.hex_char_to_num))
@@ -15173,7 +15173,7 @@ Local Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> lv_txt.o(.data)
 </UL>
-<P><STRONG><a name="[4]"></a>lv_txt_utf8_get_byte_id</STRONG> (Thumb, 50 bytes, Stack size 24 bytes, lv_txt.o(i.lv_txt_utf8_get_byte_id))
+<P><STRONG><a name="[6]"></a>lv_txt_utf8_get_byte_id</STRONG> (Thumb, 50 bytes, Stack size 24 bytes, lv_txt.o(i.lv_txt_utf8_get_byte_id))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = lv_txt_utf8_get_byte_id
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> lv_txt.o(.data)
@@ -15183,22 +15183,22 @@ Local Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> lv_txt.o(.data)
 </UL>
-<P><STRONG><a name="[6]"></a>lv_txt_utf8_get_length</STRONG> (Thumb, 34 bytes, Stack size 24 bytes, lv_txt.o(i.lv_txt_utf8_get_length))
+<P><STRONG><a name="[3]"></a>lv_txt_utf8_get_length</STRONG> (Thumb, 34 bytes, Stack size 24 bytes, lv_txt.o(i.lv_txt_utf8_get_length))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = lv_txt_utf8_get_length
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> lv_txt.o(.data)
 </UL>
-<P><STRONG><a name="[3]"></a>lv_txt_utf8_next</STRONG> (Thumb, 138 bytes, Stack size 20 bytes, lv_txt.o(i.lv_txt_utf8_next))
+<P><STRONG><a name="[5]"></a>lv_txt_utf8_next</STRONG> (Thumb, 138 bytes, Stack size 20 bytes, lv_txt.o(i.lv_txt_utf8_next))
 <BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = lv_txt_utf8_next
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> lv_txt.o(.data)
 </UL>
-<P><STRONG><a name="[5]"></a>lv_txt_utf8_prev</STRONG> (Thumb, 66 bytes, Stack size 24 bytes, lv_txt.o(i.lv_txt_utf8_prev))
+<P><STRONG><a name="[2]"></a>lv_txt_utf8_prev</STRONG> (Thumb, 66 bytes, Stack size 24 bytes, lv_txt.o(i.lv_txt_utf8_prev))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = lv_txt_utf8_prev
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> lv_txt.o(.data)
 </UL>
-<P><STRONG><a name="[2]"></a>lv_txt_utf8_size</STRONG> (Thumb, 50 bytes, Stack size 0 bytes, lv_txt.o(i.lv_txt_utf8_size))
+<P><STRONG><a name="[4]"></a>lv_txt_utf8_size</STRONG> (Thumb, 50 bytes, Stack size 0 bytes, lv_txt.o(i.lv_txt_utf8_size))
 <BR>[Address Reference Count : 1]<UL><LI> lv_txt.o(.data)
 </UL>
 <P><STRONG><a name="[3a8]"></a>get_glyph_dsc_id</STRONG> (Thumb, 284 bytes, Stack size 40 bytes, lv_font_fmt_txt.o(i.get_glyph_dsc_id))
