@@ -28,7 +28,8 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-
+#include <stdio.h>
+#include <stdbool.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -36,6 +37,16 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+#define DOWN_FRAME_HEADER1    0x24   // 下行帧头1 (PC->MCU)
+#define DOWN_FRAME_HEADER2    0x42   // 下行帧头2 (PC->MCU)
+#define DOWN_FRAME_LEN_MIN    5       // 最小帧长度:双帧头+地址+长度+校验
+#define DOWN_FRAME_LEN_MAX    30      // 最大帧长度
+#define DOWN_FRAME_HEAD1_POS  0       // 第一帧头位置
+#define DOWN_FRAME_HEAD2_POS  1       // 第二帧头位置
+#define DOWN_FRAME_ADDR_POS   2       // 地址位置 
+#define DOWN_FRAME_LEN_POS    3       // 长度位置
+#define DOWN_FRAME_DATA_POS   4       // 数据起始位置
+
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint8_t u8;
@@ -116,6 +127,24 @@ typedef struct Key_Struct
 	uint8_t mode;//模式标志
 	uint8_t mode_now;
 }Key_Struct_init;
+
+typedef enum {
+    WAIT_HEAD1,     // 等待第一帧头
+    WAIT_HEAD2,     // 等待第二帧头
+    WAIT_ADDR,      // 等待地址
+    WAIT_LEN,       // 等待长度
+    WAIT_DATA,      // 等待数据
+    WAIT_CHECK      // 等待校验�????
+} RxState;
+// 接收处理结构????
+typedef struct {
+    uint8_t  rxBuff[DOWN_FRAME_LEN_MAX];// 接收缓冲
+    uint8_t  addr;                      // 地址
+    uint8_t  rxLen;                     // 接收长度
+    uint8_t  dataLen;                   // 数据长度
+    RxState  state;                     // 状态机状态
+    bool     frameOK;                   // 帧完成标志
+} FrameRxHandler;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -157,6 +186,7 @@ void Error_Handler(void);
 #define RGB_C_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
+#define BUFFER_SIZE     256
 
 /* USER CODE END Private defines */
 

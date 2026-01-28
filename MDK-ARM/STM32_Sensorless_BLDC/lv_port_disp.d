@@ -167,6 +167,7 @@ stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\lv_port_disp.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\lv_port_disp.o: ../Bsp/inc/lcd.h
 stm32_sensorless_bldc\lv_port_disp.o: ../LVGL/examples/porting/lv_port_disp.h
 stm32_sensorless_bldc\lv_port_disp.o: ../LVGL/examples/porting/lv_port_indev.h

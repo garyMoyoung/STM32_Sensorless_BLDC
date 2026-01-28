@@ -1763,6 +1763,16 @@
               <FileType>5</FileType>
               <FilePath>..\Bsp\inc\pid.h</FilePath>
             </File>
+            <File>
+              <FileName>SMO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\SMO.c</FilePath>
+            </File>
+            <File>
+              <FileName>SMO.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\SMO.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1854,6 +1864,9 @@
               <FilePath>..\App\inc\init_file.h</FilePath>
             </File>
           </Files>
+        </Group>
+        <Group>
+          <GroupName>::CMSIS</GroupName>
         </Group>
         <Group>
           <GroupName>Middlewares/Library/DSP Library/DSP Library</GroupName>
@@ -1952,9 +1965,6 @@
               </FileOption>
             </File>
           </Files>
-        </Group>
-        <Group>
-          <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>
     </Target>

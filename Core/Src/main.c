@@ -142,12 +142,36 @@ Key_Struct_init Key[3];
 float PID_Q_Kp = 0.0f;
 float PID_Q_Ki = 0.0f;
 float PID_Q_Kd = 0.0f;
+
+/* KEY_init BEGIN*/
 // 更灵敏的阈值（单位：ms），适配1kHz采样
 const uint16_t DEBOUNCE_MS = 5;       // 5ms 消抖
 const uint16_t SHORT_MS = 200;        // 短按判定 200ms
 const uint16_t LONG_MS = 500;         // 长按判定 500ms（更灵敏）
 const uint16_t DOUBLE_MS = 300;       // 双击最大间隔 300ms
 const uint16_t SINGLE_MS = 150;       // 单击确认阈值 150ms
+/* KEY_init END*/
+
+/* UASRT BEGIN*/
+FrameRxHandler frameHandler_one;
+uint8_t rx1_buffer[100]={0};
+volatile uint8_t rx1_len = 0;
+volatile uint8_t recv1_end_flag = 0;
+volatile uint8_t rx1_addr = 0;
+volatile uint8_t rx1_length = 0;
+volatile uint8_t rx1_data[8] = {0};
+volatile uint8_t rx1_checksum = 0;
+volatile uint8_t rx1_checksum_flag = 0;
+/* UASRT END*/
+
+/* CodeSet BEGIN*/
+T_FlipFlop_t Key_Y;
+uint8_t Key_clk = 0;
+uint8_t T_input1 = 0;
+Edge_Detector_t edge_detector;
+
+/* CodeSet END*/
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -351,11 +375,25 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void PWM_TIM2_Set(uint16_t pwm_a,uint16_t pwm_b,uint16_t pwm_c)
 {
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwm_a);//4
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);//2
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);//3
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwm_a);//
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);//
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);//
 }
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+  if(hadc->Instance == ADC1)
+  {
+    ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
+    ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
+    ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+    Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
+    Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
+    Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
 
+
+  }
+
+}
 /* USER CODE END 4 */
 
 /**
@@ -374,12 +412,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if(++TIM9_100Hz_CNT >= 5) // 500Hz
     {
       TIM9_100Hz_CNT = 0;
-      ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
-      ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-      ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
-      Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
-      Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
-      Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
 
       AS5600_Update(&AS5600);
       Mech_Angle = AS5600_GetOnceAngle(&AS5600);
@@ -388,30 +420,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-      // angle += 0.04f;
-      // if(angle > 6.2831853f) angle = 0.0f;
-      Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
-      Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,1.0f,Iqd_M0.Iq);
+      angle += 0.04f;
+      if(angle > 6.2831853f) angle = 0.0f;
+      // Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
+      // Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,1.0f,Iqd_M0.Iq);
       inverseParkTransform(&Udq_M0,&Ualpbe_M0,Elec_Angle);
       svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
       SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
       PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
-      osMutexAcquire(imuDataMutexHandle, osWaitForever);
-      float pitch = pitch_inside;
-      float roll = roll_inside;
-      float yaw = yaw_inside;
+
       // 处理按键调整 PID_Current_Q.Kp/Ki/Kd
 
       // printf("pitch:roll:yaw:ia:ib:ic:Ang:Rpm:Counter:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%lu\n", 
       //                 pitch,roll,yaw,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic,
       //                 Mech_Angle,Mech_RPM,imu_task_counter);
-      printf("Ang:Rpm:ia:ib:ic:id:iq:kp:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
-      ,Mech_Angle,Mech_RPM,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic
-      ,Iqd_M0.Id,Iqd_M0.Iq,PID_Current_Q.kp,Udq_M0.Uq,Udq_M0.Ud);
-      // printf("ta:tb:tc:key1:key2:key3:%.4f,%.4f,%.4f,%d,%d,%d,%lu\n"
-      //   ,SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc
-      //   ,Key[0].mode,Key[1].mode,Key[2].mode,TIM10_task_CNT);
-      osMutexRelease(imuDataMutexHandle);
+      // printf("Ang:Rpm:ia:ib:ic:id:iq:kp:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
+      // ,Mech_Angle,Mech_RPM,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic
+      // ,Iqd_M0.Id,Iqd_M0.Iq,PID_Current_Q.kp,Udq_M0.Uq,Udq_M0.Ud);
+      printf("ta:tb:tc:key1:key2:key3:%.4f,%.4f,%.4f,%d,%d,%d,%lu\n"
+        ,SVPWM_M0.ta,SVPWM_M0.tb,SVPWM_M0.tc
+        ,Key[0].mode,Key[1].mode,Key[2].mode,TIM10_task_CNT);
     }
     
   }

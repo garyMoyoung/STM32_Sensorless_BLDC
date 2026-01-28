@@ -39,6 +39,8 @@ stm32_sensorless_bldc\spi.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_s
 stm32_sensorless_bldc\spi.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\spi.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\spi.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\spi.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
+stm32_sensorless_bldc\spi.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\spi.o: ../LVGL/lvgl.h
 stm32_sensorless_bldc\spi.o: ../LVGL/src/misc/lv_log.h
 stm32_sensorless_bldc\spi.o: ../LVGL/src/misc/../lv_conf_internal.h
@@ -47,7 +49,6 @@ stm32_sensorless_bldc\spi.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\spi.o: ../LVGL/src/misc/lv_types.h
 stm32_sensorless_bldc\spi.o: ../LVGL/src/misc/lv_timer.h
 stm32_sensorless_bldc\spi.o: ../LVGL/src/misc/../hal/lv_hal_tick.h
-stm32_sensorless_bldc\spi.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\spi.o: ../LVGL/src/misc/lv_math.h
 stm32_sensorless_bldc\spi.o: ../LVGL/src/misc/lv_mem.h
 stm32_sensorless_bldc\spi.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h

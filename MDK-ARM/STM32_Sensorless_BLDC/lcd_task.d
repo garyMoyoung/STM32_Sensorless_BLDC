@@ -51,6 +51,8 @@ stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\lcd_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
+stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lcd_task.o: ../Bsp/inc/lcd.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/lvgl.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_log.h
@@ -60,7 +62,6 @@ stm32_sensorless_bldc\lcd_task.o: ../LVGL/examples/porting/../../lv_conf.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_types.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_timer.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/../hal/lv_hal_tick.h
-stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_math.h
 stm32_sensorless_bldc\lcd_task.o: ../LVGL/src/misc/lv_mem.h
 stm32_sensorless_bldc\lcd_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h

@@ -39,6 +39,7 @@ stm32_sensorless_bldc\mpu9250-dmp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4
 stm32_sensorless_bldc\mpu9250-dmp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\mpu9250-dmp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\mpu9250-dmp.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\mpu9250-dmp.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\mpu9250-dmp.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\mpu9250-dmp.o: ../Algorithm/util/inv_mpu.h
 stm32_sensorless_bldc\mpu9250-dmp.o: ../Algorithm/util/inv_mpu_dmp_motion_driver.h

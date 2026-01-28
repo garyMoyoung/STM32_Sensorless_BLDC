@@ -50,10 +50,10 @@ stm32_sensorless_bldc\imu_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_
 stm32_sensorless_bldc\imu_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\imu_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\imu_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
-stm32_sensorless_bldc\imu_task.o: ../Bsp/inc/MPU9250-DMP.h
+stm32_sensorless_bldc\imu_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\imu_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
+stm32_sensorless_bldc\imu_task.o: ../Bsp/inc/MPU9250-DMP.h
 stm32_sensorless_bldc\imu_task.o: ../Algorithm/util/inv_mpu.h
 stm32_sensorless_bldc\imu_task.o: ../Algorithm/util/inv_mpu_dmp_motion_driver.h
 stm32_sensorless_bldc\imu_task.o: ../Bsp/inc/MPU9250_RegisterMap.h
-stm32_sensorless_bldc\imu_task.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\imu_task.o: ../App/inc/IMU_task.h

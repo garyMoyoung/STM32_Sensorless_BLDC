@@ -39,6 +39,8 @@ stm32_sensorless_bldc\lcd_init.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_
 stm32_sensorless_bldc\lcd_init.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\lcd_init.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\lcd_init.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\lcd_init.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
+stm32_sensorless_bldc\lcd_init.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\lcd_init.o: ../Core/Inc/spi.h
 stm32_sensorless_bldc\lcd_init.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 stm32_sensorless_bldc\lcd_init.o: ../Core/Inc/FreeRTOSConfig.h

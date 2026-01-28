@@ -38,6 +38,8 @@ stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_
 stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
+stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h
 stm32_sensorless_bldc\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/FreeRTOSConfig.h
@@ -62,10 +64,8 @@ stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\string.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\math.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\float.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\limits.h
-stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdarg.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/AS5600.h
-stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/AS5600.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd_init.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd.h

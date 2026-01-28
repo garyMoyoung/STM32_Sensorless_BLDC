@@ -38,5 +38,7 @@ stm32_sensorless_bldc\stm32_mpu9250_i2c_fixed.o: ../Drivers/STM32F4xx_HAL_Driver
 stm32_sensorless_bldc\stm32_mpu9250_i2c_fixed.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 stm32_sensorless_bldc\stm32_mpu9250_i2c_fixed.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 stm32_sensorless_bldc\stm32_mpu9250_i2c_fixed.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+stm32_sensorless_bldc\stm32_mpu9250_i2c_fixed.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
+stm32_sensorless_bldc\stm32_mpu9250_i2c_fixed.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\stm32_mpu9250_i2c_fixed.o: ..\Algorithm\util\stm32_mpu9250_i2c_fixed.h
 stm32_sensorless_bldc\stm32_mpu9250_i2c_fixed.o: ../Core/Inc/i2c.h

@@ -6,6 +6,16 @@
 #define ADC_FILTER_SIZE 10
 
 typedef struct {
+    uint8_t Q_state;   // 当前Q输出状态
+    uint8_t clk_last;  // 上一次时钟值
+} T_FlipFlop_t;
+typedef struct {
+    uint8_t signal_last;      // 上一次的信号状态
+    uint8_t rising_pulse;     // 上升沿脉冲输出
+    uint8_t falling_pulse;    // 下降沿脉冲输出
+} Edge_Detector_t;
+
+typedef struct {
     uint16_t buffer[ADC_FILTER_SIZE];
     uint8_t index;
     uint32_t sum;
@@ -21,14 +31,10 @@ typedef struct {
     float K;  // 卡尔曼增益
     float x;  // 估计值
 } Kalman_Filter_t;
-void Idq_LPF_Filter(float*data);
-float LPF_Filter(float data);
-float Vab_LPF_Filter(float data);
-float We_Filter(float data);
-float Limit(float value,float lim);
-void SMO(void);
-void PLL_SMO(float*Vin);
-
+void Edge_Detector_Init(Edge_Detector_t *edge, uint8_t initial_state);
+uint8_t Edge_Detector_Update(Edge_Detector_t *edge, uint8_t signal);
+void T_FlipFlop_Init(T_FlipFlop_t *t_ff, uint8_t initial_state);
+uint8_t T_FlipFlop_Update(T_FlipFlop_t *t_ff, uint8_t clk, uint8_t T);
 void ADC_Filter_Init(ADC_Filter_t *filter);
 uint16_t ADC_Moving_Average_Filter(ADC_Filter_t *filter, uint16_t new_value);
 float ADC_Low_Pass_Filter(float last_value, uint16_t new_value, float alpha);
