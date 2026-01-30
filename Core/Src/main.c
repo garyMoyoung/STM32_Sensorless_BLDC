@@ -129,9 +129,11 @@ float Alpha;
 uint16_t CCNNTT;
 uint16_t Start_Flag = 1, Start_CNT = 0;
 
-extern osMutexId imuDataMutexHandle;
 extern float pitch_inside, roll_inside, yaw_inside;
 extern uint32_t imu_task_counter;  // 引入IMU任务计数器
+float pitch = 0.0f;
+float roll = 0.0f;
+float yaw = 0.0f;
 uint32_t TIM9_100Hz_CNT = 0;  // 100Hz定时器计数器
 uint32_t TIM10_task_CNT = 0;
 float angle = 0.0f;
@@ -169,8 +171,11 @@ T_FlipFlop_t Key_Y;
 uint8_t Key_clk = 0;
 uint8_t T_input1 = 0;
 Edge_Detector_t edge_detector;
-
 /* CodeSet END*/
+
+/* IMU BEGIN*/
+extern osMessageQId IMUQueueHandle;
+/* IMU END*/
 
 /* USER CODE END PV */
 
@@ -383,12 +388,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
   if(hadc->Instance == ADC1)
   {
-    ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
-    ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-    ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
-    Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
-    Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
-    Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
+      RGBB_toggle();
 
 
   }
@@ -409,12 +409,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-      // AS5600_Update(&AS5600);
-      // Mech_Angle = AS5600_GetOnceAngle(&AS5600);
+      RGBC_toggle();
+      ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
+      ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
+      ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+      Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
+      Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
+      Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
+
+      AS5600_Update(&AS5600);
+      Mech_Angle = AS5600_GetOnceAngle(&AS5600);
       // Elec_Angle = Mech_Angle*7.0f;
       // Mech_RPM = AS5600_GetVelocity_RPM(&AS5600);
-      // Clarke_transform(&Iabc_M0,&Ialpbe_M0);
-      // Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
+      Clarke_transform(&Iabc_M0,&Ialpbe_M0);
+      Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
       angle += 0.04f;
       if(angle > 6.2831853f) angle = 0.0f;
@@ -431,9 +439,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       // printf("Ang:Rpm:ia:ib:ic:id:iq:kp:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
       // ,Mech_Angle,Mech_RPM,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic
       // ,Iqd_M0.Id,Iqd_M0.Iq,PID_Current_Q.kp,Udq_M0.Uq,Udq_M0.Ud);
-      printf("ta:tb:tc:%.4f,%.4f,%.4f\n"
-        ,SVPWM_M0.tcm1,SVPWM_M0.tcm2,SVPWM_M0.tcm3);
-    
+      osEvent evt = osMessageGet(IMUQueueHandle, 0);  // 非阻塞获取
+      if (evt.status == osEventMessage) {
+          IMU_Euler_t* p_euler = (IMU_Euler_t*)evt.value.p;
+          pitch = p_euler->pitch;
+          roll = p_euler->roll;
+          yaw = p_euler->yaw;
+      }
+      printf("ta:tb:tc:Ang:ia:ib:ic:pitch:roll:yaw:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
+        ,SVPWM_M0.tcm1,SVPWM_M0.tcm2,SVPWM_M0.tcm3,Mech_Angle
+        ,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic,pitch,roll,yaw);
+
   }
   if (htim->Instance == TIM10) // 1ms tick
   {

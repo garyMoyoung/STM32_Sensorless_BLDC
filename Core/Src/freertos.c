@@ -31,6 +31,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+// IMU 欧拉角数据结构体，用于队列传递
+
 
 /* USER CODE END PTD */
 
@@ -59,11 +61,13 @@ const osThreadAttr_t IMU9250_task_attributes = {
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+osMessageQId IMUQueueHandle;
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-osMutexId_t imuDataMutexHandle;
+
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -98,6 +102,13 @@ void MX_FREERTOS_Init(void) {
   imuDataMutexHandle = osMutexNew(NULL);
   /* USER CODE END RTOS_MUTEX */
 
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  // 创建 IMU 欧拉角队列，容量8个
+  osMessageQDef(IMUEulerQueue, 8, IMU_Euler_t);
+  IMUQueueHandle = osMessageCreate(osMessageQ(IMUEulerQueue), NULL);
+  /* USER CODE END RTOS_QUEUES */
+
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -105,10 +116,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
   /* creation of defaultTask */

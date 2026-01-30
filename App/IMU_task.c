@@ -11,7 +11,6 @@
 /* GYROScope BEGIN*/
 extern SPI_HandleTypeDef hspi1;
 extern SPI_HandleTypeDef hspi2;
-extern osMutexId_t imuDataMutexHandle;
 extern int ax, ay, az;
 extern int gx, gy, gz;
 extern int mx, my, mz;
@@ -23,7 +22,7 @@ extern float heading;
 extern unsigned short _aSense;
 extern float _gSense, _mSense;
 /* GYROScope END*/
-
+extern osMessageQId IMUQueueHandle;
 uint32_t imu_task_counter = 0;  // IMU任务计数器
 
 void IMU9250Task_Entry(void const * argument)
@@ -61,10 +60,13 @@ void IMU9250Task_Entry(void const * argument)
 
             if (MPU9250_dmpUpdateFifo() == INV_SUCCESS)
             {
-                osMutexAcquire(imuDataMutexHandle, osWaitForever);
                 MPU9250_updateCompass();
                 MPU9250_computeEulerAnglesWithMag(true);
-                osMutexRelease(imuDataMutexHandle);
+                IMU_Euler_t euler_data;
+                euler_data.pitch = pitch_inside;
+                euler_data.roll = roll_inside;
+                euler_data.yaw = yaw_inside;
+                osMessagePut(IMUQueueHandle, (uint32_t)&euler_data, 0);
             }
         }
         osDelay(10);

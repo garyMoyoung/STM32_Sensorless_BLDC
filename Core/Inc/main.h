@@ -148,6 +148,13 @@ typedef struct {
     RxState  state;                     // 状态机状态
     bool     frameOK;                   // 帧完成标志
 } FrameRxHandler;
+
+typedef struct {
+    float pitch;    // 俯仰角
+    float roll;     // 滚转角
+    float yaw;      // 偏航角
+} IMU_Euler_t;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -191,6 +198,9 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define BUFFER_SIZE     256
 #define PI 3.1415926f
+#define RGBA_toggle() HAL_GPIO_TogglePin(RGBA_GPIO_Port, RGBA_Pin)
+#define RGBB_toggle() HAL_GPIO_TogglePin(RGB_B_GPIO_Port, RGB_B_Pin)
+#define RGBC_toggle() HAL_GPIO_TogglePin(RGB_C_GPIO_Port, RGB_C_Pin)
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
