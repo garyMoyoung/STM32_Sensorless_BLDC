@@ -119,8 +119,6 @@ float h = 2.5 , Vab[2] , Vab_Filter[2];
 float Eab[2];
 
 float Vab_alpha = 0.286;
-
-
 float Theta_fore_New , Theta_fore_Last , We_fore;
 float PLL_Kp =0.034 , PLL_Ki= 2.12;
 
@@ -305,7 +303,7 @@ int main(void)
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
   svpwm_init(&Udq_M0,0.0f,2.5f);
-  // AS5600_Init(&AS5600,&hi2c2);
+  AS5600_Init(&AS5600,&hi2c2);
   PID_Init(&PID_Current_D,3.0f,-3.0f,100.0f);
   PID_Init(&PID_Current_Q,3.0f,-3.0f,100.0f);
   PID_param_set(&PID_Current_D,0.0f,0.0f,0.0f);
@@ -430,19 +428,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-      // AS5600_Update(&AS5600);
-      // Mech_Angle = AS5600_GetOnceAngle(&AS5600);
-      // Elec_Angle = Mech_Angle*7.0f;
-      // Mech_RPM = AS5600_GetVelocity_RPM(&AS5600);
       // Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       // Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-      angle += 0.04f;
-      if(angle > 6.2831853f) angle = 0.0f;
-      inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle*7);
-      svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
-      SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
-
+      IF_ang_ZZ(angle,0.04f);
+      SVPWM(angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
 
       // PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
 

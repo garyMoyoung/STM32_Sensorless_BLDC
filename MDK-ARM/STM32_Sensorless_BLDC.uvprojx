@@ -1873,6 +1873,16 @@
               <FileType>5</FileType>
               <FilePath>..\App\inc\uart_task.h</FilePath>
             </File>
+            <File>
+              <FileName>foc_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\foc_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>foc_task.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\App\inc\foc_task.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -250,6 +250,7 @@
 "stm32_sensorless_bldc\imu_task.o"
 "stm32_sensorless_bldc\init_file.o"
 "stm32_sensorless_bldc\uart_task.o"
+"stm32_sensorless_bldc\foc_task.o"
 "..\Middlewares\ST\ARM\DSP\Lib\arm_cortexM4lf_math.lib"
 --library_type=microlib --strict --scatter "STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols

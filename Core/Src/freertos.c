@@ -28,6 +28,7 @@
 #include "lcd_task.h"
 #include "IMU_task.h"
 #include "uart_task.h"
+#include "foc_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,6 +68,12 @@ const osThreadAttr_t UART_task_attributes = {
   .name = "UARTTask",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityHigh,
+};
+osThreadId_t AngleTaskHandle;
+const osThreadAttr_t Angle_task_attributes = {
+  .name = "AngleTask",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 osMessageQueueId_t IMUQueueHandle;
 osMessageQueueId_t FOCQueueHandle;
@@ -134,6 +141,7 @@ void MX_FREERTOS_Init(void) {
   LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, NULL, &LvglTimer_task_attributes);
   // IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
   UARTTaskHandle = osThreadNew(UARTTask_Entry, NULL, &UART_task_attributes);
+  AngleTaskHandle = osThreadNew(AngleTask_Entry, NULL, &Angle_task_attributes);
 
   /* USER CODE END RTOS_THREADS */
 

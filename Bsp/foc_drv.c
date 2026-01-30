@@ -189,7 +189,17 @@ void SVPWM_timer_period_set(SVPWM_Struct *svpwm, Ualpbe_Struct *U_alphaBeta)
           break;
     }
 }
-
+void SVPWM(float Ele_angle, Ualpbe_Struct *Ualpbe_M0, SVPWM_Struct *SVPWM_M0, Udq_Struct *Udq_M0)
+{
+    inverseParkTransform(Udq_M0,Ualpbe_M0,Ele_angle);
+    svpwm_sector_choice(SVPWM_M0,Ualpbe_M0);
+    SVPWM_timer_period_set(SVPWM_M0,Ualpbe_M0);
+}
+void IF_ang_ZZ(float angle,float add_index)
+{
+    angle += add_index;
+    if(angle > 6.2831853f) angle = 0.0f;
+}
 /** 
  * @brief SVPWM初始化
  * @param U_dq: dq轴电压
