@@ -1,14 +1,20 @@
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
+compiling stm32f4xx_hal_adc.c...
+../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c(1253): warning:  #223-D: function "HAL_ADC_ConvCpltCallback" declared implicitly
+      HAL_ADC_ConvCpltCallback(hadc);
+../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c(1580): error:  #159: declaration is incompatible with previous "HAL_ADC_ConvCpltCallback"  (declared at line 1253)
+  void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c: 1 warning, 1 error
 compiling main.c...
 ../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
   int MPU9250_DMP();
 ../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
   
 ool MPU9250_dataReady();
-../Core/Src/main.c: 2 warnings, 0 errors
-linking...
-Program Size: Code=185512 RO-data=24592 RW-data=956 ZI-data=109136  
-FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 2 Warning(s).
-Build Time Elapsed:  00:00:07
+../Core/Src/main.c(168): warning:  #177-D: variable "dma_buffer"  was declared but never referenced
+  static uint8_t dma_buffer[256];
+../Core/Src/main.c: 3 warnings, 0 errors
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 1 Error(s), 4 Warning(s).
+Target not created.
+Build Time Elapsed:  00:00:06

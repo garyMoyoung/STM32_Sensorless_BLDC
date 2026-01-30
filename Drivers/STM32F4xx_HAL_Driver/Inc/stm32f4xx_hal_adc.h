@@ -596,7 +596,7 @@ HAL_StatusTypeDef HAL_ADC_Stop_DMA(ADC_HandleTypeDef *hadc);
 
 uint32_t HAL_ADC_GetValue(ADC_HandleTypeDef *hadc);
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
+void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc);
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc);
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc);
 void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc);

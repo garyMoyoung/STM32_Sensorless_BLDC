@@ -22,6 +22,8 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "cmsis_os.h"
+#include "FreeRTOS.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -85,6 +87,10 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 extern TIM_HandleTypeDef htim5;
 
+extern uint16_t ad_val_orig[3];
+extern Iabc_Struct Iabc_M0;
+extern SVPWM_Struct SVPWM_M0;
+extern osMessageQueueId_t FOCQueueHandle;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -235,7 +241,7 @@ void DMA1_Stream6_IRQHandler(void)
 void ADC_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC_IRQn 0 */
-
+  
   /* USER CODE END ADC_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   HAL_ADC_IRQHandler(&hadc2);

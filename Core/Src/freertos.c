@@ -27,6 +27,8 @@
 /* USER CODE BEGIN Includes */
 #include "lcd_task.h"
 #include "IMU_task.h"
+#include "uart_task.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,16 +55,22 @@ osThreadId_t LvglTimerTaskHandle;
 const osThreadAttr_t LvglTimer_task_attributes = {
   .name = "LvglTimerTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 osThreadId_t IMU9250TaskHandle;
 const osThreadAttr_t IMU9250_task_attributes = {
   .name = "IMU9250Task",
   .stack_size = 1024 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityHigh,
+};
+osThreadId_t UARTTaskHandle;
+const osThreadAttr_t UART_task_attributes = {
+  .name = "UARTTask",
+  .stack_size = 1024 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 osMessageQueueId_t IMUQueueHandle;
-
+osMessageQueueId_t FOCQueueHandle;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -106,6 +114,8 @@ void MX_FREERTOS_Init(void) {
   /* add queues, ... */
   // 创建 IMU 欧拉角队列，容量8个
   IMUQueueHandle = osMessageQueueNew(8, sizeof(IMU_Euler_t), NULL);
+  FOCQueueHandle = osMessageQueueNew(10, sizeof(FOC_Data_t), NULL);
+
   /* USER CODE END RTOS_QUEUES */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -124,7 +134,8 @@ void MX_FREERTOS_Init(void) {
   /* add threads, ... */
   LcdTaskHandle = osThreadNew(LcdTask_Entry,NULL,&Lcd_task_attributes);
   LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, NULL, &LvglTimer_task_attributes);
-  IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
+  // IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
+  UARTTaskHandle = osThreadNew(UARTTask_Entry, NULL, &UART_task_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

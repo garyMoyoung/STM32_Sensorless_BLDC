@@ -155,6 +155,18 @@ typedef struct {
     float yaw;      // 偏航角
 } IMU_Euler_t;
 
+typedef struct {
+    float tcm1;
+    float tcm2;
+    float tcm3;
+    float Ia;
+    float Ib;
+    float Ic;
+    float Iq;
+    float Id;
+    float Mech_Angle;
+} FOC_Data_t;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

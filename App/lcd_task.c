@@ -49,6 +49,7 @@ void LcdTask_Entry(void const * argument)
 
     for(;;)
     {
+        printf("lcd_task_working\n");
         osDelay(20);
     }
 }
