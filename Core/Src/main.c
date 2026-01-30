@@ -291,11 +291,12 @@ int main(void)
   
   HAL_ADCEx_InjectedStart(&hadc1);
   __HAL_ADC_ENABLE_IT(&hadc1,ADC_IT_JEOC);
-  //HAL_ADC_Start_DMA(&hadc3,(uint32_t *)ADC_buff,15);
+  
   HAL_ADC_Start_IT(&hadc1);
   HAL_ADC_Start_DMA(&hadc1,(uint32_t *)ADC_buff,12);
   HAL_ADC_PollForConversion(&hadc1, 50);
   HAL_ADC_Start(&hadc1);
+  // HAL_ADCEx_InjectedStart_IT(&hadc1);
 
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
@@ -413,7 +414,7 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
   }
 
 }
-
+//7ee75574453dedc37120c1ddd948099600afb96d
 /* USER CODE END 4 */
 
 /**
@@ -441,6 +442,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       inverseParkTransform(&Udq_M0,&Ualpbe_M0,angle*7);
       svpwm_sector_choice(&SVPWM_M0,&Ualpbe_M0);
       SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
+
+
       // PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
 
 
