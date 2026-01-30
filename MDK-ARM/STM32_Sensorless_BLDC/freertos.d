@@ -58,3 +58,4 @@ stm32_sensorless_bldc\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMS
 stm32_sensorless_bldc\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
 stm32_sensorless_bldc\freertos.o: ../App/inc/lcd_task.h
 stm32_sensorless_bldc\freertos.o: ../App/inc/IMU_task.h
+stm32_sensorless_bldc\freertos.o: ../App/inc/uart_task.h

@@ -1863,6 +1863,16 @@
               <FileType>5</FileType>
               <FilePath>..\App\inc\init_file.h</FilePath>
             </File>
+            <File>
+              <FileName>uart_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\uart_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_task.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\App\inc\uart_task.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -1,14 +1,2 @@
-*** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
-Build target 'STM32_Sensorless_BLDC'
-compiling main.c...
-../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
-  int MPU9250_DMP();
-../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
-  
-ool MPU9250_dataReady();
-../Core/Src/main.c: 2 warnings, 0 errors
-linking...
-Program Size: Code=185512 RO-data=24592 RW-data=956 ZI-data=109136  
-FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 2 Warning(s).
-Build Time Elapsed:  00:00:07
+Load "STM32_Sensorless_BLDC\\STM32_Sensorless_BLDC.axf" 
+Erase Done.Programming Done.Verify OK.Flash Load finished at 14:02:43

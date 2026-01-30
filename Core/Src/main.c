@@ -177,7 +177,8 @@ Edge_Detector_t edge_detector;
 /* CodeSet END*/
 
 /* IMU BEGIN*/
-extern osMessageQId IMUQueueHandle;
+extern osMessageQueueId_t IMUQueueHandle;
+extern osMessageQueueId_t FOCQueueHandle;
 /* IMU END*/
 
 /* USER CODE END PV */
@@ -303,7 +304,7 @@ int main(void)
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
   svpwm_init(&Udq_M0,0.0f,2.5f);
-  AS5600_Init(&AS5600,&hi2c2);
+  // AS5600_Init(&AS5600,&hi2c2);
   PID_Init(&PID_Current_D,3.0f,-3.0f,100.0f);
   PID_Init(&PID_Current_Q,3.0f,-3.0f,100.0f);
   PID_param_set(&PID_Current_D,0.0f,0.0f,0.0f);
@@ -388,13 +389,27 @@ void PWM_TIM2_Set(uint16_t pwm_a,uint16_t pwm_b,uint16_t pwm_c)
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);//
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);//
 }
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
   if(hadc->Instance == ADC1)
   {
       RGBB_toggle();
-
-
+      RGBC_toggle();
+      ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
+      ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
+      ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+      Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
+      Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
+      Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
+      FOC_Data_t foc_data;
+      foc_data.tcm1 = SVPWM_M0.tcm1;
+      foc_data.tcm2 = SVPWM_M0.tcm2;
+      foc_data.tcm3 = SVPWM_M0.tcm3;
+      foc_data.Ia = Iabc_M0.Ia;
+      foc_data.Ib = Iabc_M0.Ib;
+      foc_data.Ic = Iabc_M0.Ic;
+      osMessageQueuePut(FOCQueueHandle, &foc_data, 0, 0);
+      // printf("ADC_ISR_working\n");
   }
 
 }
@@ -414,20 +429,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-      RGBC_toggle();
-      ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
-      ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-      ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
-      Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
-      Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
-      Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
-
-      AS5600_Update(&AS5600);
-      Mech_Angle = AS5600_GetOnceAngle(&AS5600);
+      // AS5600_Update(&AS5600);
+      // Mech_Angle = AS5600_GetOnceAngle(&AS5600);
       // Elec_Angle = Mech_Angle*7.0f;
       // Mech_RPM = AS5600_GetVelocity_RPM(&AS5600);
-      Clarke_transform(&Iabc_M0,&Ialpbe_M0);
-      Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
+      // Clarke_transform(&Iabc_M0,&Ialpbe_M0);
+      // Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
       angle += 0.04f;
       if(angle > 6.2831853f) angle = 0.0f;
@@ -436,26 +443,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       SVPWM_timer_period_set(&SVPWM_M0,&Ualpbe_M0);
       // PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
 
-      // 处理按键调整 PID_Current_Q.Kp/Ki/Kd
 
-      // printf("pitch:roll:yaw:ia:ib:ic:Ang:Rpm:Counter:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%lu\n", 
-      //                 pitch,roll,yaw,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic,
-      //                 Mech_Angle,Mech_RPM,imu_task_counter);
-      // printf("Ang:Rpm:ia:ib:ic:id:iq:kp:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
-      // ,Mech_Angle,Mech_RPM,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic
-      // ,Iqd_M0.Id,Iqd_M0.Iq,PID_Current_Q.kp,Udq_M0.Uq,Udq_M0.Ud);
-      IMU_Euler_t euler_data;
-      osStatus_t status = osMessageQueueGet(IMUQueueHandle, &euler_data, NULL, 0);  // 非阻塞获取
-      if (status == osOK) {
-          pitch = euler_data.pitch;
-          roll = euler_data.roll;
-          yaw = euler_data.yaw;
-      }
-      len = sprintf((char *)dma_buffer, 
-          "ta:tb:tc:Ang:ia:ib:ic:pitch:roll:yaw:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
-          SVPWM_M0.tcm1, SVPWM_M0.tcm2, SVPWM_M0.tcm3, Mech_Angle,
-          Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic, pitch, roll, yaw);
-      HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
   }
   if (htim->Instance == TIM10) // 1ms tick
   {

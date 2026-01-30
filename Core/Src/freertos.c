@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "lcd_task.h"
 #include "IMU_task.h"
+#include "uart_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,8 +62,14 @@ const osThreadAttr_t IMU9250_task_attributes = {
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+osThreadId_t UARTTaskHandle;
+const osThreadAttr_t UART_task_attributes = {
+  .name = "UARTTask",
+  .stack_size = 1024 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
+};
 osMessageQueueId_t IMUQueueHandle;
-
+osMessageQueueId_t FOCQueueHandle;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -119,12 +126,15 @@ void MX_FREERTOS_Init(void) {
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  FOCQueueHandle = osMessageQueueNew(10, sizeof(FOC_Data_t), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   LcdTaskHandle = osThreadNew(LcdTask_Entry,NULL,&Lcd_task_attributes);
   LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, NULL, &LvglTimer_task_attributes);
-  IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
+  // IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
+  UARTTaskHandle = osThreadNew(UARTTask_Entry, NULL, &UART_task_attributes);
+
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
