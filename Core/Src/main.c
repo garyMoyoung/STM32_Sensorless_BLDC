@@ -164,6 +164,9 @@ volatile uint8_t rx1_length = 0;
 volatile uint8_t rx1_data[8] = {0};
 volatile uint8_t rx1_checksum = 0;
 volatile uint8_t rx1_checksum_flag = 0;
+
+static uint8_t dma_buffer[256];
+int len;
 /* UASRT END*/
 
 /* CodeSet BEGIN*/
@@ -309,6 +312,7 @@ int main(void)
   PID_Q_Kp = 0.0f;
   PID_Q_Ki = 0.0f;
   PID_Q_Kd = 0.0f;
+  
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -394,6 +398,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
   }
 
 }
+
 /* USER CODE END 4 */
 
 /**
@@ -439,17 +444,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       // printf("Ang:Rpm:ia:ib:ic:id:iq:kp:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
       // ,Mech_Angle,Mech_RPM,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic
       // ,Iqd_M0.Id,Iqd_M0.Iq,PID_Current_Q.kp,Udq_M0.Uq,Udq_M0.Ud);
-      osEvent evt = osMessageGet(IMUQueueHandle, 0);  // 非阻塞获取
-      if (evt.status == osEventMessage) {
-          IMU_Euler_t* p_euler = (IMU_Euler_t*)evt.value.p;
-          pitch = p_euler->pitch;
-          roll = p_euler->roll;
-          yaw = p_euler->yaw;
+      IMU_Euler_t euler_data;
+      osStatus_t status = osMessageQueueGet(IMUQueueHandle, &euler_data, NULL, 0);  // 非阻塞获取
+      if (status == osOK) {
+          pitch = euler_data.pitch;
+          roll = euler_data.roll;
+          yaw = euler_data.yaw;
       }
-      printf("ta:tb:tc:Ang:ia:ib:ic:pitch:roll:yaw:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n"
-        ,SVPWM_M0.tcm1,SVPWM_M0.tcm2,SVPWM_M0.tcm3,Mech_Angle
-        ,Iabc_M0.Ia,Iabc_M0.Ib,Iabc_M0.Ic,pitch,roll,yaw);
-
+      len = sprintf((char *)dma_buffer, 
+          "ta:tb:tc:Ang:ia:ib:ic:pitch:roll:yaw:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
+          SVPWM_M0.tcm1, SVPWM_M0.tcm2, SVPWM_M0.tcm3, Mech_Angle,
+          Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic, pitch, roll, yaw);
+      HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
   }
   if (htim->Instance == TIM10) // 1ms tick
   {

@@ -61,7 +61,7 @@ const osThreadAttr_t IMU9250_task_attributes = {
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-osMessageQId IMUQueueHandle;
+osMessageQueueId_t IMUQueueHandle;
 
 /* USER CODE END PM */
 
@@ -99,14 +99,13 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
-  imuDataMutexHandle = osMutexNew(NULL);
+
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   // 创建 IMU 欧拉角队列，容量8个
-  osMessageQDef(IMUEulerQueue, 8, IMU_Euler_t);
-  IMUQueueHandle = osMessageCreate(osMessageQ(IMUEulerQueue), NULL);
+  IMUQueueHandle = osMessageQueueNew(8, sizeof(IMU_Euler_t), NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */

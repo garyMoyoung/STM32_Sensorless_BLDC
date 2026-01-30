@@ -1,8 +1,14 @@
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
-compiling foc_drv.c...
+compiling main.c...
+../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
+  int MPU9250_DMP();
+../Bsp/inc/MPU9250-DMP.h(148): warning:  #1295-D: Deprecated declaration MPU9250_dataReady - give arg types
+  
+ool MPU9250_dataReady();
+../Core/Src/main.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=185888 RO-data=24504 RW-data=952 ZI-data=108864  
+Program Size: Code=185512 RO-data=24592 RW-data=956 ZI-data=109136  
 FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 0 Warning(s).
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 2 Warning(s).
 Build Time Elapsed:  00:00:07

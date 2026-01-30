@@ -66,7 +66,7 @@ void IMU9250Task_Entry(void const * argument)
                 euler_data.pitch = pitch_inside;
                 euler_data.roll = roll_inside;
                 euler_data.yaw = yaw_inside;
-                osMessagePut(IMUQueueHandle, (uint32_t)&euler_data, 0);
+                osMessageQueuePut(IMUQueueHandle, &euler_data, 0, 0);
             }
         }
         osDelay(10);

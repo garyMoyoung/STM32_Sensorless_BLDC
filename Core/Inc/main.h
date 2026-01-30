@@ -197,7 +197,6 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 #define BUFFER_SIZE     256
-#define PI 3.1415926f
 #define RGBA_toggle() HAL_GPIO_TogglePin(RGBA_GPIO_Port, RGBA_Pin)
 #define RGBB_toggle() HAL_GPIO_TogglePin(RGB_B_GPIO_Port, RGB_B_Pin)
 #define RGBC_toggle() HAL_GPIO_TogglePin(RGB_C_GPIO_Port, RGB_C_Pin)
