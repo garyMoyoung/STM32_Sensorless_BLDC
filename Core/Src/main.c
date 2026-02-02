@@ -302,7 +302,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
-  svpwm_init(&Udq_M0,0.0f,2.5f);
+  svpwm_init(&Udq_M0,0.0f,0.5f);
   AS5600_Init(&AS5600,&hi2c2);
   PID_Init(&PID_Current_D,3.0f,-3.0f,100.0f);
   PID_Init(&PID_Current_Q,3.0f,-3.0f,100.0f);
@@ -431,8 +431,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       // Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       // Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-      IF_ang_ZZ(angle,0.04f);
-      SVPWM(angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
+      angle = IF_ang_ZZ(angle,0.04f);
+      SVPWM(angle*7.0f, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
 
       // PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
 

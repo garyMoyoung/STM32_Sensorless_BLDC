@@ -13,7 +13,7 @@ void inverseParkTransform(Udq_Struct *U_dq,Ualpbe_Struct *U_alphaBeta,float angl
 void svpwm_sector_choice(SVPWM_Struct *svpwm,Ualpbe_Struct *U_alphaBeta);
 void SVPWM_timer_period_set(SVPWM_Struct *svpwm,Ualpbe_Struct *U_alphaBeta);
 void SVPWM(float Ele_angle, Ualpbe_Struct *Ualpbe_M0, SVPWM_Struct *SVPWM_M0, Udq_Struct *Udq_M0);
-void IF_ang_ZZ(float angle,float add_index);
+float IF_ang_ZZ(float angle,float add_index);
 void  Key_read(void);
 
 #endif

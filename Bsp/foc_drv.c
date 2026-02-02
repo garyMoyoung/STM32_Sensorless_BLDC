@@ -188,6 +188,9 @@ void SVPWM_timer_period_set(SVPWM_Struct *svpwm, Ualpbe_Struct *U_alphaBeta)
           svpwm->tcm3 = svpwm->ta;
           break;
     }
+    svpwm->tcm1 = 2.0f * svpwm->tcm1;
+    svpwm->tcm2 = 2.0f * svpwm->tcm2;
+    svpwm->tcm3 = 2.0f * svpwm->tcm3;
 }
 void SVPWM(float Ele_angle, Ualpbe_Struct *Ualpbe_M0, SVPWM_Struct *SVPWM_M0, Udq_Struct *Udq_M0)
 {
@@ -195,10 +198,11 @@ void SVPWM(float Ele_angle, Ualpbe_Struct *Ualpbe_M0, SVPWM_Struct *SVPWM_M0, Ud
     svpwm_sector_choice(SVPWM_M0,Ualpbe_M0);
     SVPWM_timer_period_set(SVPWM_M0,Ualpbe_M0);
 }
-void IF_ang_ZZ(float angle,float add_index)
+float IF_ang_ZZ(float angle,float add_index)
 {
     angle += add_index;
     if(angle > 6.2831853f) angle = 0.0f;
+    return angle;
 }
 /** 
  * @brief SVPWM初始化
