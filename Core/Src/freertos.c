@@ -129,7 +129,7 @@ void MX_FREERTOS_Init(void) {
   /* add queues, ... */
   // 创建 IMU 欧拉角队列，容量8个
   IMUQueueHandle = osMessageQueueNew(8, sizeof(IMU_Euler_t), NULL);
-  PIDQueueHandle = osMessageQueueNew(4, sizeof(PID_Param_t), NULL);
+  PIDQueueHandle = osMessageQueueNew(6, sizeof(PID_Param_t), NULL);
   FOCQueueHandle = osMessageQueueNew(8, sizeof(FOC_Data_t), NULL);
   /* USER CODE END RTOS_QUEUES */
 

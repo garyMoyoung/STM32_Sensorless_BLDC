@@ -359,7 +359,6 @@ void USART1_IRQHandler(void)
               frameHandler_one.rxBuff[DOWN_FRAME_HEAD2_POS] = rx1_buffer[i];
               frameHandler_one.state = WAIT_DEVICE;
             }
-            else frameHandler_one.state = 0;
             break;
 
           case WAIT_DEVICE:
@@ -378,11 +377,6 @@ void USART1_IRQHandler(void)
           case WAIT_data2:  // 数据2
               frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS + 1] = rx1_buffer[i];
               frameHandler_one.data[1] = rx1_buffer[i];
-              frameHandler_one.state = WAIT_data3;
-            break;
-          case WAIT_data3:  // 数据3
-              frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS + 2] = rx1_buffer[i];
-              frameHandler_one.data[2] = rx1_buffer[i];
               frameHandler_one.state = WAIT_TAIL1;
             break;
           
@@ -393,20 +387,18 @@ void USART1_IRQHandler(void)
           
           case WAIT_TAIL2:
               frameHandler_one.rxBuff[DOWN_FRAME_TAIL2_POS] = rx1_buffer[i];
-              frameHandler_one.state = 0;
               frameHandler_one.frameOK = true;
               Proc_flag = 1;
             break;
           
           default:
-            frameHandler_one.state = 0;
             break;
         }
         if(frameHandler_one.frameOK = true)
         {
           
           temp_array[0] = frameHandler_one.device;
-          memcpy(&temp_array[1], frameHandler_one.data, 3);
+          memcpy(&temp_array[1], frameHandler_one.data, 2);
           ProcessDataFrame(temp_array,Proc_flag);
           frameHandler_one.frameOK = false;
         }

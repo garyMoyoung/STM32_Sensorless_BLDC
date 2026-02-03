@@ -416,7 +416,7 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-      // osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
+      osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
       osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
       PID_Current_D.kp = Id_pid.kp;
       PID_Current_Q.kp = Iq_pid.kp;
@@ -434,11 +434,13 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
         PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
       }
 
-      len = sprintf((char *)dma_buffer, 
-        "id:iq:ialpha:ibeta:Ang:iq_kp:iq_ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
-        Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
-        PID_Current_Q.kp, PID_Current_Q.ki);
-      HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
+      printf("iq_kp:iq_ki:id_kp:id_ki:%.4f,%.4f,%.4f,%.4f\n",
+        PID_Current_Q.kp,PID_Current_Q.ki,PID_Current_D.kp,PID_Current_D.ki);
+      // len = sprintf((char *)dma_buffer, 
+      //   "id:iq:ialpha:ibeta:Ang:iq_kp:iq_ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
+      //   Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
+      //   PID_Current_Q.kp, PID_Current_Q.ki);
+      // HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
   }
 
 }

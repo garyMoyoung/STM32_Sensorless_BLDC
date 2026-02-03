@@ -38,7 +38,6 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
         uint8_t data1 = data[0];//三环选取
         uint8_t data2 = data[1];//参数索引
         uint8_t data3 = data[2];//步长
-        uint8_t data4 = data[3];//
         float step_size = calculate_step_size(data[2]);
 
         switch(data[0])
@@ -61,9 +60,10 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
           break;
         }
         Proc_flag = 0;
-        // osMessageQueuePut(PIDQueueHandle, &Id_temp, 0, 0);
+        osMessageQueuePut(PIDQueueHandle, &Id_temp, 0, 0);
         osMessageQueuePut(PIDQueueHandle, &Iq_temp, 0, 0);
-
+        // printf("Id_temp.kp:%.4f,Id_temp.ki:%.4f,Iq_temp.kp:%.4f,Iq_temp.ki:%.4f\n",
+        // Id_temp.kp,Id_temp.ki,Iq_temp.kp,Iq_temp.ki);
     }
     
 }
@@ -83,7 +83,7 @@ void UARTTask_Entry(void * argument)
     FOC_Data_t foc_data;
     osStatus_t status = osMessageQueueGet(FOCQueueHandle, &foc_data, NULL, 0);
     
-    osDelay(10);  // 500Hz
+    osDelay(1);  // 500Hz
   }
   /* USER CODE END UARTTask_Entry */
 }

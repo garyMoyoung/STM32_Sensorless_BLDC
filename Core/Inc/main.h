@@ -147,7 +147,7 @@ typedef enum {
 typedef struct {
     uint8_t  rxBuff[DOWN_FRAME_LEN_MAX];// 接收缓冲
     uint8_t  device;                      // 地址
-    uint8_t  data[3];                     // 接收长度
+    uint8_t  data[2];                     // 接收长度
     RxState  state;                     // 状态机状态
     bool     frameOK;                   // 帧完成标志
 } FrameRxHandler;
