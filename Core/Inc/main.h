@@ -179,6 +179,10 @@ typedef struct {
     float maxIntegral;
 } PID_Param_t;
 
+typedef struct {
+    uint8_t data[3];
+    uint8_t flag;
+} UART_Frame_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

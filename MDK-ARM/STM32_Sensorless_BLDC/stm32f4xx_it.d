@@ -47,3 +47,14 @@ stm32_sensorless_bldc\stm32f4xx_it.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio
 stm32_sensorless_bldc\stm32f4xx_it.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\stm32f4xx_it.o: ../Core/Inc/stm32f4xx_it.h
 stm32_sensorless_bldc\stm32f4xx_it.o: ../App/inc/uart_task.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Core/Inc/FreeRTOSConfig.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h

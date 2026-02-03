@@ -183,6 +183,7 @@ Edge_Detector_t edge_detector;
 extern osMessageQueueId_t IMUQueueHandle;
 extern osMessageQueueId_t FOCQueueHandle;
 extern osMessageQueueId_t PIDQueueHandle;
+extern osMessageQueueId_t UARTQueueHandle;
 /* IMU END*/
 
 /* USER CODE END PV */

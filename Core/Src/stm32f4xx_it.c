@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "uart_task.h"
+#include "cmsis_os.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +54,9 @@ extern volatile uint8_t rx1_length;
 extern volatile uint8_t rx1_data[8];
 extern volatile uint8_t rx1_checksum;
 extern volatile uint8_t rx1_checksum_flag;
+
+extern osMessageQueueId_t UARTQueueHandle;
+
 /* UASRT END*/
 
 /* USER CODE END PV */
@@ -327,10 +331,8 @@ void USART1_IRQHandler(void)
   /* USER CODE BEGIN USART1_IRQn 0 */
   uint8_t tmp_flag = 0;
 	uint8_t temp;
-  uint8_t *temp_array;
-  uint8_t Proc_flag = 0;
 	tmp_flag = __HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE);
-	
+	UART_Frame_t drame;
   if((tmp_flag != RESET))
 	{ 
 		__HAL_UART_CLEAR_IDLEFLAG(&huart1);
@@ -388,7 +390,7 @@ void USART1_IRQHandler(void)
           case WAIT_TAIL2:
               frameHandler_one.rxBuff[DOWN_FRAME_TAIL2_POS] = rx1_buffer[i];
               frameHandler_one.frameOK = true;
-              Proc_flag = 1;
+              drame.flag = 1;
             break;
           
           default:
@@ -396,10 +398,9 @@ void USART1_IRQHandler(void)
         }
         if(frameHandler_one.frameOK = true)
         {
-          
-          temp_array[0] = frameHandler_one.device;
-          memcpy(&temp_array[1], frameHandler_one.data, 2);
-          ProcessDataFrame(temp_array,Proc_flag);
+          drame.data[0] = frameHandler_one.device;
+          memcpy(&drame.data[1], frameHandler_one.data, 2);
+          osMessageQueuePut(UARTQueueHandle, &drame, 0, 0);
           frameHandler_one.frameOK = false;
         }
       }

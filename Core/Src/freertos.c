@@ -78,6 +78,7 @@ const osThreadAttr_t Angle_task_attributes = {
 osMessageQueueId_t IMUQueueHandle;
 osMessageQueueId_t FOCQueueHandle;
 osMessageQueueId_t PIDQueueHandle;
+osMessageQueueId_t UARTQueueHandle;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -131,6 +132,7 @@ void MX_FREERTOS_Init(void) {
   IMUQueueHandle = osMessageQueueNew(8, sizeof(IMU_Euler_t), NULL);
   PIDQueueHandle = osMessageQueueNew(6, sizeof(PID_Param_t), NULL);
   FOCQueueHandle = osMessageQueueNew(8, sizeof(FOC_Data_t), NULL);
+  UARTQueueHandle = osMessageQueueNew(1, sizeof(UART_Frame_t), NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */

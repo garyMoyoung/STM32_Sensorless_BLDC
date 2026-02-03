@@ -11,12 +11,14 @@ extern UART_HandleTypeDef huart1;
 extern osMessageQueueId_t IMUQueueHandle;
 extern osMessageQueueId_t FOCQueueHandle;
 extern osMessageQueueId_t PIDQueueHandle;
+extern osMessageQueueId_t UARTQueueHandle;
 extern FrameRxHandler frameHandler_one;
 
 extern PIDController PID_Current_D;
 extern PIDController PID_Current_Q;
 PID_Param_t Id_temp;
 PID_Param_t Iq_temp;
+UART_Frame_t drame_task;
 float calculate_step_size(uint8_t data_value) {
     // 步长 = 10^(-data_value)
     float step_size = 1.0f;
@@ -73,7 +75,10 @@ void UARTTask_Entry(void * argument)
   /* USER CODE BEGIN UARTTask_Entry */
   for(;;)
   {
-
+    osStatus_t status_uart = osMessageQueueGet(UARTQueueHandle, &drame_task, NULL, 0);
+    if (status_uart == osOK) {
+        ProcessDataFrame(drame_task.data,drame_task.flag);
+    }
     // osStatus_t status = osMessageQueueGet(IMUQueueHandle, &euler_data, NULL, 0);  // 非阻塞获取
     // if (status == osOK) {
     //     pitch = euler_data.pitch;
