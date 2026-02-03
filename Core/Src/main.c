@@ -398,32 +398,43 @@ void PWM_TIM2_Set(uint16_t pwm_a,uint16_t pwm_b,uint16_t pwm_c)
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);//
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);//
 }
+void Current_read()
+{
+    ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
+    ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
+    ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+    Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
+    Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
+    Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
+}
+
+void angle_proc()
+{
+    AS5600_UpdateAngle_DMA(&M0);
+    Mech_Angle = AS5600_GetAngle(&M0);
+    Mech_Angle = _normalizeAngle(Mech_Angle);
+    Elec_Angle = 7.0f * Mech_Angle;
+}
+
+void Queue_proc()
+{
+    osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
+    osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
+    PID_Current_D.kp = Id_pid.kp;
+    PID_Current_Q.kp = Iq_pid.kp;
+    PID_Current_D.ki = Id_pid.ki;
+    PID_Current_Q.ki = Iq_pid.ki;
+
+}
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
   if(hadc->Instance == ADC1)
   {
-      RGBB_toggle();
-      RGBC_toggle();
-      AS5600_UpdateAngle_DMA(&M0);
-      Mech_Angle = AS5600_GetAngle(&M0);
-      Mech_Angle = _normalizeAngle(Mech_Angle);
-      Elec_Angle = 7.0f * Mech_Angle;
-      ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
-      ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-      ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
-      Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
-      Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
-      Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
+      angle_proc();
+      Current_read();
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
-
-      osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
-      osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
-      PID_Current_D.kp = Id_pid.kp;
-      PID_Current_Q.kp = Iq_pid.kp;
-      PID_Current_D.ki = Id_pid.ki;
-      PID_Current_Q.ki = Iq_pid.ki;
-
+      Queue_proc();
       angle = IF_ang_ZZ(angle,0.001f);
       SVPWM(angle*7.0f, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
       if(Key[0].mode == 1)

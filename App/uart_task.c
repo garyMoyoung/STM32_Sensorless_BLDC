@@ -85,8 +85,6 @@ void UARTTask_Entry(void * argument)
     //     roll = euler_data.roll;
     //     yaw = euler_data.yaw;
     // }
-    FOC_Data_t foc_data;
-    osStatus_t status = osMessageQueueGet(FOCQueueHandle, &foc_data, NULL, 0);
     
     osDelay(1);  // 500Hz
   }
