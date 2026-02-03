@@ -139,6 +139,8 @@ uint32_t TIM10_task_CNT = 0;
 float angle = 0.0f;
 PIDController PID_Current_D;
 PIDController PID_Current_Q;
+PID_Param_t Id_pid;
+PID_Param_t Iq_pid;
 Key_Struct_init Key[3];
 // PID Q 参数备用变量（用于按键调整）
 float PID_Q_Kp = 0.0f;
@@ -165,6 +167,7 @@ volatile uint8_t rx1_data[8] = {0};
 volatile uint8_t rx1_checksum = 0;
 volatile uint8_t rx1_checksum_flag = 0;
 
+
 static uint8_t dma_buffer[256];
 int len;
 /* UASRT END*/
@@ -179,6 +182,7 @@ Edge_Detector_t edge_detector;
 /* IMU BEGIN*/
 extern osMessageQueueId_t IMUQueueHandle;
 extern osMessageQueueId_t FOCQueueHandle;
+extern osMessageQueueId_t PIDQueueHandle;
 /* IMU END*/
 
 /* USER CODE END PV */
@@ -282,6 +286,10 @@ int main(void)
   MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
   // Init_All();
+  __HAL_UART_ENABLE_IT(&huart1,UART_IT_IDLE);//空闲中断
+  // __HAL_UART_ENABLE_IT(&huart1,UART_IT_RXNE);//接收中断
+  HAL_UART_Receive_DMA(&huart1,rx1_buffer,BUFFER_SIZE);
+
   __HAL_TIM_CLEAR_IT(&htim3,TIM_IT_UPDATE);
   HAL_TIM_Base_Start_IT(&htim3);
   __HAL_TIM_CLEAR_IT(&htim9,TIM_IT_UPDATE);
@@ -408,7 +416,13 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-      
+      // osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
+      osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
+      PID_Current_D.kp = Id_pid.kp;
+      PID_Current_Q.kp = Iq_pid.kp;
+      PID_Current_D.ki = Id_pid.ki;
+      PID_Current_Q.ki = Iq_pid.ki;
+
       angle = IF_ang_ZZ(angle,0.001f);
       SVPWM(angle*7.0f, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
       if(Key[0].mode == 1)
@@ -421,20 +435,10 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       }
 
       len = sprintf((char *)dma_buffer, 
-        "id:iq:ialpha:ibeta:Ang:ia:ib:ic:key0:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d\n",
+        "id:iq:ialpha:ibeta:Ang:iq_kp:iq_ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
         Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
-        Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic, Key[0].mode);
+        PID_Current_Q.kp, PID_Current_Q.ki);
       HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
-
-      // FOC_Data_t foc_data;
-      // foc_data.tcm1 = SVPWM_M0.tcm1;
-      // foc_data.tcm2 = SVPWM_M0.tcm2;
-      // foc_data.tcm3 = SVPWM_M0.tcm3;
-      // foc_data.Ia = Iabc_M0.Ia;
-      // foc_data.Ib = Iabc_M0.Ib;
-      // foc_data.Ic = Iabc_M0.Ic;
-      // osMessageQueuePut(FOCQueueHandle, &foc_data, 0, 0);
-      // printf("ADC_ISR_working\n");
   }
 
 }

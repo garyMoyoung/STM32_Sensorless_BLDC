@@ -27,6 +27,14 @@ Project File Date:  02/03/2026
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
+compiling uart_task.c...
+..\App\uart_task.c(38): warning:  #177-D: variable "data1"  was declared but never referenced
+          uint8_t data1 = data[0];//三环选取
+..\App\uart_task.c(40): warning:  #177-D: variable "data3"  was declared but never referenced
+          uint8_t data3 = data[2];//步长
+..\App\uart_task.c(41): warning:  #177-D: variable "data4"  was declared but never referenced
+          uint8_t data4 = data[3];//
+..\App\uart_task.c: 3 warnings, 0 errors
 compiling main.c...
 ../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
   int MPU9250_DMP();
@@ -35,9 +43,9 @@ compiling main.c...
 ool MPU9250_dataReady();
 ../Core/Src/main.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=174264 RO-data=20936 RW-data=788 ZI-data=109300  
+Program Size: Code=174548 RO-data=20924 RW-data=772 ZI-data=109396  
 FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 2 Warning(s).
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 5 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -60,7 +68,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@6.1.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:10
+Build Time Elapsed:  00:00:06
 </pre>
 </body>
 </html>

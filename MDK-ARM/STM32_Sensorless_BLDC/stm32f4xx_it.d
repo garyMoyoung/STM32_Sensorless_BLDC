@@ -46,3 +46,4 @@ stm32_sensorless_bldc\stm32f4xx_it.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\limit
 stm32_sensorless_bldc\stm32f4xx_it.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_sensorless_bldc\stm32f4xx_it.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdbool.h
 stm32_sensorless_bldc\stm32f4xx_it.o: ../Core/Inc/stm32f4xx_it.h
+stm32_sensorless_bldc\stm32f4xx_it.o: ../App/inc/uart_task.h

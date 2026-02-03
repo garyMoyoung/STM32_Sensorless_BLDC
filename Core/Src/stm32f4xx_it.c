@@ -22,6 +22,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "uart_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -326,9 +327,10 @@ void USART1_IRQHandler(void)
   /* USER CODE BEGIN USART1_IRQn 0 */
   uint8_t tmp_flag = 0;
 	uint8_t temp;
-  static uint8_t checksum = 0;
-
+  uint8_t *temp_array;
+  uint8_t Proc_flag = 0;
 	tmp_flag = __HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE);
+	
   if((tmp_flag != RESET))
 	{ 
 		__HAL_UART_CLEAR_IDLEFLAG(&huart1);
@@ -336,6 +338,7 @@ void USART1_IRQHandler(void)
 		temp  =  __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
 		rx1_len =  BUFFER_SIZE - temp; 
 		recv1_end_flag = 1;
+    
     if(recv1_end_flag == 1)
 		{
       for(uint8_t i = 0; i < rx1_len; i++)
@@ -343,70 +346,69 @@ void USART1_IRQHandler(void)
         switch(frameHandler_one.state)
         {
           case WAIT_HEAD1:  // 帧头1 (0x24)
-            if(rx1_buffer[i] == 0x24)
+            if(rx1_buffer[i] == 0xFE)
             {
               frameHandler_one.rxBuff[DOWN_FRAME_HEAD1_POS] = rx1_buffer[i];
-              frameHandler_one.rxLen = 1;
               frameHandler_one.state = WAIT_HEAD2;
             }
             break;
 
           case WAIT_HEAD2:  // 帧头2 (0x42)
-            if(rx1_buffer[i] == 0x42) 
+            if(rx1_buffer[i] == 0xEF) 
             {
               frameHandler_one.rxBuff[DOWN_FRAME_HEAD2_POS] = rx1_buffer[i];
-              frameHandler_one.rxLen++;
-              frameHandler_one.state = WAIT_ADDR;
-              checksum = 0;  //计算校验�????
+              frameHandler_one.state = WAIT_DEVICE;
             }
             else frameHandler_one.state = 0;
             break;
-            
-          case WAIT_ADDR:  // 地址
-            frameHandler_one.rxBuff[DOWN_FRAME_ADDR_POS] = rx1_buffer[i];
-            frameHandler_one.rxLen++;
-            frameHandler_one.addr = rx1_buffer[i];  // 保存地址
-            frameHandler_one.state = WAIT_LEN;
-            checksum += rx1_buffer[i];  // 累加校验�?????????
-            rx1_addr = rx1_buffer[i];         
-            break;
-            
-          case WAIT_LEN:  // 长度
-            if(rx1_buffer[i] <= DOWN_FRAME_LEN_MAX) {
-                frameHandler_one.rxBuff[DOWN_FRAME_LEN_POS] = rx1_buffer[i];
-                frameHandler_one.dataLen = rx1_buffer[i];
-                frameHandler_one.rxLen++;
-                frameHandler_one.state = frameHandler_one.dataLen > 0 ? WAIT_DATA : WAIT_CHECK;
-                checksum += rx1_buffer[i];
-                rx1_length = rx1_buffer[i];  // 保存长度
-            } else {
-                frameHandler_one.state = WAIT_HEAD1;
-            }
+
+          case WAIT_DEVICE:
+            frameHandler_one.rxBuff[DOWN_FRAME_DEVICE_POS] = rx1_buffer[i];
+            frameHandler_one.device = rx1_buffer[i];  // 保存地址
+            frameHandler_one.state = WAIT_data1;
             break;
 
-          case WAIT_DATA:  // 数据
-            frameHandler_one.rxBuff[frameHandler_one.rxLen++] = rx1_buffer[i];
-            checksum += rx1_buffer[i];
-            rx1_data[frameHandler_one.rxLen - DOWN_FRAME_DATA_POS - 1] = rx1_buffer[i];  // 保存数据
-            if(frameHandler_one.rxLen >= frameHandler_one.dataLen + DOWN_FRAME_DATA_POS) {
-                frameHandler_one.state = WAIT_CHECK;
+          case WAIT_data1:  //数据1
+            if(rx1_buffer[i] <= DOWN_FRAME_LEN_MAX) {
+                frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS] = rx1_buffer[i];
+                frameHandler_one.data[0] = rx1_buffer[i];
+                frameHandler_one.state = WAIT_data2;
             }
+            break;
+          case WAIT_data2:  // 数据2
+              frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS + 1] = rx1_buffer[i];
+              frameHandler_one.data[1] = rx1_buffer[i];
+              frameHandler_one.state = WAIT_data3;
+            break;
+          case WAIT_data3:  // 数据3
+              frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS + 2] = rx1_buffer[i];
+              frameHandler_one.data[2] = rx1_buffer[i];
+              frameHandler_one.state = WAIT_TAIL1;
             break;
           
-          case WAIT_CHECK:  // 校验�????????
-            if(rx1_buffer[i] == checksum) 
-            {
-                frameHandler_one.frameOK = true;
-                rx1_checksum = checksum;  // 保存校验�????
-                rx1_checksum_flag = 1;    // 设置校验成功标志
-            }
-            frameHandler_one.state = WAIT_HEAD1;
-            checksum = 0;
+          case WAIT_TAIL1:
+              frameHandler_one.rxBuff[DOWN_FRAME_TAIL1_POS] = rx1_buffer[i];
+              frameHandler_one.state = WAIT_TAIL2;
             break;
-            
+          
+          case WAIT_TAIL2:
+              frameHandler_one.rxBuff[DOWN_FRAME_TAIL2_POS] = rx1_buffer[i];
+              frameHandler_one.state = 0;
+              frameHandler_one.frameOK = true;
+              Proc_flag = 1;
+            break;
+          
           default:
             frameHandler_one.state = 0;
             break;
+        }
+        if(frameHandler_one.frameOK = true)
+        {
+          
+          temp_array[0] = frameHandler_one.device;
+          memcpy(&temp_array[1], frameHandler_one.data, 3);
+          ProcessDataFrame(temp_array,Proc_flag);
+          frameHandler_one.frameOK = false;
         }
       }
     }

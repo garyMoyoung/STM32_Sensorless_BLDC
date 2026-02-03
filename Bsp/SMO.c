@@ -67,6 +67,7 @@ float Limit(float value,float lim)
 	}
 	return tem;
 }
+
 void SMO(void)
 {
 	if(Iab_fore_Last[0] - Iab_Last[0] > 1.0f)

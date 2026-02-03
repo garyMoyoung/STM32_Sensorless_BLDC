@@ -1,6 +1,7 @@
 #include "cmsis_os.h"
 #include "math.h"
 #include "main.h"
+#include "uart_task.h"
 
 extern float Mech_Angle; 
 extern Iabc_Struct Iabc_M0;
@@ -9,14 +10,67 @@ extern SVPWM_Struct SVPWM_M0;
 extern UART_HandleTypeDef huart1;
 extern osMessageQueueId_t IMUQueueHandle;
 extern osMessageQueueId_t FOCQueueHandle;
+extern osMessageQueueId_t PIDQueueHandle;
 extern FrameRxHandler frameHandler_one;
+
+extern PIDController PID_Current_D;
+extern PIDController PID_Current_Q;
+PID_Param_t Id_temp;
+PID_Param_t Iq_temp;
+float calculate_step_size(uint8_t data_value) {
+    // 步长 = 10^(-data_value)
+    float step_size = 1.0f;
+    
+    for(int i = 0; i < data_value; i++) {
+        step_size /= 10.0f;
+    }
+    
+    return step_size;
+}
+
+// 数据帧处理函数
+void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag) 
+{
+    // 这里处理接收到的4字节数据
+    // 根据实际需求解析数据
+    if(Proc_flag == 1) 
+    {
+        uint8_t data1 = data[0];//三环选取
+        uint8_t data2 = data[1];//参数索引
+        uint8_t data3 = data[2];//步长
+        uint8_t data4 = data[3];//
+        float step_size = calculate_step_size(data[2]);
+
+        switch(data[0])
+        {
+          case 0x00:
+          break;
+          case 0x01://电流环参数
+            if((data2 == 0x01)&&Proc_flag == 1)       Id_temp.kp += step_size;
+            else if((data2 == 0x11)&&Proc_flag == 1)  Id_temp.kp -= step_size;
+            else if((data2 == 0x02)&&Proc_flag == 1)  Id_temp.ki += step_size;
+            else if((data2 == 0x12)&&Proc_flag == 1)  Id_temp.ki -= step_size;
+          break;
+          case 0x02://电流环参数
+            if((data2 == 0x01)&&Proc_flag == 1)       Iq_temp.kp += step_size;
+            else if((data2 == 0x11)&&Proc_flag == 1)  Iq_temp.kp -= step_size;
+            else if((data2 == 0x02)&&Proc_flag == 1)  Iq_temp.ki += step_size;
+            else if((data2 == 0x12)&&Proc_flag == 1)  Iq_temp.ki -= step_size;
+          break;
+          default:
+          break;
+        }
+        Proc_flag = 0;
+        // osMessageQueuePut(PIDQueueHandle, &Id_temp, 0, 0);
+        osMessageQueuePut(PIDQueueHandle, &Iq_temp, 0, 0);
+
+    }
+    
+}
+
 void UARTTask_Entry(void * argument)
 {
   /* USER CODE BEGIN UARTTask_Entry */
-  static uint8_t dma_buffer[256];
-  int len;
-  
-  IMU_Euler_t euler_data;
   for(;;)
   {
 

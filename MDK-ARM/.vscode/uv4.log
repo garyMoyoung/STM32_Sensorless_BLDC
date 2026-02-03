@@ -1,2 +1,21 @@
-Load "STM32_Sensorless_BLDC\\STM32_Sensorless_BLDC.axf" 
-Erase Done.Programming Done.Verify OK.Flash Load finished at 14:02:43
+*** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
+Build target 'STM32_Sensorless_BLDC'
+compiling SMO.c...
+compiling stm32f4xx_it.c...
+../Core/Src/stm32f4xx_it.c(359): warning:  #188-D: enumerated type mixed with another type
+              else frameHandler_one.state = 0;
+../Core/Src/stm32f4xx_it.c(393): warning:  #188-D: enumerated type mixed with another type
+                frameHandler_one.state = 0;
+../Core/Src/stm32f4xx_it.c(398): warning:  #188-D: enumerated type mixed with another type
+              frameHandler_one.state = 0;
+../Core/Src/stm32f4xx_it.c(401): warning:  #187-D: use of "=" where "==" may have been intended
+          if(frameHandler_one.frameOK = 
+rue)
+../Core/Src/stm32f4xx_it.c(405): warning:  #223-D: function "ProcessDataFrame" declared implicitly
+            ProcessDataFrame(temp_array);
+../Core/Src/stm32f4xx_it.c: 5 warnings, 0 errors
+linking...
+Program Size: Code=174584 RO-data=20936 RW-data=780 ZI-data=109300  
+FromELF: creating hex file...
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 5 Warning(s).
+Build Time Elapsed:  00:00:08
