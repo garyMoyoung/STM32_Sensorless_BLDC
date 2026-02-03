@@ -13,14 +13,9 @@ extern Key_Struct_init Key[3];
  */
 void Clarke_transform(Iabc_Struct *I_abc, Ialpbe_Struct *I_alpbe)
 {
-    // Clarke变换公式
-    // I_alpha = Ia
-    // I_beta = (Ia + 2*Ib) / √3 = (Ia + 2*Ib) * sqrt(3)/3
     
-    float32_t sqrt3_inv = 0.57735026919f;  // 1/√3
-    
-    I_alpbe->I_alpha = I_abc->Ia;
-    I_alpbe->I_beta = (I_abc->Ia + 2.0f * I_abc->Ib) * sqrt3_inv;
+    I_alpbe->I_alpha = I_abc->Ia - I_abc->Ib / 2.0f - I_abc->Ic / 2.0f;
+    I_alpbe->I_beta =  I_abc->Ib * 0.866f - I_abc->Ic * 0.866f;
 }
 
 /**

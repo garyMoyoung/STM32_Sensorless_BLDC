@@ -395,22 +395,35 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
   {
       RGBB_toggle();
       RGBC_toggle();
-      ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
+      AS5600_UpdateAngle_DMA(&M0);
+      Mech_Angle = AS5600_GetAngle(&M0);
+      Mech_Angle = _normalizeAngle(Mech_Angle);
+      Elec_Angle = 7.0f * Mech_Angle;
+      ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
       ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-      ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+      ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
       Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
       Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
       Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
+      Clarke_transform(&Iabc_M0,&Ialpbe_M0);
+      Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
+
       
-      AS5600_UpdateAngle_DMA(&M0);
-      Mech_Angle = AS5600_GetAngle(&M0);
-      angle = IF_ang_ZZ(angle,0.04f);
+      angle = IF_ang_ZZ(angle,0.001f);
       SVPWM(angle*7.0f, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-      
+      if(Key[0].mode == 1)
+      {
+        PWM_TIM2_Set(0,0,0);
+      }
+      else 
+      {
+        PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
+      }
+
       len = sprintf((char *)dma_buffer, 
-        "ta:tb:tc:Ang:ia:ib:ic:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
-        SVPWM_M0.tcm1, SVPWM_M0.tcm2, SVPWM_M0.tcm3, Mech_Angle,
-        Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic);
+        "id:iq:ialpha:ibeta:Ang:ia:ib:ic:key0:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d\n",
+        Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
+        Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic, Key[0].mode);
       HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
 
       // FOC_Data_t foc_data;
@@ -441,12 +454,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-      // Clarke_transform(&Iabc_M0,&Ialpbe_M0);
-      // Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
+      
 
       
 
-      // PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
+      
 
 
   }
