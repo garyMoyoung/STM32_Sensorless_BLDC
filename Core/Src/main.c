@@ -54,6 +54,7 @@
 #include "init_file.h"
 #include "foc_drv.h"
 #include "pid.h"
+#include "timer_utils.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -82,11 +83,12 @@ Ialpbe_Struct Ialpbe_M0;
 Ialpbe_Struct Ialpbe_M0_last;
 Iqd_Struct Iqd_M0;
 SVPWM_Struct SVPWM_M0;
+AS5600 M0;
 float Udc = 12.6f;
 uint16_t ADC_Value[3] = {0};
 uint32_t ADC_buff[3] = {0};
 uint16_t ad_val_orig[3] = {0};
-AS5600_T AS5600;
+
 float Mech_Angle = 0.0f; 
 float Elec_Angle = 0.0f;   
 float Mech_RPM = 0.0f;
@@ -303,16 +305,15 @@ int main(void)
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
   svpwm_init(&Udq_M0,0.0f,0.5f);
-  AS5600_Init(&AS5600,&hi2c2);
-  PID_Init(&PID_Current_D,3.0f,-3.0f,100.0f);
-  PID_Init(&PID_Current_Q,3.0f,-3.0f,100.0f);
+  
+  AS5600_Init(&M0,&hi2c2);
+  DWT_Init();
+  PID_Init(&PID_Current_D,0.0f,0.0f,0.0f);
+  PID_Init(&PID_Current_Q,0.0f,0.0f,0.0f);
   PID_param_set(&PID_Current_D,0.0f,0.0f,0.0f);
   PID_param_set(&PID_Current_Q,0.0f,0.0f,0.0f);
   // 初始化 PID Q 参数本地副本
-  PID_Q_Kp = 0.0f;
-  PID_Q_Ki = 0.0f;
-  PID_Q_Kd = 0.0f;
-  
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -400,14 +401,26 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
       Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
       Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
-      FOC_Data_t foc_data;
-      foc_data.tcm1 = SVPWM_M0.tcm1;
-      foc_data.tcm2 = SVPWM_M0.tcm2;
-      foc_data.tcm3 = SVPWM_M0.tcm3;
-      foc_data.Ia = Iabc_M0.Ia;
-      foc_data.Ib = Iabc_M0.Ib;
-      foc_data.Ic = Iabc_M0.Ic;
-      osMessageQueuePut(FOCQueueHandle, &foc_data, 0, 0);
+      
+      AS5600_UpdateAngle_DMA(&M0);
+      Mech_Angle = AS5600_GetAngle(&M0);
+      angle = IF_ang_ZZ(angle,0.04f);
+      SVPWM(angle*7.0f, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
+      
+      len = sprintf((char *)dma_buffer, 
+        "ta:tb:tc:Ang:ia:ib:ic:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
+        SVPWM_M0.tcm1, SVPWM_M0.tcm2, SVPWM_M0.tcm3, Mech_Angle,
+        Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic);
+      HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
+
+      // FOC_Data_t foc_data;
+      // foc_data.tcm1 = SVPWM_M0.tcm1;
+      // foc_data.tcm2 = SVPWM_M0.tcm2;
+      // foc_data.tcm3 = SVPWM_M0.tcm3;
+      // foc_data.Ia = Iabc_M0.Ia;
+      // foc_data.Ib = Iabc_M0.Ib;
+      // foc_data.Ic = Iabc_M0.Ic;
+      // osMessageQueuePut(FOCQueueHandle, &foc_data, 0, 0);
       // printf("ADC_ISR_working\n");
   }
 
@@ -431,8 +444,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       // Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       // Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-      angle = IF_ang_ZZ(angle,0.04f);
-      SVPWM(angle*7.0f, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
+      
 
       // PWM_TIM2_Set(3360*SVPWM_M0.ta,3360*SVPWM_M0.tb,3360*SVPWM_M0.tc);
 
@@ -446,14 +458,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       TIM10_task_CNT = 0;
       
     }
-    if (Key[0].mode_now == 1) {
-        PID_Q_Kp += 0.001f;
-      }
-      if (Key[1].mode_now == 1) {
-        PID_Q_Kp -= 0.001f;
-      }
-    PID_Current_Q.kp = PID_Q_Kp;
-    PID_Current_D.kp = PID_Q_Kp;
+
     // 将按键计数视为毫秒（每次中断 +1 ms）
     for (uint8_t i = 0; i < 3; i++)
     {

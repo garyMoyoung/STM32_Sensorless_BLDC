@@ -116,12 +116,6 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE END RTOS_MUTEX */
 
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  // 创建 IMU 欧拉角队列，容量8个
-  IMUQueueHandle = osMessageQueueNew(8, sizeof(IMU_Euler_t), NULL);
-  /* USER CODE END RTOS_QUEUES */
-
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -130,10 +124,15 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  // 创建 IMU 欧拉角队列，容量8个
+  IMUQueueHandle = osMessageQueueNew(8, sizeof(IMU_Euler_t), NULL);
+  /* USER CODE END RTOS_QUEUES */
+
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-  FOCQueueHandle = osMessageQueueNew(10, sizeof(FOC_Data_t), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

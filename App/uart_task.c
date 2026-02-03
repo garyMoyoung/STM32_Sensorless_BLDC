@@ -28,11 +28,7 @@ void UARTTask_Entry(void * argument)
     // }
     FOC_Data_t foc_data;
     osStatus_t status = osMessageQueueGet(FOCQueueHandle, &foc_data, NULL, 0);
-    len = sprintf((char *)dma_buffer, 
-        "ta:tb:tc:Ang:ia:ib:ic:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
-        foc_data.tcm1, foc_data.tcm2, foc_data.tcm3, Mech_Angle,
-        foc_data.Ia, foc_data.Ib, foc_data.Ic);
-    HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
+    
     osDelay(10);  // 500Hz
   }
   /* USER CODE END UARTTask_Entry */

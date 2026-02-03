@@ -4,15 +4,15 @@ stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.
 stm32_sensorless_bldc\main.o: ../Core/Inc/stm32f4xx_hal_conf.h
 stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
 stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
-stm32_sensorless_bldc\main.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h
-stm32_sensorless_bldc\main.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f407xx.h
+stm32_sensorless_bldc\main.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
+stm32_sensorless_bldc\main.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h
 stm32_sensorless_bldc\main.o: ../Drivers/CMSIS/Include/core_cm4.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdint.h
 stm32_sensorless_bldc\main.o: ../Drivers/CMSIS/Include/cmsis_version.h
 stm32_sensorless_bldc\main.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 stm32_sensorless_bldc\main.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 stm32_sensorless_bldc\main.o: ../Drivers/CMSIS/Include/mpu_armv7.h
-stm32_sensorless_bldc\main.o: ..\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h
+stm32_sensorless_bldc\main.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h
 stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 stm32_sensorless_bldc\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stddef.h
@@ -65,7 +65,6 @@ stm32_sensorless_bldc\main.o: ../Core/Inc/tim.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/usart.h
 stm32_sensorless_bldc\main.o: ../Core/Inc/gpio.h
 stm32_sensorless_bldc\main.o: D:\Keil MDK\ARM\ARMCC\Bin\..\include\stdarg.h
-stm32_sensorless_bldc\main.o: ../Bsp/inc/AS5600.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/AS5600.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd_init.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/lcd.h
@@ -208,3 +207,4 @@ stm32_sensorless_bldc\main.o: ../LVGL/examples/porting/lv_port_indev.h
 stm32_sensorless_bldc\main.o: ../App/inc/init_file.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/foc_drv.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/pid.h
+stm32_sensorless_bldc\main.o: ../Bsp/inc/timer_utils.h
