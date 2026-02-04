@@ -121,7 +121,7 @@ uint16_t ADC_Moving_Average_Filter(ADC_Filter_t *filter, uint16_t new_value)
  * @param alpha: 滤波系数 (0-1, 越小滤波越强)
  * @retval 滤波后的值
  */
-float ADC_Low_Pass_Filter(float last_value, uint16_t new_value, float alpha)
+float Low_Pass_Filter(float last_value, uint16_t new_value, float alpha)
 {
     return alpha * new_value + (1.0f - alpha) * last_value;
 }

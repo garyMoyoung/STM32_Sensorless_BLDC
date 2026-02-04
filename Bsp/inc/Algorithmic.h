@@ -37,7 +37,7 @@ void T_FlipFlop_Init(T_FlipFlop_t *t_ff, uint8_t initial_state);
 uint8_t T_FlipFlop_Update(T_FlipFlop_t *t_ff, uint8_t clk, uint8_t T);
 void ADC_Filter_Init(ADC_Filter_t *filter);
 uint16_t ADC_Moving_Average_Filter(ADC_Filter_t *filter, uint16_t new_value);
-float ADC_Low_Pass_Filter(float last_value, uint16_t new_value, float alpha);
+float Low_Pass_Filter(float last_value, uint16_t new_value, float alpha);
 uint16_t ADC_Median_Filter(uint16_t *buffer, uint8_t size);
 void Kalman_Filter_Init(Kalman_Filter_t *kf, float Q, float R, float P, float initial_value);
 float Kalman_Filter_Update(Kalman_Filter_t *kf, float measurement);

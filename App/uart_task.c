@@ -58,13 +58,17 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
             else if((data2 == 0x02)&&Proc_flag == 1)  Iq_temp.ki += step_size;
             else if((data2 == 0x12)&&Proc_flag == 1)  Iq_temp.ki -= step_size;
           break;
+          case 0x03:
+            if((data2 == 0x01)&&Proc_flag == 1)       Iq_temp.target += 2.0f;
+            else if((data2 == 0x02)&&Proc_flag == 1)  Iq_temp.target -= 2.0f;
+          break;
           default:
           break;
         }
         Proc_flag = 0;
         osMessageQueuePut(PIDQueueHandle, &Id_temp, 0, 0);
         osMessageQueuePut(PIDQueueHandle, &Iq_temp, 0, 0);
-        // printf("data1:0x%02x,data2:0x%02x,data3:0x%02x\n",data1,data2,data3);
+        printf("data1:0x%02x,data2:0x%02x,data3:0x%02x\n",data1,data2,data3);
         // printf("Id_temp.kp:%.4f,Id_temp.ki:%.4f,Iq_temp.kp:%.4f,Iq_temp.ki:%.4f\n",
         // Id_temp.kp,Id_temp.ki,Iq_temp.kp,Iq_temp.ki);
     }

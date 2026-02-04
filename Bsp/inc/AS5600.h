@@ -74,5 +74,8 @@ float AS5600_GetAngle(AS5600* dev);
 uint16_t AS5600_GetRawAngle_Blocking(AS5600* dev);
 uint16_t AS5600_GetRawAngle(AS5600* dev);
 float AS5600_GetVelocity(AS5600* dev);
+float rad_sec_to_rpm(float rad_sec);
+float rad_sec_to_hz(float rad_sec);
+
 
 #endif /* INC_AS5600_H_ */

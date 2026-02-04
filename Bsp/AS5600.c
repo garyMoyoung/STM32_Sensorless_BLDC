@@ -153,19 +153,33 @@ float AS5600_GetVelocity(AS5600* dev)
 
 	/* Save previous angle */
 	float prev_angle = dev->total_angle_rad;
+    printf("Previous angle: %.4f rad\n", prev_angle);
 
+	AS5600_UpdateAngle_DMA(dev);
 	/* Calculate time delta */
 	float time_delta_s = (now_us - dev->prev_time_us) * 0.000001f;
 	time_delta_s = (time_delta_s > 0.1) ? 0.0001f : time_delta_s;
 
 	/* Calculate angle delta */
-	float angle_delta = AS5600_GetAngle(dev) - prev_angle;
+	float current_angle = AS5600_GetAngle(dev);
+    printf("Current angle: %.4f rad\n", current_angle);
 
+	float angle_delta = current_angle - prev_angle;
+	
 	/* Update sensor timestamp */
 	dev->prev_time_us = now_us;
-
+	printf("angle_delta:%.4f,time_delta_s:%.4f\n",angle_delta,time_delta_s);
+	
 	return angle_delta / time_delta_s;
 }
 
+// 从弧度/秒转换为RPM (Revolutions Per Minute)
+float rad_sec_to_rpm(float rad_sec) {
+    return rad_sec * 60.0f / (2.0f * PI);
+}
 
+// 从弧度/秒转换为Hz (Revolutions Per Second)
+float rad_sec_to_hz(float rad_sec) {
+    return rad_sec / (2.0f * PI);
+}
 

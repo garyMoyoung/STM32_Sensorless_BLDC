@@ -92,6 +92,7 @@ uint16_t ad_val_orig[3] = {0};
 float Mech_Angle = 0.0f; 
 float Elec_Angle = 0.0f;   
 float Mech_RPM = 0.0f;
+float Mech_RPM_filter = 0.0f;
 
 uint16_t ucAdc[3];
 uint8_t Flag;
@@ -139,6 +140,7 @@ uint32_t TIM10_task_CNT = 0;
 float angle = 0.0f;
 PIDController PID_Current_D;
 PIDController PID_Current_Q;
+PIDController PID_Speed;
 PID_Param_t Id_pid;
 PID_Param_t Iq_pid;
 Key_Struct_init Key[3];
@@ -167,9 +169,6 @@ volatile uint8_t rx1_data[8] = {0};
 volatile uint8_t rx1_checksum = 0;
 volatile uint8_t rx1_checksum_flag = 0;
 
-
-static uint8_t dma_buffer[256];
-int len;
 /* UASRT END*/
 
 /* CodeSet BEGIN*/
@@ -408,22 +407,64 @@ void Current_read()
     Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
 }
 
-void angle_proc()
-{
-    AS5600_UpdateAngle_DMA(&M0);
-    Mech_Angle = AS5600_GetAngle(&M0);
-    Mech_Angle = _normalizeAngle(Mech_Angle);
-    Elec_Angle = 7.0f * Mech_Angle;
-}
+
 
 void Queue_proc()
 {
     osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
     osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
-    PID_param_set(&PID_Current_D,0.049f,Id_pid.ki,Id_pid.kd);
-    PID_param_set(&PID_Current_Q,0.049f,Iq_pid.ki,Iq_pid.kd);
-
+    PID_param_set(&PID_Current_D,0.050f,Id_pid.ki,Id_pid.kd);
+    PID_param_set(&PID_Current_Q,0.050f,Iq_pid.ki,Iq_pid.kd);
+    PID_Current_Q.target = Iq_pid.target;
 }
+
+static float prev_angle = 0.0f;
+static uint32_t prev_time = 0;
+
+float calculate_speed_from_angle(float current_angle, float* prev_angle, uint32_t* prev_time)
+{
+    uint32_t current_time = micros(); // 获取当前时间（微秒）
+    
+    // 计算时间差（秒）
+    float time_delta = (current_time - *prev_time) / 1000000.0f;
+    
+    // 限制最小时间差，避免除零
+    if(time_delta < 0.001f) {
+        time_delta = 0.001f;
+    }
+    
+    // 计算角度差（考虑角度环绕）
+    float angle_delta = current_angle - *prev_angle;
+    
+    // 处理角度环绕（-π到π或0到2π）
+    if(angle_delta > 3.14159f) {
+        angle_delta -= 2 * 3.14159f;
+    } else if(angle_delta < -3.14159f) {
+        angle_delta += 2 * 3.14159f;
+    }
+    
+    // 计算速度（弧度/秒）
+    float speed = angle_delta / time_delta;
+    
+    // 更新前一次的值
+    *prev_angle = current_angle;
+    *prev_time = current_time;
+    
+    return speed;
+}
+
+void angle_proc()
+{
+    AS5600_UpdateAngle_DMA(&M0);
+    Mech_Angle = AS5600_GetAngle(&M0);
+    Mech_RPM = calculate_speed_from_angle(Mech_Angle, &prev_angle, &prev_time);
+    Mech_RPM = rad_sec_to_rpm(Mech_RPM);
+    // Mech_RPM_filter = Low_Pass_Filter(Mech_RPM_filter, Mech_RPM, 0.5f);
+
+    Mech_Angle = _normalizeAngle(Mech_Angle);
+    Elec_Angle = 7.0f * Mech_Angle;
+}
+
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
   if(hadc->Instance == ADC1)
@@ -433,17 +474,17 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
       Queue_proc();
+      // PID_Current_Q.target = PID_Position_Calculate();
       Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
-      Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,4.0f,Iqd_M0.Iq);
+      Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
 //      angle = IF_ang_ZZ(angle,0.1f);
       SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
       PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
+      
 
-      // printf("iq_kp:iq_ki:id_kp:id_ki:%.4f,%.4f,%.4f,%.4f\n",
-      //   PID_Current_Q.kp,PID_Current_Q.ki,PID_Current_D.kp,PID_Current_D.ki);
-      printf("id:iq:ialpha:ibeta:Ang:iq_ki:id_ki:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
-        Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
-        PID_Current_Q.ki, PID_Current_D.ki,Udq_M0.Uq,Udq_M0.Ud);
+      printf("id:iq:ialpha:ibeta:rpm:iq_ki:id_ki:Uq:Ud:IQ_tar:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f\n",
+        Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_RPM,
+        PID_Current_Q.ki, PID_Current_D.ki,Udq_M0.Uq,Udq_M0.Ud,PID_Current_Q.target);
       // len = sprintf((char *)dma_buffer, 
       //   "id:iq:ialpha:ibeta:Ang:iq_kp:iq_ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
       //   Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,

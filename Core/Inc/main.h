@@ -118,6 +118,7 @@ typedef struct {
     float maxOutput; // ??????
     float minOutput; // ??????
     float maxIntegral; // ????
+    float target;    // 目标值
 } PIDController;
 
 typedef struct Key_Struct
@@ -177,6 +178,7 @@ typedef struct {
     float maxOutput;
     float minOutput;
     float maxIntegral;
+    float target;
 } PID_Param_t;
 
 typedef struct {
