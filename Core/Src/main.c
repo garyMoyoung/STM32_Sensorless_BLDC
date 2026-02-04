@@ -420,10 +420,8 @@ void Queue_proc()
 {
     osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
     osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
-    PID_Current_D.kp = Id_pid.kp;
-    PID_Current_Q.kp = Iq_pid.kp;
-    PID_Current_D.ki = Id_pid.ki;
-    PID_Current_Q.ki = Iq_pid.ki;
+    PID_param_set(&PID_Current_D,Id_pid.kp,Id_pid.ki,Id_pid.kd);
+    PID_param_set(&PID_Current_Q,Iq_pid.kp,Iq_pid.ki,Iq_pid.kd);
 
 }
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
@@ -435,19 +433,21 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
       Queue_proc();
-      angle = IF_ang_ZZ(angle,0.001f);
+      // Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
+      // Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,0.0f,Iqd_M0.Iq);
+      angle = IF_ang_ZZ(angle,0.005f);
       SVPWM(angle*7.0f, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
       if(Key[0].mode == 1)
       {
         PWM_TIM2_Set(0,0,0);
       }
-      else 
+      else
       {
         PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
       }
 
-      printf("iq_kp:iq_ki:id_kp:id_ki:%.4f,%.4f,%.4f,%.4f\n",
-        PID_Current_Q.kp,PID_Current_Q.ki,PID_Current_D.kp,PID_Current_D.ki);
+      // printf("iq_kp:iq_ki:id_kp:id_ki:%.4f,%.4f,%.4f,%.4f\n",
+      //   PID_Current_Q.kp,PID_Current_Q.ki,PID_Current_D.kp,PID_Current_D.ki);
       // len = sprintf((char *)dma_buffer, 
       //   "id:iq:ialpha:ibeta:Ang:iq_kp:iq_ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
       //   Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
@@ -473,11 +473,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   if (htim->Instance == TIM9)
   {
       
-
-      
-
-      
-
 
   }
   if (htim->Instance == TIM10) // 1ms tick
