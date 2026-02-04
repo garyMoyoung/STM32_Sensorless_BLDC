@@ -353,7 +353,7 @@ void USART1_IRQHandler(void)
             {
               frameHandler_one.rxBuff[DOWN_FRAME_HEAD1_POS] = rx1_buffer[i];
               frameHandler_one.state = WAIT_HEAD2;
-              printf("State: WAIT_HEAD1 (0)\r\n");
+              // printf("State: WAIT_HEAD1 (0)\r\n");
             }
             break;
 
@@ -362,7 +362,7 @@ void USART1_IRQHandler(void)
             {
               frameHandler_one.rxBuff[DOWN_FRAME_HEAD2_POS] = rx1_buffer[i];
               frameHandler_one.state = WAIT_DEVICE;
-              printf("State: WAIT_HEAD2 (1)\r\n");
+              // printf("State: WAIT_HEAD2 (1)\r\n");
             }
             break;
 
@@ -370,7 +370,7 @@ void USART1_IRQHandler(void)
             frameHandler_one.rxBuff[DOWN_FRAME_DEVICE_POS] = rx1_buffer[i];
             frameHandler_one.device = rx1_buffer[i];  // 保存地址
             frameHandler_one.state = WAIT_data1;
-            printf("State: WAIT_DEVICE (2)\r\n");
+            // printf("State: WAIT_DEVICE (2)\r\n");
             break;
 
           case WAIT_data1:  //数据1
@@ -378,14 +378,14 @@ void USART1_IRQHandler(void)
                 frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS] = rx1_buffer[i];
                 frameHandler_one.data[0] = rx1_buffer[i];
                 frameHandler_one.state = WAIT_data2;
-                printf("State: WAIT_data1 (3)\r\n");
+                // printf("State: WAIT_data1 (3)\r\n");
             }
             break;
           case WAIT_data2:  // 数据2
               frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS + 1] = rx1_buffer[i];
               frameHandler_one.data[1] = rx1_buffer[i];
               frameHandler_one.state = WAIT_TAIL1;
-              printf("State: WAIT_data2 (4)\r\n");
+              // printf("State: WAIT_data2 (4)\r\n");
             break;
           
           case WAIT_TAIL1:
@@ -393,7 +393,7 @@ void USART1_IRQHandler(void)
             {
               frameHandler_one.rxBuff[DOWN_FRAME_TAIL1_POS] = rx1_buffer[i];
                 frameHandler_one.state = WAIT_TAIL2;
-                printf("State: WAIT_TAIL1 (5)\r\n");
+                // printf("State: WAIT_TAIL1 (5)\r\n");
             }
             break;
           
@@ -404,7 +404,7 @@ void USART1_IRQHandler(void)
               frameHandler_one.frameOK = true;
               drame.flag = 1;
               frameHandler_one.state = WAIT_HEAD1;
-              printf("State: WAIT_TAIL2 (6)\r\n");
+              // printf("State: WAIT_TAIL2 (6)\r\n");
             }
             break;
           

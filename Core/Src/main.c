@@ -313,14 +313,14 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
-  svpwm_init(&Udq_M0,0.0f,0.5f);
+  svpwm_init(&Udq_M0,0.0f,0.0f);
   
   AS5600_Init(&M0,&hi2c2);
   DWT_Init();
-  PID_Init(&PID_Current_D,0.0f,0.0f,0.0f);
-  PID_Init(&PID_Current_Q,0.0f,0.0f,0.0f);
-  PID_param_set(&PID_Current_D,0.0f,0.0f,0.0f);
-  PID_param_set(&PID_Current_Q,0.0f,0.0f,0.0f);
+  PID_Init(&PID_Current_D,4.0f,-4.0f,100.0f);
+  PID_Init(&PID_Current_Q,4.0f,-4.0f,100.0f);
+  PID_param_set(&PID_Current_D,0.0517f,0.0f,0.0f);
+  PID_param_set(&PID_Current_Q,0.0517f,0.0f,0.0f);
   // 初始化 PID Q 参数本地副本
 
   /* USER CODE END 2 */
@@ -420,8 +420,8 @@ void Queue_proc()
 {
     osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
     osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
-    PID_param_set(&PID_Current_D,Id_pid.kp,Id_pid.ki,Id_pid.kd);
-    PID_param_set(&PID_Current_Q,Iq_pid.kp,Iq_pid.ki,Iq_pid.kd);
+    PID_param_set(&PID_Current_D,0.049f,Id_pid.ki,Id_pid.kd);
+    PID_param_set(&PID_Current_Q,0.049f,Iq_pid.ki,Iq_pid.kd);
 
 }
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
@@ -433,21 +433,17 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
       Queue_proc();
-      // Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
-      // Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,0.0f,Iqd_M0.Iq);
-      angle = IF_ang_ZZ(angle,0.005f);
-      SVPWM(angle*7.0f, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-      if(Key[0].mode == 1)
-      {
-        PWM_TIM2_Set(0,0,0);
-      }
-      else
-      {
-        PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
-      }
+      Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
+      Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,4.0f,Iqd_M0.Iq);
+//      angle = IF_ang_ZZ(angle,0.1f);
+      SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
+      PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
 
       // printf("iq_kp:iq_ki:id_kp:id_ki:%.4f,%.4f,%.4f,%.4f\n",
       //   PID_Current_Q.kp,PID_Current_Q.ki,PID_Current_D.kp,PID_Current_D.ki);
+      printf("id:iq:ialpha:ibeta:Ang:iq_ki:id_ki:Uq:Ud:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
+        Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
+        PID_Current_Q.ki, PID_Current_D.ki,Udq_M0.Uq,Udq_M0.Ud);
       // len = sprintf((char *)dma_buffer, 
       //   "id:iq:ialpha:ibeta:Ang:iq_kp:iq_ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
       //   Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
