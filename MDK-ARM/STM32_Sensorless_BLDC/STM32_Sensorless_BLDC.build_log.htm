@@ -21,13 +21,18 @@ Target DLL:      CMSIS_AGDI.dll V1.33.18.0
 Dialog DLL:      TCM.DLL V1.56.4.0
  
 <h2>Project:</h2>
-D:\2025\STM32_project\STM32_Sensorless_BLDC\MDK-ARM\STM32_Sensorless_BLDC.uvprojx
+d:\2025\STM32_project\STM32_Sensorless_BLDC\MDK-ARM\STM32_Sensorless_BLDC.uvprojx
 Project File Date:  02/03/2026
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'D:\Keil MDK\ARM\ARMCC\Bin'
 Build target 'STM32_Sensorless_BLDC'
-compiling Algorithmic.c...
+compiling uart_task.c...
+..\App\uart_task.c(41): warning:  #177-D: variable "data1"  was declared but never referenced
+          uint8_t data1 = data[0];//三环选取
+..\App\uart_task.c(43): warning:  #177-D: variable "data3"  was declared but never referenced
+          uint8_t data3 = data[2];//步长
+..\App\uart_task.c: 2 warnings, 0 errors
 compiling main.c...
 ../Bsp/inc/MPU9250-DMP.h(52): warning:  #1295-D: Deprecated declaration MPU9250_DMP - give arg types
   int MPU9250_DMP();
@@ -36,9 +41,9 @@ compiling main.c...
 ool MPU9250_dataReady();
 ../Core/Src/main.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=175348 RO-data=20952 RW-data=800 ZI-data=109164  
+Program Size: Code=175224 RO-data=20852 RW-data=792 ZI-data=109268  
 FromELF: creating hex file...
-"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 2 Warning(s).
+"STM32_Sensorless_BLDC\STM32_Sensorless_BLDC.axf" - 0 Error(s), 4 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -61,7 +66,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@6.1.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:06
+Build Time Elapsed:  00:00:08
 </pre>
 </body>
 </html>

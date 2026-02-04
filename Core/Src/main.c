@@ -143,6 +143,7 @@ PIDController PID_Current_Q;
 PIDController PID_Speed;
 PID_Param_t Id_pid;
 PID_Param_t Iq_pid;
+PID_Param_t Speed_pid;
 Key_Struct_init Key[3];
 // PID Q 参数备用变量（用于按键调整）
 float PID_Q_Kp = 0.0f;
@@ -318,8 +319,10 @@ int main(void)
   DWT_Init();
   PID_Init(&PID_Current_D,4.0f,-4.0f,100.0f);
   PID_Init(&PID_Current_Q,4.0f,-4.0f,100.0f);
+  PID_Init(&PID_Speed,15.0f,-15.0f,0.0f);
   PID_param_set(&PID_Current_D,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Current_Q,0.0517f,0.0f,0.0f);
+  PID_param_set(&PID_Speed,0.0f,0.0f,0.0f);
   // 初始化 PID Q 参数本地副本
 
   /* USER CODE END 2 */
@@ -413,9 +416,12 @@ void Queue_proc()
 {
     osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
     osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
+    osMessageQueueGet(PIDQueueHandle, &Speed_pid, NULL, 0);
+
     PID_param_set(&PID_Current_D,0.050f,Id_pid.ki,Id_pid.kd);
     PID_param_set(&PID_Current_Q,0.050f,Iq_pid.ki,Iq_pid.kd);
-    PID_Current_Q.target = Iq_pid.target;
+    PID_param_set(&PID_Speed,Speed_pid.kp,Speed_pid.ki,Speed_pid.kd);
+    // PID_Current_Q.target = Iq_pid.target;
 }
 
 static float prev_angle = 0.0f;
@@ -474,7 +480,8 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
       Queue_proc();
-      // PID_Current_Q.target = PID_Position_Calculate();
+
+      PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,1000,Mech_RPM);
       Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
       Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
 //      angle = IF_ang_ZZ(angle,0.1f);
@@ -482,14 +489,12 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
       PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
       
 
-      printf("id:iq:ialpha:ibeta:rpm:iq_ki:id_ki:Uq:Ud:IQ_tar:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f\n",
-        Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_RPM,
-        PID_Current_Q.ki, PID_Current_D.ki,Udq_M0.Uq,Udq_M0.Ud,PID_Current_Q.target);
-      // len = sprintf((char *)dma_buffer, 
-      //   "id:iq:ialpha:ibeta:Ang:iq_kp:iq_ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
-      //   Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_Angle,
-      //   PID_Current_Q.kp, PID_Current_Q.ki);
-      // HAL_UART_Transmit_DMA(&huart1, dma_buffer, len);
+      // printf("id:iq:ialpha:ibeta:rpm:iq_ki:id_ki:Uq:Ud:IQ_tar:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f\n",
+      //   Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_RPM,
+      //   PID_Current_Q.ki, PID_Current_D.ki,Udq_M0.Uq,Udq_M0.Ud,PID_Current_Q.target);
+      printf("id:iq:rpm:IQ_tar:kp:ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
+        Iqd_M0.Id, Iqd_M0.Iq, Mech_RPM, PID_Current_Q.target,
+        PID_Current_Q.kp, PID_Current_Q.ki);
   }
 
 }
