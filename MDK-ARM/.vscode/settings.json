@@ -12,3 +12,7 @@
         "mpu9250_registermap.h": "c"
     }
 }
+// {
+//   "http.proxy": "http://127.0.0.1:10808",
+//   "https.proxy": "http://127.0.0.1:10808"
+// }

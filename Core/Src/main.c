@@ -314,7 +314,7 @@ int main(void)
 
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
   svpwm_init(&Udq_M0,0.0f,0.0f);
-  
+
   AS5600_Init(&M0,&hi2c2);
   DWT_Init();
   PID_Init(&PID_Current_D,4.0f,-4.0f,100.0f);
@@ -324,6 +324,7 @@ int main(void)
   PID_param_set(&PID_Current_Q,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Speed,0.0f,0.0f,0.0f);
   // 初始化 PID Q 参数本地副本
+  
 
   /* USER CODE END 2 */
 
@@ -414,12 +415,11 @@ void Current_read()
 
 void Queue_proc()
 {
-    osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
-    osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
+    // osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
+    // PID_param_set(&PID_Current_D,0.050f,Id_pid.ki,Id_pid.kd);
+    // osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
+    // PID_param_set(&PID_Current_Q,0.050f,Iq_pid.ki,Iq_pid.kd);
     osMessageQueueGet(PIDQueueHandle, &Speed_pid, NULL, 0);
-
-    PID_param_set(&PID_Current_D,0.050f,Id_pid.ki,Id_pid.kd);
-    PID_param_set(&PID_Current_Q,0.050f,Iq_pid.ki,Iq_pid.kd);
     PID_param_set(&PID_Speed,Speed_pid.kp,Speed_pid.ki,Speed_pid.kd);
     // PID_Current_Q.target = Iq_pid.target;
 }
@@ -487,14 +487,14 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 //      angle = IF_ang_ZZ(angle,0.1f);
       SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
       PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
-      
+
 
       // printf("id:iq:ialpha:ibeta:rpm:iq_ki:id_ki:Uq:Ud:IQ_tar:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f\n",
       //   Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_RPM,
       //   PID_Current_Q.ki, PID_Current_D.ki,Udq_M0.Uq,Udq_M0.Ud,PID_Current_Q.target);
       printf("id:iq:rpm:IQ_tar:kp:ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
         Iqd_M0.Id, Iqd_M0.Iq, Mech_RPM, PID_Current_Q.target,
-        PID_Current_Q.kp, PID_Current_Q.ki);
+        PID_Speed.kp, PID_Speed.ki);
   }
 
 }
