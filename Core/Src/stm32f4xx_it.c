@@ -47,13 +47,15 @@
 /* UASRT BEGIN*/
 extern FrameRxHandler frameHandler_one;
 extern uint8_t rx1_buffer[100];
-extern volatile uint8_t rx1_len;
+extern volatile uint16_t rx1_len;
 extern volatile uint8_t recv1_end_flag;
 extern volatile uint8_t rx1_addr;
-extern volatile uint8_t rx1_length;
+extern volatile uint16_t rx1_length;
 extern volatile uint8_t rx1_data[8];
 extern volatile uint8_t rx1_checksum;
 extern volatile uint8_t rx1_checksum_flag;
+extern uint8_t rx1_frame_buffer[BUFFER_SIZE];
+extern volatile uint16_t rx1_frame_len;
 
 extern osMessageQueueId_t UARTQueueHandle;
 
@@ -330,102 +332,23 @@ void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
   uint8_t tmp_flag = 0;
-	uint8_t temp;
+	uint16_t temp;
 	tmp_flag = __HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE);
-	UART_Frame_t drame;
   if((tmp_flag != RESET))
-	{ 
+	{
 		__HAL_UART_CLEAR_IDLEFLAG(&huart1);
-		HAL_UART_DMAStop(&huart1); //
+		HAL_UART_DMAStop(&huart1);
 		temp  =  __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
-		rx1_len =  BUFFER_SIZE - temp; 
-		recv1_end_flag = 1;
-    
-    if(recv1_end_flag == 1)
-		{
-      for(uint8_t i = 0; i < rx1_len; i++)
-      {
-        
-        switch(frameHandler_one.state)
-        {
-          case WAIT_HEAD1:  // 帧头1 (0xfe)
-            if(rx1_buffer[i] == 0xFE)
-            {
-              frameHandler_one.rxBuff[DOWN_FRAME_HEAD1_POS] = rx1_buffer[i];
-              frameHandler_one.state = WAIT_HEAD2;
-              // printf("State: WAIT_HEAD1 (0)\r\n");
-            }
-            break;
-
-          case WAIT_HEAD2:  // 帧头2 (0xef)
-            if(rx1_buffer[i] == 0xEF) 
-            {
-              frameHandler_one.rxBuff[DOWN_FRAME_HEAD2_POS] = rx1_buffer[i];
-              frameHandler_one.state = WAIT_DEVICE;
-              // printf("State: WAIT_HEAD2 (1)\r\n");
-            }
-            break;
-
-          case WAIT_DEVICE:
-            frameHandler_one.rxBuff[DOWN_FRAME_DEVICE_POS] = rx1_buffer[i];
-            frameHandler_one.device = rx1_buffer[i];  // 保存地址
-            frameHandler_one.state = WAIT_data1;
-            // printf("State: WAIT_DEVICE (2)\r\n");
-            break;
-
-          case WAIT_data1:  //数据1
-            if(rx1_buffer[i] <= DOWN_FRAME_LEN_MAX) {
-                frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS] = rx1_buffer[i];
-                frameHandler_one.data[0] = rx1_buffer[i];
-                frameHandler_one.state = WAIT_data2;
-                // printf("State: WAIT_data1 (3)\r\n");
-            }
-            break;
-          case WAIT_data2:  // 数据2
-              frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS + 1] = rx1_buffer[i];
-              frameHandler_one.data[1] = rx1_buffer[i];
-              frameHandler_one.state = WAIT_TAIL1;
-              // printf("State: WAIT_data2 (4)\r\n");
-            break;
-          
-          case WAIT_TAIL1:
-            if(rx1_buffer[i] == 0x23)
-            {
-              frameHandler_one.rxBuff[DOWN_FRAME_TAIL1_POS] = rx1_buffer[i];
-                frameHandler_one.state = WAIT_TAIL2;
-                // printf("State: WAIT_TAIL1 (5)\r\n");
-            }
-            break;
-          
-          case WAIT_TAIL2:
-            if(rx1_buffer[i] == 0x24)
-            {
-              frameHandler_one.rxBuff[DOWN_FRAME_TAIL2_POS] = rx1_buffer[i];
-              frameHandler_one.frameOK = true;
-              drame.flag = 1;
-              frameHandler_one.state = WAIT_HEAD1;
-              // printf("State: WAIT_TAIL2 (6)\r\n");
-            }
-            break;
-          
-          default:
-            break;
-        }
-        if(frameHandler_one.frameOK == true)
-        {
-          drame.data[0] = frameHandler_one.device;
-          memcpy(&drame.data[1], frameHandler_one.data, 2);
-          osMessageQueuePut(UARTQueueHandle, &drame, 0, 0);
-          frameHandler_one.frameOK = false;
-          printf("State: frameOK (7)\r\n");
-          // frameHandler_one.state = 0;
-        }
-      }
+		rx1_len =  BUFFER_SIZE - temp;
+    if(rx1_len > BUFFER_SIZE)
+    {
+      rx1_len = BUFFER_SIZE;
     }
+    memcpy(rx1_frame_buffer, rx1_buffer, rx1_len);
+    rx1_frame_len = rx1_len;
+		recv1_end_flag = 1;
 		rx1_len = 0;
-		recv1_end_flag = 0;
-    // checksum_flag = 0;
-		memset(rx1_buffer,0,rx1_len);
+		memset(rx1_buffer,0,BUFFER_SIZE);
   }
 
   HAL_UART_Receive_DMA(&huart1,rx1_buffer,BUFFER_SIZE);

@@ -208,3 +208,4 @@ stm32_sensorless_bldc\main.o: ../App/inc/init_file.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/foc_drv.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/pid.h
 stm32_sensorless_bldc\main.o: ../Bsp/inc/timer_utils.h
+stm32_sensorless_bldc\main.o: ../App/inc/uart_task.h

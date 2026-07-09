@@ -49,12 +49,13 @@
 #include "stm32_mpu9250_i2c.h"
 #include "Algorithmic.h"
 #include "lvgl.h"                // 它为整个LVGL提供了更完整的头文件引用
-#include "lv_port_disp.h"        // LVGL的显示支持
-#include "lv_port_indev.h"       // LVGL的触屏支持
+#include "lv_port_disp.h"        // LVGL的显示支�?
+#include "lv_port_indev.h"       // LVGL的触屏支�?
 #include "init_file.h"
 #include "foc_drv.h"
 #include "pid.h"
 #include "timer_utils.h"
+#include "uart_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -131,7 +132,7 @@ uint16_t CCNNTT;
 uint16_t Start_Flag = 1, Start_CNT = 0;
 
 extern float pitch_inside, roll_inside, yaw_inside;
-extern uint32_t imu_task_counter;  // 引入IMU任务计数器
+extern uint32_t imu_task_counter;  // 引入IMU任务计数�?
 float pitch = 0.0f;
 float roll = 0.0f;
 float yaw = 0.0f;
@@ -141,6 +142,7 @@ float angle = 0.0f;
 PIDController PID_Current_D;
 PIDController PID_Current_Q;
 PIDController PID_Speed;
+PIDController PID_Position;
 PID_Param_t Id_pid;
 PID_Param_t Iq_pid;
 PID_Param_t Speed_pid;
@@ -154,21 +156,23 @@ float PID_Q_Kd = 0.0f;
 // 更灵敏的阈值（单位：ms），适配1kHz采样
 const uint16_t DEBOUNCE_MS = 5;       // 5ms 消抖
 const uint16_t SHORT_MS = 200;        // 短按判定 200ms
-const uint16_t LONG_MS = 500;         // 长按判定 500ms（更灵敏）
-const uint16_t DOUBLE_MS = 300;       // 双击最大间隔 300ms
-const uint16_t SINGLE_MS = 150;       // 单击确认阈值 150ms
+const uint16_t LONG_MS = 500;         // 长按判定 500ms（更灵敏�?
+const uint16_t DOUBLE_MS = 300;       // 双击最大间�?300ms
+const uint16_t SINGLE_MS = 150;       // 单击确认阈�?150ms
 /* KEY_init END*/
 
 /* UASRT BEGIN*/
 FrameRxHandler frameHandler_one;
-uint8_t rx1_buffer[100]={0};
-volatile uint8_t rx1_len = 0;
+uint8_t rx1_buffer[BUFFER_SIZE]={0};
+volatile uint16_t rx1_len = 0;
 volatile uint8_t recv1_end_flag = 0;
 volatile uint8_t rx1_addr = 0;
-volatile uint8_t rx1_length = 0;
+volatile uint16_t rx1_length = 0;
 volatile uint8_t rx1_data[8] = {0};
 volatile uint8_t rx1_checksum = 0;
 volatile uint8_t rx1_checksum_flag = 0;
+uint8_t rx1_frame_buffer[BUFFER_SIZE] = {0};
+volatile uint16_t rx1_frame_len = 0;
 
 /* UASRT END*/
 
@@ -194,13 +198,13 @@ void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* Private function prototypes -----------------------------------------------*/
-/* ------------------通过重定向将printf函数映射到串口1上-------------------*/
+/* ------------------通过重定向将printf函数映射到串�?�?------------------*/
 
 #if !defined(__MICROLIB)
 
 //#pragma import(__use_no_semihosting)
 __asm (".global __use_no_semihosting\n\t");
-void _sys_exit(int x) //避免使用半主机模式
+void _sys_exit(int x) //避免使用半主机模�?
 {
   x = x;
 }
@@ -225,7 +229,7 @@ FILE __stdout;
 PUTCHAR_PROTOTYPE
 {
   /* 实现串口发送一个字节数据的函数 */
-  //serial_write(&serial1, (uint8_t)ch); //发送一个自己的数据到串口
+  //serial_write(&serial1, (uint8_t)ch); //发送一个自己的数据到串�?
 	HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
     return ch;
 }
@@ -320,10 +324,16 @@ int main(void)
   PID_Init(&PID_Current_D,4.0f,-4.0f,100.0f);
   PID_Init(&PID_Current_Q,4.0f,-4.0f,100.0f);
   PID_Init(&PID_Speed,15.0f,-15.0f,0.0f);
+  PID_Init(&PID_Position,15.0f,-15.0f,0.0f);
   PID_param_set(&PID_Current_D,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Current_Q,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Speed,0.0f,0.0f,0.0f);
-  // 初始化 PID Q 参数本地副本
+  PID_param_set(&PID_Position,0.0f,0.0f,0.0f);
+  PID_Current_D.target = 0.0f;
+  PID_Current_Q.target = 0.0f;
+  PID_Speed.target = 1000.0f;
+  PID_Position.target = 0.0f;
+  // 初始�?PID Q 参数本地副本
   
 
   /* USER CODE END 2 */
@@ -434,25 +444,25 @@ float calculate_speed_from_angle(float current_angle, float* prev_angle, uint32_
     // 计算时间差（秒）
     float time_delta = (current_time - *prev_time) / 1000000.0f;
     
-    // 限制最小时间差，避免除零
+    // 限制最小时间差，避免除�?
     if(time_delta < 0.001f) {
         time_delta = 0.001f;
     }
     
-    // 计算角度差（考虑角度环绕）
+    // 计算角度差（考虑角度环绕�?
     float angle_delta = current_angle - *prev_angle;
     
-    // 处理角度环绕（-π到π或0到2π）
+    // 处理角度环绕�?π到π�?�?π�?
     if(angle_delta > 3.14159f) {
         angle_delta -= 2 * 3.14159f;
     } else if(angle_delta < -3.14159f) {
         angle_delta += 2 * 3.14159f;
     }
     
-    // 计算速度（弧度/秒）
+    // 计算速度（弧�?秒）
     float speed = angle_delta / time_delta;
     
-    // 更新前一次的值
+    // 更新前一次的�?
     *prev_angle = current_angle;
     *prev_time = current_time;
     
@@ -471,30 +481,32 @@ void angle_proc()
     Elec_Angle = 7.0f * Mech_Angle;
 }
 
-void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
+
+void FOC_ControlLoop(void)
 {
-  if(hadc->Instance == ADC1)
-  {
       angle_proc();
       Current_read();
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
-      Queue_proc();
 
-      PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,1000,Mech_RPM);
-      Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,0.0f,Iqd_M0.Id);
+      PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM);
+      Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id);
       Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
 //      angle = IF_ang_ZZ(angle,0.1f);
       SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
       PWM_TIM2_Set(3360*SVPWM_M0.tcm1,3360*SVPWM_M0.tcm2,3360*SVPWM_M0.tcm3);
 
 
-      // printf("id:iq:ialpha:ibeta:rpm:iq_ki:id_ki:Uq:Ud:IQ_tar:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f\n",
-      //   Iqd_M0.Id, Iqd_M0.Iq, Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta, Mech_RPM,
-      //   PID_Current_Q.ki, PID_Current_D.ki,Udq_M0.Uq,Udq_M0.Ud,PID_Current_Q.target);
-      printf("id:iq:rpm:IQ_tar:kp:ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
-        Iqd_M0.Id, Iqd_M0.Iq, Mech_RPM, PID_Current_Q.target,
-        PID_Speed.kp, PID_Speed.ki);
+      // printf("id:iq:rpm:IQ_tar:kp:ki:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
+      //   Iqd_M0.Id, Iqd_M0.Iq, Mech_RPM, PID_Current_Q.target,
+      //   PID_Speed.kp, PID_Speed.ki);
+}
+
+void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+  if(hadc->Instance == ADC1)
+  {
+      Current_read();
   }
 
 }
@@ -514,19 +526,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-      
+      UART_ProcessInTimer();
+      UART_TelemetryTick();
 
   }
   if (htim->Instance == TIM10) // 1ms tick
   {
-    Key_read();  // 只调用一次
+    FOC_ControlLoop();
+    Key_read();  // 只调用一�?
     if(++TIM10_task_CNT >= 1000)
     {
       TIM10_task_CNT = 0;
       
     }
 
-    // 将按键计数视为毫秒（每次中断 +1 ms）
+    // 将按键计数视为毫秒（每次中断 +1 ms�?
     for (uint8_t i = 0; i < 3; i++)
     {
         if (Key[i].Time_Count_Flag == 1)
@@ -540,7 +554,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
         
 
-        // 如果按键持续按下且超过长按阈值，立即判定为长按（无需等待释放）
+        // 如果按键持续按下且超过长按阈值，立即判定为长按（无需等待释放�?
         if (Key[i].Time_Count_Flag == 1 && Key[i].Press_Time_Count >= LONG_MS && Key[i].Key_Long_Flag == 0) {
           Key[i].Key_Long_Flag = 1;
           Key[i].mode = 2;

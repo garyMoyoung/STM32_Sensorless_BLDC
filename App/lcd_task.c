@@ -49,7 +49,8 @@ void LcdTask_Entry(void const * argument)
 
     for(;;)
     {
-        osDelay(20);
+        lv_timer_handler();
+        osDelay(5);
     }
 }
 
