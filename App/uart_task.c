@@ -7,8 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern float Mech_Angle; 
+extern float Mech_Angle;
+extern float Elec_Angle;
+extern float Mech_RPM;
 extern Iabc_Struct Iabc_M0;
+extern Iqd_Struct Iqd_M0;
 extern float pitch, roll, yaw;
 extern SVPWM_Struct SVPWM_M0;
 extern UART_HandleTypeDef huart1;
@@ -25,14 +28,12 @@ extern PIDController PID_Current_D;
 extern PIDController PID_Current_Q;
 extern PIDController PID_Speed;
 extern PIDController PID_Position;
-extern Iqd_Struct Iqd_M0;
-extern float Elec_Angle;
+
 static PID_Param_t Id_temp;
 static PID_Param_t Iq_temp;
 static PID_Param_t Speed_temp;
 UART_Frame_t drame_task;
 
-#define PC_CMD_PID_TUNE_OLD     0x00U
 #define PC_CMD_READ_TELEMETRY   0x80U
 #define PC_CMD_STREAM_ON        0x81U
 #define PC_CMD_STREAM_OFF       0x82U
@@ -43,17 +44,18 @@ static volatile uint8_t telemetry_stream_enabled = 0;
 static volatile uint16_t telemetry_stream_period_ms = 50;
 static uint16_t telemetry_stream_cnt = 0;
 
-float calculate_step_size(uint8_t data_value) {
-    // 步长 = 10^(-data_value)
+float calculate_step_size(uint8_t data_value)
+{
     float step_size = 1.0f;
-    
-    for(int i = 0; i < data_value; i++) {
+    uint8_t i;
+
+    for(i = 0; i < data_value; i++)
+    {
         step_size /= 10.0f;
     }
-    
+
     return step_size;
 }
-
 
 static void UART_PrintTelemetry(void)
 {
@@ -85,103 +87,6 @@ static void UART_PrintPid(void)
            PID_Position.target, PID_Position.output, PID_Position.integral);
 }
 
-void UART_TelemetryTick(void)
-{
-    if (telemetry_stream_enabled == 0)
-    {
-        telemetry_stream_cnt = 0;
-        return;
-    }
-
-    if (++telemetry_stream_cnt >= telemetry_stream_period_ms)
-    {
-        telemetry_stream_cnt = 0;
-        UART_PrintTelemetry();
-    }
-}
-
-// 数据帧处理函�?
-void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag) 
-{
-    // 这里处理接收到的4字节数据
-    // 根据实际需求解析数�?
-    if(Proc_flag == 1) 
-    {
-        uint8_t data1 = data[0];//三环选取
-        uint8_t data2 = data[1];//参数索引
-        uint8_t data3 = data[2];//步长
-        uint8_t pid_update_required = 0;
-        float step_size = calculate_step_size(data[2]);
-
-        switch(data[0])
-        {
-          case PC_CMD_READ_TELEMETRY:
-            UART_PrintTelemetry();
-          break;
-          case PC_CMD_STREAM_ON:
-            telemetry_stream_period_ms = data2;
-            if (telemetry_stream_period_ms == 0)
-            {
-              telemetry_stream_period_ms = 50;
-            }
-            telemetry_stream_enabled = 1;
-            printf("$ACK,STREAM_ON,%u#\r\n", telemetry_stream_period_ms);
-          break;
-          case PC_CMD_STREAM_OFF:
-            telemetry_stream_enabled = 0;
-            printf("$ACK,STREAM_OFF#\r\n");
-          break;
-          case PC_CMD_READ_PID:
-            UART_PrintPid();
-          break;
-          case PC_CMD_READ_ALL:
-            UART_PrintTelemetry();
-            UART_PrintPid();
-          break;
-          case 0x00:
-          break;
-          case 0x01://电流环参�?
-            if((data2 == 0x01)&&Proc_flag == 1)       Id_temp.kp += step_size;
-            else if((data2 == 0x11)&&Proc_flag == 1)  Id_temp.kp -= step_size;
-            else if((data2 == 0x02)&&Proc_flag == 1)  Id_temp.ki += step_size;
-            else if((data2 == 0x12)&&Proc_flag == 1)  Id_temp.ki -= step_size;
-          break;
-          case 0x02://电流环参�?
-            if((data2 == 0x01)&&Proc_flag == 1)       Iq_temp.kp += step_size;
-            else if((data2 == 0x11)&&Proc_flag == 1)  Iq_temp.kp -= step_size;
-            else if((data2 == 0x02)&&Proc_flag == 1)  Iq_temp.ki += step_size;
-            else if((data2 == 0x12)&&Proc_flag == 1)  Iq_temp.ki -= step_size;
-          break;
-          case 0x03:
-            if((data2 == 0x01)&&Proc_flag == 1)       Iq_temp.target += 2.0f;
-            else if((data2 == 0x02)&&Proc_flag == 1)  Iq_temp.target -= 2.0f;
-          break;
-          case 0x04://速度环参�?
-            pid_update_required = 1;
-            if((data2 == 0x01)&&Proc_flag == 1)       Speed_temp.kp += step_size;
-            else if((data2 == 0x11)&&Proc_flag == 1)  Speed_temp.kp -= step_size;
-            else if((data2 == 0x02)&&Proc_flag == 1)  Speed_temp.ki += step_size;
-            else if((data2 == 0x12)&&Proc_flag == 1)  Speed_temp.ki -= step_size;
-          break;
-          default:
-          break;
-        }
-        Proc_flag = 0;
-        // osMessageQueuePut(PIDQueueHandle, &Id_temp, 0, 0);
-        // osMessageQueuePut(PIDQueueHandle, &Iq_temp, 0, 0);
-        if (pid_update_required)
-        {
-          PID_param_set(&PID_Speed, Speed_temp.kp, Speed_temp.ki, Speed_temp.kd);
-        }
-        // printf("Speed_temp.kp:%.4f,Speed_temp.ki:%.4f\n",Speed_temp.kp,Speed_temp.ki);
-        // printf("data1:0x%02x,data2:0x%02x,data3:0x%02x\n",data1,data2,data3);
-        // printf("Id_temp.kp:%.4f,Id_temp.ki:%.4f,Iq_temp.kp:%.4f,Iq_temp.ki:%.4f\n",
-        // Id_temp.kp,Id_temp.ki,Iq_temp.kp,Iq_temp.ki);
-    }
-    
-}
-
-
 static PIDController* UART_GetPidByName(const char *name)
 {
     if (strcmp(name, "ID") == 0)
@@ -205,16 +110,16 @@ static PIDController* UART_GetPidByName(const char *name)
 
 static void UART_ProcessAsciiCommand(char *line)
 {
-    char *token = NULL;
-    char *loop = NULL;
-    char *target_str = NULL;
-    char *kp_str = NULL;
-    char *ki_str = NULL;
-    char *kd_str = NULL;
-    float target = 0.0f;
-    float kp = 0.0f;
-    float ki = 0.0f;
-    float kd = 0.0f;
+    char *token;
+    char *loop;
+    char *target_str;
+    char *kp_str;
+    char *ki_str;
+    char *kd_str;
+    float target;
+    float kp;
+    float ki;
+    float kd;
     char *end = strchr(line, '#');
 
     if (end != NULL)
@@ -240,10 +145,10 @@ static void UART_ProcessAsciiCommand(char *line)
             return;
         }
 
-        target = strtof(target_str, NULL);
-        kp = strtof(kp_str, NULL);
-        ki = strtof(ki_str, NULL);
-        kd = strtof(kd_str, NULL);
+        target = (float)atof(target_str);
+        kp = (float)atof(kp_str);
+        ki = (float)atof(ki_str);
+        kd = (float)atof(kd_str);
 
         PID_param_set(pid, kp, ki, kd);
         pid->target = target;
@@ -255,10 +160,110 @@ static void UART_ProcessAsciiCommand(char *line)
     printf("$ERR,UNKNOWN_CMD#\r\n");
 }
 
+void UART_TelemetryTick(void)
+{
+    if (telemetry_stream_enabled == 0)
+    {
+        telemetry_stream_cnt = 0;
+        return;
+    }
+
+    if (++telemetry_stream_cnt >= telemetry_stream_period_ms)
+    {
+        telemetry_stream_cnt = 0;
+        UART_PrintTelemetry();
+    }
+}
+
+void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
+{
+    uint8_t data2;
+    uint8_t pid_update_required = 0;
+    float step_size;
+
+    if(Proc_flag != 1)
+    {
+        return;
+    }
+
+    data2 = data[1];
+    step_size = calculate_step_size(data[2]);
+
+    switch(data[0])
+    {
+      case PC_CMD_READ_TELEMETRY:
+        UART_PrintTelemetry();
+      break;
+
+      case PC_CMD_STREAM_ON:
+        telemetry_stream_period_ms = data2;
+        if (telemetry_stream_period_ms == 0)
+        {
+          telemetry_stream_period_ms = 50;
+        }
+        telemetry_stream_enabled = 1;
+        printf("$ACK,STREAM_ON,%u#\r\n", telemetry_stream_period_ms);
+      break;
+
+      case PC_CMD_STREAM_OFF:
+        telemetry_stream_enabled = 0;
+        printf("$ACK,STREAM_OFF#\r\n");
+      break;
+
+      case PC_CMD_READ_PID:
+        UART_PrintPid();
+      break;
+
+      case PC_CMD_READ_ALL:
+        UART_PrintTelemetry();
+        UART_PrintPid();
+      break;
+
+      case 0x00:
+      break;
+
+      case 0x01:
+        if(data2 == 0x01)       Id_temp.kp += step_size;
+        else if(data2 == 0x11)  Id_temp.kp -= step_size;
+        else if(data2 == 0x02)  Id_temp.ki += step_size;
+        else if(data2 == 0x12)  Id_temp.ki -= step_size;
+      break;
+
+      case 0x02:
+        if(data2 == 0x01)       Iq_temp.kp += step_size;
+        else if(data2 == 0x11)  Iq_temp.kp -= step_size;
+        else if(data2 == 0x02)  Iq_temp.ki += step_size;
+        else if(data2 == 0x12)  Iq_temp.ki -= step_size;
+      break;
+
+      case 0x03:
+        if(data2 == 0x01)       Iq_temp.target += 2.0f;
+        else if(data2 == 0x02)  Iq_temp.target -= 2.0f;
+      break;
+
+      case 0x04:
+        pid_update_required = 1;
+        if(data2 == 0x01)       Speed_temp.kp += step_size;
+        else if(data2 == 0x11)  Speed_temp.kp -= step_size;
+        else if(data2 == 0x02)  Speed_temp.ki += step_size;
+        else if(data2 == 0x12)  Speed_temp.ki -= step_size;
+      break;
+
+      default:
+      break;
+    }
+
+    if (pid_update_required)
+    {
+      PID_param_set(&PID_Speed, Speed_temp.kp, Speed_temp.ki, Speed_temp.kd);
+    }
+}
+
 void UART_ProcessInTimer(void)
 {
   UART_Frame_t frame;
   uint16_t frame_len;
+  uint16_t i;
 
   if (recv1_end_flag == 0)
   {
@@ -269,108 +274,7 @@ void UART_ProcessInTimer(void)
   recv1_end_flag = 0;
   rx1_frame_len = 0;
 
-  if ((frame_len > 0) && (rx1_frame_buffer[0] == '
-  {
-    switch(frameHandler_one.state)
-    {
-      case WAIT_HEAD1:
-        if(rx1_frame_buffer[i] == 0xFE)
-        {
-          frameHandler_one.rxBuff[DOWN_FRAME_HEAD1_POS] = rx1_frame_buffer[i];
-          frameHandler_one.state = WAIT_HEAD2;
-        }
-        break;
-
-      case WAIT_HEAD2:
-        if(rx1_frame_buffer[i] == 0xEF)
-        {
-          frameHandler_one.rxBuff[DOWN_FRAME_HEAD2_POS] = rx1_frame_buffer[i];
-          frameHandler_one.state = WAIT_DEVICE;
-        }
-        break;
-
-      case WAIT_DEVICE:
-        frameHandler_one.rxBuff[DOWN_FRAME_DEVICE_POS] = rx1_frame_buffer[i];
-        frameHandler_one.device = rx1_frame_buffer[i];
-        frameHandler_one.state = WAIT_data1;
-        break;
-
-      case WAIT_data1:
-        if(rx1_frame_buffer[i] <= DOWN_FRAME_LEN_MAX)
-        {
-          frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS] = rx1_frame_buffer[i];
-          frameHandler_one.data[0] = rx1_frame_buffer[i];
-          frameHandler_one.state = WAIT_data2;
-        }
-        break;
-
-      case WAIT_data2:
-        frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS + 1] = rx1_frame_buffer[i];
-        frameHandler_one.data[1] = rx1_frame_buffer[i];
-        frameHandler_one.state = WAIT_TAIL1;
-        break;
-
-      case WAIT_TAIL1:
-        if(rx1_frame_buffer[i] == 0x23)
-        {
-          frameHandler_one.rxBuff[DOWN_FRAME_TAIL1_POS] = rx1_frame_buffer[i];
-          frameHandler_one.state = WAIT_TAIL2;
-        }
-        break;
-
-      case WAIT_TAIL2:
-        if(rx1_frame_buffer[i] == 0x24)
-        {
-          frameHandler_one.rxBuff[DOWN_FRAME_TAIL2_POS] = rx1_frame_buffer[i];
-          frameHandler_one.frameOK = true;
-          frame.flag = 1;
-          frameHandler_one.state = WAIT_HEAD1;
-        }
-        break;
-
-      default:
-        frameHandler_one.state = WAIT_HEAD1;
-        break;
-    }
-
-    if(frameHandler_one.frameOK == true)
-    {
-      frame.data[0] = frameHandler_one.device;
-      memcpy(&frame.data[1], frameHandler_one.data, 2);
-      ProcessDataFrame(frame.data, frame.flag);
-      frameHandler_one.frameOK = false;
-    }
-  }
-
-  memset(rx1_frame_buffer, 0, frame_len);
-}
-
-void UARTTask_Entry(void * argument)
-{
-  Id_temp.kp = 0.0f;
-  Id_temp.ki = 0.0f;
-  Iq_temp.kp = 0.0f;
-  Iq_temp.ki = 0.0f;
-  /* USER CODE BEGIN UARTTask_Entry */
-  for(;;)
-  {
-    osStatus_t status_uart = osMessageQueueGet(UARTQueueHandle, &drame_task, NULL, 0);
-    if (status_uart == osOK) {
-        ProcessDataFrame(drame_task.data,drame_task.flag);
-    }
-    // osStatus_t status = osMessageQueueGet(IMUQueueHandle, &euler_data, NULL, 0);  // 非阻塞获�?
-    // if (status == osOK) {
-    //     pitch = euler_data.pitch;
-    //     roll = euler_data.roll;
-    //     yaw = euler_data.yaw;
-    // }
-    
-    osDelay(1);  // 500Hz
-  }
-  /* USER CODE END UARTTask_Entry */
-}
-
-))
+  if ((frame_len > 0) && (rx1_frame_buffer[0] == '$'))
   {
     char ascii_cmd[BUFFER_SIZE + 1];
     uint16_t copy_len = frame_len;
@@ -385,7 +289,7 @@ void UARTTask_Entry(void * argument)
     return;
   }
 
-  for(uint16_t i = 0; i < frame_len; i++)
+  for(i = 0; i < frame_len; i++)
   {
     switch(frameHandler_one.state)
     {
@@ -467,22 +371,15 @@ void UARTTask_Entry(void * argument)
   Id_temp.ki = 0.0f;
   Iq_temp.kp = 0.0f;
   Iq_temp.ki = 0.0f;
-  /* USER CODE BEGIN UARTTask_Entry */
+
   for(;;)
   {
     osStatus_t status_uart = osMessageQueueGet(UARTQueueHandle, &drame_task, NULL, 0);
-    if (status_uart == osOK) {
-        ProcessDataFrame(drame_task.data,drame_task.flag);
+    if (status_uart == osOK)
+    {
+        ProcessDataFrame(drame_task.data, drame_task.flag);
     }
-    // osStatus_t status = osMessageQueueGet(IMUQueueHandle, &euler_data, NULL, 0);  // 非阻塞获�?
-    // if (status == osOK) {
-    //     pitch = euler_data.pitch;
-    //     roll = euler_data.roll;
-    //     yaw = euler_data.yaw;
-    // }
-    
-    osDelay(1);  // 500Hz
-  }
-  /* USER CODE END UARTTask_Entry */
-}
 
+    osDelay(1);
+  }
+}
