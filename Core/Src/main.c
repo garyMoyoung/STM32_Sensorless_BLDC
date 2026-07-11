@@ -65,6 +65,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define CURRENT_ADC_REF_VOLTAGE      3.3f
+#define CURRENT_ADC_FULL_SCALE       4096.0f
+#define CURRENT_INA240_GAIN          50.0f
+#define CURRENT_SHUNT_RESISTOR_OHM   0.005f
+#define CURRENT_ADC_TO_AMP           (CURRENT_ADC_REF_VOLTAGE / CURRENT_ADC_FULL_SCALE / (CURRENT_INA240_GAIN * CURRENT_SHUNT_RESISTOR_OHM))
+#define CURRENT_OFFSET_DEFAULT_ADC   2048U
 
 /* USER CODE END PD */
 
@@ -89,6 +95,11 @@ float Udc = 12.6f;
 uint16_t ADC_Value[3] = {0};
 uint32_t ADC_buff[3] = {0};
 uint16_t ad_val_orig[3] = {0};
+static uint16_t current_adc_offset[3] = {
+  CURRENT_OFFSET_DEFAULT_ADC,
+  CURRENT_OFFSET_DEFAULT_ADC,
+  CURRENT_OFFSET_DEFAULT_ADC
+};
 
 volatile float Mech_Angle = 0.0f;
 float Elec_Angle = 0.0f;
@@ -198,6 +209,8 @@ extern osMessageQueueId_t UARTQueueHandle;
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
+static void Current_ReadRaw(uint16_t raw_adc[3]);
+static void Current_CalibrateOffset(uint16_t sample_count);
 
 /* Private function prototypes -----------------------------------------------*/
 /* ------------------?????????printf?????????????------------------*/
@@ -314,11 +327,12 @@ int main(void)
   // HAL_ADCEx_InjectedStart_IT(&hadc1);
 
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
+  Current_CalibrateOffset(512U);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
 
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
   svpwm_init(&Udq_M0,0.0f,0.0f);
 
   AS5600_Init(&M0,&hi2c2);
@@ -413,14 +427,50 @@ void PWM_TIM2_Set(uint16_t pwm_a,uint16_t pwm_b,uint16_t pwm_c)
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);//
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);//
 }
+static void Current_ReadRaw(uint16_t raw_adc[3])
+{
+    raw_adc[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
+    raw_adc[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
+    raw_adc[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+}
+
+static void Current_CalibrateOffset(uint16_t sample_count)
+{
+    uint32_t sum[3] = {0U, 0U, 0U};
+    uint16_t raw_adc[3] = {0U, 0U, 0U};
+    uint16_t valid_samples = 0U;
+
+    if (sample_count == 0U)
+    {
+        sample_count = 1U;
+    }
+
+    for (uint16_t i = 0U; i < sample_count; i++)
+    {
+        if (HAL_ADCEx_InjectedPollForConversion(&hadc1, 2U) == HAL_OK)
+        {
+            Current_ReadRaw(raw_adc);
+            sum[0] += raw_adc[0];
+            sum[1] += raw_adc[1];
+            sum[2] += raw_adc[2];
+            valid_samples++;
+        }
+    }
+
+    if (valid_samples > 0U)
+    {
+        current_adc_offset[0] = (uint16_t)(sum[0] / valid_samples);
+        current_adc_offset[1] = (uint16_t)(sum[1] / valid_samples);
+        current_adc_offset[2] = (uint16_t)(sum[2] / valid_samples);
+    }
+}
+
 void Current_read()
 {
-    ad_val_orig[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
-    ad_val_orig[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-    ad_val_orig[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
-    Iabc_M0.Ia = ((ad_val_orig[0]*3.3f)/4096.0f -1.65f)*4.0f;
-    Iabc_M0.Ib = ((ad_val_orig[1]*3.3f)/4096.0f -1.65f)*4.0f;
-    Iabc_M0.Ic = ((ad_val_orig[2]*3.3f)/4096.0f -1.65f)*4.0f;
+    Current_ReadRaw(ad_val_orig);
+    Iabc_M0.Ia = ((float)ad_val_orig[0] - (float)current_adc_offset[0]) * CURRENT_ADC_TO_AMP;
+    Iabc_M0.Ib = ((float)ad_val_orig[1] - (float)current_adc_offset[1]) * CURRENT_ADC_TO_AMP;
+    Iabc_M0.Ic = ((float)ad_val_orig[2] - (float)current_adc_offset[2]) * CURRENT_ADC_TO_AMP;
 }
 
 
@@ -491,7 +541,10 @@ void FOC_ControlLoop(void)
       Clarke_transform(&Iabc_M0,&Ialpbe_M0);
       Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-      PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM);
+      if ((PID_Speed.kp != 0.0f) || (PID_Speed.ki != 0.0f) || (PID_Speed.kd != 0.0f))
+      {
+        PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM);
+      }
       Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id);
       Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
 //      angle = IF_ang_ZZ(angle,0.1f);
