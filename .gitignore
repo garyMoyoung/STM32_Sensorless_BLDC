@@ -1,0 +1,36 @@
+# Keil MDK build output
+MDK-ARM/STM32_Sensorless_BLDC/
+MDK-ARM/*.lst
+
+# Keil user/local state
+MDK-ARM/*.uvguix.*
+MDK-ARM/*.uvoptx
+MDK-ARM/.vscode/
+
+# Keil/ARMCC generated files
+*.axf
+*.bin
+*.build_log.htm
+*.crf
+*.d
+*.dep
+*.elf
+*.hex
+*.htm
+*.iex
+*.lnp
+*.map
+*.o
+*.sct
+
+# Logs and temporary files
+*.log
+*.log.lock
+*.tmp
+*.bak
+*.swp
+~$*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
