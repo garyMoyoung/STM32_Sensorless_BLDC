@@ -360,27 +360,27 @@ void SPI2_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-  uint8_t tmp_flag = 0;
-	uint16_t temp;
-	tmp_flag = __HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE);
-  if((tmp_flag != RESET))
-	{
-		__HAL_UART_CLEAR_IDLEFLAG(&huart1);
-		HAL_UART_DMAStop(&huart1);
-		temp  =  __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
-		rx1_len =  BUFFER_SIZE - temp;
-    if(rx1_len > BUFFER_SIZE)
+  uint16_t temp;
+
+  if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_IDLE) != RESET)
+  {
+    __HAL_UART_CLEAR_IDLEFLAG(&huart1);
+    HAL_UART_DMAStop(&huart1);
+    temp = (uint16_t)__HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
+    rx1_len = (uint16_t)(BUFFER_SIZE - temp);
+    if (rx1_len > BUFFER_SIZE)
     {
       rx1_len = BUFFER_SIZE;
     }
-    memcpy(rx1_frame_buffer, rx1_buffer, rx1_len);
-    rx1_frame_len = rx1_len;
-		recv1_end_flag = 1;
-		rx1_len = 0;
-		memset(rx1_buffer,0,BUFFER_SIZE);
+    if (rx1_len > 0U)
+    {
+      memcpy(rx1_frame_buffer, rx1_buffer, rx1_len);
+      rx1_frame_len = rx1_len;
+      recv1_end_flag = 1U;
+    }
+    memset(rx1_buffer, 0, BUFFER_SIZE);
+    (void)HAL_UART_Receive_DMA(&huart1, rx1_buffer, BUFFER_SIZE);
   }
-
-  HAL_UART_Receive_DMA(&huart1,rx1_buffer,BUFFER_SIZE);
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */

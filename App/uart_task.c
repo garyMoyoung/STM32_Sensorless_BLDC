@@ -16,6 +16,7 @@ extern float pitch, roll, yaw;
 extern SVPWM_Struct SVPWM_M0;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
+extern uint8_t rx1_buffer[BUFFER_SIZE];
 extern osMessageQueueId_t IMUQueueHandle;
 extern osMessageQueueId_t FOCQueueHandle;
 extern osMessageQueueId_t PIDQueueHandle;
@@ -50,6 +51,21 @@ static volatile uint8_t telemetry_stream_enabled = 0;
 static volatile uint16_t telemetry_stream_period_ms = 50;
 static uint16_t telemetry_stream_cnt = 0;
 static uint16_t uart2_speed_debug_cnt = 0;
+
+void UART1_SendByte(uint8_t ch)
+{
+    (void)HAL_UART_Transmit(&huart1, &ch, 1U, 50U);
+}
+
+void UART1_SendBytes(const uint8_t *data, uint16_t len)
+{
+    if ((data == NULL) || (len == 0U))
+    {
+        return;
+    }
+
+    (void)HAL_UART_Transmit(&huart1, (uint8_t *)data, len, 500U);
+}
 
 float calculate_step_size(uint8_t data_value)
 {
