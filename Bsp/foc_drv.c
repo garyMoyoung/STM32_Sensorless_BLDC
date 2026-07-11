@@ -95,6 +95,13 @@ void SVPWM_timer_period_set(SVPWM_Struct *svpwm, Ualpbe_Struct *U_alphaBeta)
     float32_t sum, k_svpwm;
 
     svpwm->Ts = 1.0f;
+    if (svpwm->sector == 0)
+    {
+        svpwm->tcm1 = 0.5f;
+        svpwm->tcm2 = 0.5f;
+        svpwm->tcm3 = 0.5f;
+        return;
+    }
     
     // 使用常数而不是计算
     float32_t K = 1.73205080756f * svpwm->Ts / Udc;  // √3 * Ts / Udc

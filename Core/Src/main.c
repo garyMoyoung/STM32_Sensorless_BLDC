@@ -486,26 +486,19 @@ void Queue_proc()
     // PID_Current_Q.target = Iq_pid.target;
 }
 
+#define FOC_LOOP_DT_S  0.001f
+
 static float prev_speed_angle = 0.0f;
-static uint32_t prev_speed_time_us = 0;
+static uint8_t prev_speed_valid = 0U;
 
-void MechSpeed_OnNewAngle(float current_angle)
+static void MechSpeed_Update(float current_angle)
 {
-    uint32_t current_time_us = micros();
-    float time_delta_s;
     float angle_delta;
-    float speed_rad_s;
 
-    if (prev_speed_time_us == 0U)
+    if (prev_speed_valid == 0U)
     {
         prev_speed_angle = current_angle;
-        prev_speed_time_us = current_time_us;
-        return;
-    }
-
-    time_delta_s = (current_time_us - prev_speed_time_us) * 0.000001f;
-    if (time_delta_s < 0.0001f)
-    {
+        prev_speed_valid = 1U;
         return;
     }
 
@@ -519,17 +512,18 @@ void MechSpeed_OnNewAngle(float current_angle)
         angle_delta += 2.0f * 3.14159f;
     }
 
-    speed_rad_s = angle_delta / time_delta_s;
-    Mech_RPM = rad_sec_to_rpm(speed_rad_s);
-
+    Mech_RPM = rad_sec_to_rpm(angle_delta / FOC_LOOP_DT_S);
     prev_speed_angle = current_angle;
-    prev_speed_time_us = current_time_us;
 }
 
 void angle_proc()
 {
-    AS5600_UpdateAngle_DMA(&M0);
-    Mech_Angle = _normalizeAngle(AS5600_GetAngle(&M0));
+    float raw_angle;
+
+    AS5600_UpdateAngle(&M0);
+    raw_angle = AS5600_GetAngle(&M0);
+    MechSpeed_Update(raw_angle);
+    Mech_Angle = _normalizeAngle(raw_angle);
     Elec_Angle = 7.0f * Mech_Angle;
 }
 
