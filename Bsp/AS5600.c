@@ -1,5 +1,6 @@
 #include "AS5600.h"
 #include "timer_utils.h"
+#include "main.h"
 
 static AS5600 *as5600_dma_dev = NULL;
 
@@ -162,6 +163,7 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
 	if((as5600_dma_dev != NULL) && (hi2c == as5600_dma_dev->i2cHandle)) {
 		AS5600_ProcessRawAngle(as5600_dma_dev);
+		MechSpeed_OnNewAngle(as5600_dma_dev->total_angle_rad);
 		as5600_dma_dev = NULL;
 	}
 }

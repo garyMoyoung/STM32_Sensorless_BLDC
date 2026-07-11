@@ -7,9 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern float Mech_Angle;
+extern volatile float Mech_Angle;
 extern float Elec_Angle;
-extern float Mech_RPM;
+extern volatile float Mech_RPM;
 extern Iabc_Struct Iabc_M0;
 extern Iqd_Struct Iqd_M0;
 extern float pitch, roll, yaw;

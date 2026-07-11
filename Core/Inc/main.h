@@ -202,7 +202,7 @@ typedef struct {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void MechSpeed_OnNewAngle(float current_angle);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

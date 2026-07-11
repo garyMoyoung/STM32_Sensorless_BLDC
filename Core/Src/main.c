@@ -90,9 +90,9 @@ uint16_t ADC_Value[3] = {0};
 uint32_t ADC_buff[3] = {0};
 uint16_t ad_val_orig[3] = {0};
 
-float Mech_Angle = 0.0f; 
-float Elec_Angle = 0.0f;   
-float Mech_RPM = 0.0f;
+volatile float Mech_Angle = 0.0f;
+float Elec_Angle = 0.0f;
+volatile float Mech_RPM = 0.0f;
 float Mech_RPM_filter = 0.0f;
 
 uint16_t ucAdc[3];
@@ -165,7 +165,7 @@ const uint16_t SINGLE_MS = 150;       // ??????????150ms
 
 /* UASRT BEGIN*/
 FrameRxHandler frameHandler_one;
-uint8_t rx1_buffer[100]={0};
+uint8_t rx1_buffer[BUFFER_SIZE] = {0};
 volatile uint16_t rx1_len = 0;
 volatile uint8_t recv1_end_flag = 0;
 volatile uint8_t rx1_addr = 0;
@@ -436,50 +436,50 @@ void Queue_proc()
     // PID_Current_Q.target = Iq_pid.target;
 }
 
-static float prev_angle = 0.0f;
-static uint32_t prev_time = 0;
+static float prev_speed_angle = 0.0f;
+static uint32_t prev_speed_time_us = 0;
 
-float calculate_speed_from_angle(float current_angle, float* prev_angle, uint32_t* prev_time)
+void MechSpeed_OnNewAngle(float current_angle)
 {
-    uint32_t current_time = micros(); // ???????????????
-    
-    // ????????????
-    float time_delta = (current_time - *prev_time) / 1000000.0f;
-    
-    // ???????????????????
-    if(time_delta < 0.001f) {
-        time_delta = 0.001f;
+    uint32_t current_time_us = micros();
+    float time_delta_s;
+    float angle_delta;
+    float speed_rad_s;
+
+    if (prev_speed_time_us == 0U)
+    {
+        prev_speed_angle = current_angle;
+        prev_speed_time_us = current_time_us;
+        return;
     }
-    
-    // ????????????????????
-    float angle_delta = current_angle - *prev_angle;
-    
-    // ??????????????????????
-    if(angle_delta > 3.14159f) {
-        angle_delta -= 2 * 3.14159f;
-    } else if(angle_delta < -3.14159f) {
-        angle_delta += 2 * 3.14159f;
+
+    time_delta_s = (current_time_us - prev_speed_time_us) * 0.000001f;
+    if (time_delta_s < 0.0001f)
+    {
+        return;
     }
-    
-    // ??????????????
-    float speed = angle_delta / time_delta;
-    
-    // ???????????
-    *prev_angle = current_angle;
-    *prev_time = current_time;
-    
-    return speed;
+
+    angle_delta = current_angle - prev_speed_angle;
+    if (angle_delta > 3.14159f)
+    {
+        angle_delta -= 2.0f * 3.14159f;
+    }
+    else if (angle_delta < -3.14159f)
+    {
+        angle_delta += 2.0f * 3.14159f;
+    }
+
+    speed_rad_s = angle_delta / time_delta_s;
+    Mech_RPM = rad_sec_to_rpm(speed_rad_s);
+
+    prev_speed_angle = current_angle;
+    prev_speed_time_us = current_time_us;
 }
 
 void angle_proc()
 {
     AS5600_UpdateAngle_DMA(&M0);
-    Mech_Angle = AS5600_GetAngle(&M0);
-    Mech_RPM = calculate_speed_from_angle(Mech_Angle, &prev_angle, &prev_time);
-    Mech_RPM = rad_sec_to_rpm(Mech_RPM);
-    // Mech_RPM_filter = Low_Pass_Filter(Mech_RPM_filter, Mech_RPM, 0.5f);
-
-    Mech_Angle = _normalizeAngle(Mech_Angle);
+    Mech_Angle = _normalizeAngle(AS5600_GetAngle(&M0));
     Elec_Angle = 7.0f * Mech_Angle;
 }
 
