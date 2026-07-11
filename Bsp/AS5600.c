@@ -1,6 +1,8 @@
 #include "AS5600.h"
 #include "timer_utils.h"
 
+static AS5600 *as5600_dma_dev = NULL;
+
 /*
  * Static low level functions to read/write to registers
  */
@@ -12,6 +14,16 @@ __STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegister(AS5600 *dev, uint8_t reg, 
 __STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegisters(AS5600 *dev, uint8_t reg, uint8_t *data, uint8_t length)
 {
 	return HAL_I2C_Mem_Read(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, length, 100);
+}
+
+__STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegister_DMA(AS5600 *dev, uint8_t reg, uint8_t *data)
+{
+	return HAL_I2C_Mem_Read_DMA(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, 1);
+}
+
+__STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegisters_DMA(AS5600 *dev, uint8_t reg, uint8_t *data, uint8_t length)
+{
+	return HAL_I2C_Mem_Read_DMA(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, length);
 }
 
 __STATIC_INLINE HAL_StatusTypeDef AS5600_CheckSensor(AS5600* dev, uint32_t trials)
@@ -131,6 +143,33 @@ void AS5600_UpdateAngle(AS5600 *dev)
 
 	if(AS5600_ReadRegisters(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2) == HAL_OK) {
 		AS5600_ProcessRawAngle(dev);
+	}
+}
+
+void AS5600_UpdateAngle_DMA(AS5600 *dev)
+{
+	if((dev == NULL) || (dev->i2cHandle == NULL) || (as5600_dma_dev != NULL)) {
+		return;
+	}
+
+	as5600_dma_dev = dev;
+	if(AS5600_ReadRegisters_DMA(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2) != HAL_OK) {
+		as5600_dma_dev = NULL;
+	}
+}
+
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+	if((as5600_dma_dev != NULL) && (hi2c == as5600_dma_dev->i2cHandle)) {
+		AS5600_ProcessRawAngle(as5600_dma_dev);
+		as5600_dma_dev = NULL;
+	}
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+{
+	if((as5600_dma_dev != NULL) && (hi2c == as5600_dma_dev->i2cHandle)) {
+		as5600_dma_dev = NULL;
 	}
 }
 

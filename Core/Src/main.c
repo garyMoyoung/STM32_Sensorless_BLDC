@@ -473,7 +473,7 @@ float calculate_speed_from_angle(float current_angle, float* prev_angle, uint32_
 
 void angle_proc()
 {
-    AS5600_UpdateAngle(&M0);
+    AS5600_UpdateAngle_DMA(&M0);
     Mech_Angle = AS5600_GetAngle(&M0);
     Mech_RPM = calculate_speed_from_angle(Mech_Angle, &prev_angle, &prev_time);
     Mech_RPM = rad_sec_to_rpm(Mech_RPM);

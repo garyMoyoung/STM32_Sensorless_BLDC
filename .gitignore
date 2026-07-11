@@ -32,5 +32,6 @@ MDK-ARM/.vscode/
 ~$*
 
 # OS/editor noise
+.vs/
 .DS_Store
 Thumbs.db

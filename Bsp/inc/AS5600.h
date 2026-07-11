@@ -71,6 +71,7 @@ void AS5600_ZeroAngle(AS5600* dev);
  * Read sensor value
  */
 void AS5600_UpdateAngle(AS5600 *dev);
+void AS5600_UpdateAngle_DMA(AS5600 *dev);
 float AS5600_GetAngle(AS5600* dev);
 uint16_t AS5600_GetRawAngle_Blocking(AS5600* dev);
 uint16_t AS5600_GetRawAngle(AS5600* dev);
