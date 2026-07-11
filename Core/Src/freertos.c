@@ -29,6 +29,7 @@
 #include "IMU_task.h"
 #include "uart_task.h"
 #include "foc_task.h"
+#include "lvgl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,8 +96,8 @@ const osThreadAttr_t defaultTask_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-void LcdTask_Entry(void const * argument);
-void LvglTimerTask_Entry(void const * argument);
+void LcdTask_Entry(void *argument);
+void LvglTimerTask_Entry(void *argument);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -175,7 +176,7 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-__weak void LcdTask_Entry(void const * argument)
+__weak void LcdTask_Entry(void *argument)
 {
   /* USER CODE BEGIN LcdTask_Entry */
   /* Infinite loop */
@@ -186,7 +187,7 @@ __weak void LcdTask_Entry(void const * argument)
   /* USER CODE END LcdTask_Entry */
 }
 
-void LvglTimerTask_Entry(void const * argument)
+void LvglTimerTask_Entry(void *argument)
 {
   /* USER CODE BEGIN LvglTimerTask_Entry */
   /* Infinite loop */

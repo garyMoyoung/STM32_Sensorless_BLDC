@@ -18,7 +18,7 @@
 /* USER CODE END Header_LcdTask_Entry */
 
 
-void LcdTask_Entry(void const * argument)
+void LcdTask_Entry(void *argument)
 {
     LCD_Init_DMA();
     // LCD_Fill_DMA(0,0,LCD_W, LCD_H,BLACK);
