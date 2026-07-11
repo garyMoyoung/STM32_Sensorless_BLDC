@@ -138,6 +138,8 @@ float roll = 0.0f;
 float yaw = 0.0f;
 uint32_t TIM9_100Hz_CNT = 0;  // 100Hz?????????
 uint32_t TIM10_task_CNT = 0;
+volatile uint32_t TIM9_ISR_CNT = 0;
+volatile uint32_t TIM10_ISR_CNT = 0;
 float angle = 0.0f;
 PIDController PID_Current_D;
 PIDController PID_Current_Q;
@@ -319,7 +321,7 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1680);
   svpwm_init(&Udq_M0,0.0f,0.0f);
 
-  AS5600_Init(&M0,&hi2c2);
+  AS5600_Init(&M0,&hi2c1);
   DWT_Init();
   PID_Init(&PID_Current_D,4.0f,-4.0f,100.0f);
   PID_Init(&PID_Current_Q,4.0f,-4.0f,100.0f);
@@ -333,7 +335,6 @@ int main(void)
   PID_Current_Q.target = 0.0f;
   PID_Speed.target = 1000.0f;
   PID_Position.target = 0.0f;
-  // ?????PID Q ?????????
   
 
   /* USER CODE END 2 */
@@ -526,10 +527,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
+    TIM9_ISR_CNT++;
   }
   if (htim->Instance == TIM10) // 1ms tick
   {
-    
+    TIM10_ISR_CNT++;
     FOC_ControlLoop();
     Key_read();
     if(++TIM10_task_CNT >= 1000)

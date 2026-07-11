@@ -16,14 +16,9 @@ __STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegisters(AS5600 *dev, uint8_t reg,
 	return HAL_I2C_Mem_Read(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, length, 100);
 }
 
-__STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegister_DMA(AS5600 *dev, uint8_t reg, uint8_t *data)
+__STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegisters_IT(AS5600 *dev, uint8_t reg, uint8_t *data, uint8_t length)
 {
-	return HAL_I2C_Mem_Read_DMA(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, 1);
-}
-
-__STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegisters_DMA(AS5600 *dev, uint8_t reg, uint8_t *data, uint8_t length)
-{
-	return HAL_I2C_Mem_Read_DMA(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, length);
+	return HAL_I2C_Mem_Read_IT(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, length);
 }
 
 __STATIC_INLINE HAL_StatusTypeDef AS5600_CheckSensor(AS5600* dev, uint32_t trials)
@@ -134,7 +129,7 @@ static void AS5600_ProcessRawAngle(AS5600 *dev)
 }
 
 /*
- * @brief Start a DMA read. The angle is updated in HAL_I2C_MemRxCpltCallback.
+ * @brief Start an interrupt-mode read. The angle is updated in HAL_I2C_MemRxCpltCallback.
  */
 void AS5600_UpdateAngle_DMA(AS5600 *dev)
 {
@@ -142,8 +137,12 @@ void AS5600_UpdateAngle_DMA(AS5600 *dev)
 		return;
 	}
 
+	if(dev->i2cHandle->State != HAL_I2C_STATE_READY) {
+		return;
+	}
+
 	as5600_dma_dev = dev;
-	if(AS5600_ReadRegisters_DMA(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2) == HAL_OK) {
+	if(AS5600_ReadRegisters_IT(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2) == HAL_OK) {
 		dev->dma_busy = 1;
 	}
 	else {
