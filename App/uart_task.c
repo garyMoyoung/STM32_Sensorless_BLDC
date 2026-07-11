@@ -15,6 +15,7 @@ extern Iqd_Struct Iqd_M0;
 extern float pitch, roll, yaw;
 extern SVPWM_Struct SVPWM_M0;
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 extern osMessageQueueId_t IMUQueueHandle;
 extern osMessageQueueId_t FOCQueueHandle;
 extern osMessageQueueId_t PIDQueueHandle;
@@ -48,6 +49,7 @@ UART_Frame_t drame_task;
 static volatile uint8_t telemetry_stream_enabled = 0;
 static volatile uint16_t telemetry_stream_period_ms = 50;
 static uint16_t telemetry_stream_cnt = 0;
+static uint16_t uart2_speed_debug_cnt = 0;
 
 float calculate_step_size(uint8_t data_value)
 {
@@ -210,6 +212,28 @@ void UART_TelemetryTick(void)
     {
         telemetry_stream_cnt = 0;
         UART_PrintTelemetry();
+    }
+}
+
+static void UART2_PrintSpeedDebug(void)
+{
+    char line[96];
+    int len;
+
+    len = snprintf(line, sizeof(line), "$SPD,%.4f,%.4f,%.4f#\r\n",
+                   Mech_RPM, Mech_Angle, Elec_Angle);
+    if ((len > 0) && (len < (int)sizeof(line)))
+    {
+        HAL_UART_Transmit(&huart2, (uint8_t *)line, (uint16_t)len, 20);
+    }
+}
+
+void UART2_SpeedDebugTick(void)
+{
+    if (++uart2_speed_debug_cnt >= 100)
+    {
+        uart2_speed_debug_cnt = 0;
+        UART2_PrintSpeedDebug();
     }
 }
 
@@ -450,6 +474,7 @@ void UARTTask_Entry(void * argument)
   {
     UART_ProcessInTimer();
     UART_TelemetryTick();
+    UART2_SpeedDebugTick();
 
     osStatus_t status_uart = osMessageQueueGet(UARTQueueHandle, &drame_task, NULL, 0);
     if (status_uart == osOK)
