@@ -21,7 +21,49 @@
 #include "i2c.h"
 
 /* USER CODE BEGIN 0 */
+static void I2C2_BusDelay(void)
+{
+  volatile uint32_t delay = 400;
+  while (delay--)
+  {
+  }
+}
 
+static void I2C2_BusRecover(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  uint8_t i;
+
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_0 | GPIO_PIN_1, GPIO_PIN_SET);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  for (i = 0; i < 16; i++)
+  {
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_1, GPIO_PIN_RESET);
+    I2C2_BusDelay();
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_1, GPIO_PIN_SET);
+    I2C2_BusDelay();
+
+    if (HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_0) == GPIO_PIN_SET)
+    {
+      break;
+    }
+  }
+
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_0, GPIO_PIN_RESET);
+  I2C2_BusDelay();
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_1, GPIO_PIN_SET);
+  I2C2_BusDelay();
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_0, GPIO_PIN_SET);
+  I2C2_BusDelay();
+}
 /* USER CODE END 0 */
 
 I2C_HandleTypeDef hi2c1;
@@ -64,7 +106,7 @@ void MX_I2C2_Init(void)
 {
 
   /* USER CODE BEGIN I2C2_Init 0 */
-
+  I2C2_BusRecover();
   /* USER CODE END I2C2_Init 0 */
 
   /* USER CODE BEGIN I2C2_Init 1 */
@@ -159,7 +201,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     */
     GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
     HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
@@ -205,7 +247,10 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     __HAL_LINKDMA(i2cHandle,hdmatx,hdma_i2c2_tx);
 
   /* USER CODE BEGIN I2C2_MspInit 1 */
-
+    HAL_NVIC_SetPriority(I2C2_EV_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
+    HAL_NVIC_SetPriority(I2C2_ER_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(I2C2_ER_IRQn);
   /* USER CODE END I2C2_MspInit 1 */
   }
   else if(i2cHandle->Instance==I2C3)
@@ -285,7 +330,8 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
     HAL_DMA_DeInit(i2cHandle->hdmarx);
     HAL_DMA_DeInit(i2cHandle->hdmatx);
   /* USER CODE BEGIN I2C2_MspDeInit 1 */
-
+    HAL_NVIC_DisableIRQ(I2C2_EV_IRQn);
+    HAL_NVIC_DisableIRQ(I2C2_ER_IRQn);
   /* USER CODE END I2C2_MspDeInit 1 */
   }
   else if(i2cHandle->Instance==I2C3)

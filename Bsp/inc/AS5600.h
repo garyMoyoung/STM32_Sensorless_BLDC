@@ -52,6 +52,8 @@ typedef struct{
 	// previous 12-bit angle
 	uint16_t prev_raw_angle;
 	uint8_t regdata[2];
+	volatile uint8_t dma_busy;
+	volatile uint8_t angle_valid;
 
 	// total angle in radians
 	float total_angle_rad;

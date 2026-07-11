@@ -23,6 +23,8 @@ extern FrameRxHandler frameHandler_one;
 extern uint8_t rx1_frame_buffer[BUFFER_SIZE];
 extern volatile uint16_t rx1_frame_len;
 extern volatile uint8_t recv1_end_flag;
+extern volatile uint32_t TIM9_ISR_CNT;
+extern volatile uint32_t TIM10_ISR_CNT;
 
 extern PIDController PID_Current_D;
 extern PIDController PID_Current_Q;
@@ -32,6 +34,8 @@ extern PIDController PID_Position;
 static PID_Param_t Id_temp;
 static PID_Param_t Iq_temp;
 static PID_Param_t Speed_temp;
+static PID_Param_t Position_temp;
+static uint8_t pid_temp_initialized = 0;
 UART_Frame_t drame_task;
 
 #define PC_CMD_READ_TELEMETRY   0x80U
@@ -39,6 +43,7 @@ UART_Frame_t drame_task;
 #define PC_CMD_STREAM_OFF       0x82U
 #define PC_CMD_READ_PID         0x83U
 #define PC_CMD_READ_ALL         0x84U
+#define PC_CMD_READ_DEBUG       0x85U
 
 static volatile uint8_t telemetry_stream_enabled = 0;
 static volatile uint16_t telemetry_stream_period_ms = 50;
@@ -71,6 +76,10 @@ static void UART_PrintTelemetry(void)
            PID_Current_Q.target, PID_Speed.target);
 }
 
+static void UART_PrintDebug(void)
+{
+    printf("$DBG,%lu,%lu#\r\n", (unsigned long)TIM9_ISR_CNT, (unsigned long)TIM10_ISR_CNT);
+}
 static void UART_PrintPid(void)
 {
     printf("$PID,ID,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f#\r\n",
@@ -106,6 +115,34 @@ static PIDController* UART_GetPidByName(const char *name)
         return &PID_Position;
     }
     return NULL;
+}
+
+static void UART_CopyPidToParam(PID_Param_t *param, const PIDController *pid)
+{
+    param->kp = pid->kp;
+    param->ki = pid->ki;
+    param->kd = pid->kd;
+    param->target = pid->target;
+}
+
+static void UART_InitPidTempFromLive(void)
+{
+    if (pid_temp_initialized != 0)
+    {
+        return;
+    }
+
+    UART_CopyPidToParam(&Id_temp, &PID_Current_D);
+    UART_CopyPidToParam(&Iq_temp, &PID_Current_Q);
+    UART_CopyPidToParam(&Speed_temp, &PID_Speed);
+    UART_CopyPidToParam(&Position_temp, &PID_Position);
+    pid_temp_initialized = 1;
+}
+
+static void UART_ApplyPidParam(PIDController *pid, const PID_Param_t *param)
+{
+    PID_param_set(pid, param->kp, param->ki, param->kd);
+    pid->target = param->target;
 }
 
 static void UART_ProcessAsciiCommand(char *line)
@@ -152,6 +189,7 @@ static void UART_ProcessAsciiCommand(char *line)
 
         PID_param_set(pid, kp, ki, kd);
         pid->target = target;
+        pid_temp_initialized = 0;
         printf("$ACK,PID,%s,%.5f,%.5f,%.5f,%.5f#\r\n", loop, target, kp, ki, kd);
         UART_PrintPid();
         return;
@@ -178,7 +216,8 @@ void UART_TelemetryTick(void)
 void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
 {
     uint8_t data2;
-    uint8_t pid_update_required = 0;
+    PIDController *pid_to_apply = NULL;
+    PID_Param_t *param_to_apply = NULL;
     float step_size;
 
     if(Proc_flag != 1)
@@ -188,6 +227,7 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
 
     data2 = data[1];
     step_size = calculate_step_size(data[2]);
+    UART_InitPidTempFromLive();
 
     switch(data[0])
     {
@@ -217,6 +257,11 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       case PC_CMD_READ_ALL:
         UART_PrintTelemetry();
         UART_PrintPid();
+        UART_PrintDebug();
+      break;
+
+      case PC_CMD_READ_DEBUG:
+        UART_PrintDebug();
       break;
 
       case 0x00:
@@ -227,6 +272,12 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
         else if(data2 == 0x11)  Id_temp.kp -= step_size;
         else if(data2 == 0x02)  Id_temp.ki += step_size;
         else if(data2 == 0x12)  Id_temp.ki -= step_size;
+        else if(data2 == 0x03)  Id_temp.kd += step_size;
+        else if(data2 == 0x13)  Id_temp.kd -= step_size;
+        else if(data2 == 0x04)  Id_temp.target += step_size;
+        else if(data2 == 0x14)  Id_temp.target -= step_size;
+        pid_to_apply = &PID_Current_D;
+        param_to_apply = &Id_temp;
       break;
 
       case 0x02:
@@ -234,31 +285,57 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
         else if(data2 == 0x11)  Iq_temp.kp -= step_size;
         else if(data2 == 0x02)  Iq_temp.ki += step_size;
         else if(data2 == 0x12)  Iq_temp.ki -= step_size;
+        else if(data2 == 0x03)  Iq_temp.kd += step_size;
+        else if(data2 == 0x13)  Iq_temp.kd -= step_size;
+        else if(data2 == 0x04)  Iq_temp.target += step_size;
+        else if(data2 == 0x14)  Iq_temp.target -= step_size;
+        pid_to_apply = &PID_Current_Q;
+        param_to_apply = &Iq_temp;
       break;
 
       case 0x03:
         if(data2 == 0x01)       Iq_temp.target += 2.0f;
         else if(data2 == 0x02)  Iq_temp.target -= 2.0f;
+        pid_to_apply = &PID_Current_Q;
+        param_to_apply = &Iq_temp;
       break;
 
       case 0x04:
-        pid_update_required = 1;
         if(data2 == 0x01)       Speed_temp.kp += step_size;
         else if(data2 == 0x11)  Speed_temp.kp -= step_size;
         else if(data2 == 0x02)  Speed_temp.ki += step_size;
         else if(data2 == 0x12)  Speed_temp.ki -= step_size;
+        else if(data2 == 0x03)  Speed_temp.kd += step_size;
+        else if(data2 == 0x13)  Speed_temp.kd -= step_size;
+        else if(data2 == 0x04)  Speed_temp.target += step_size;
+        else if(data2 == 0x14)  Speed_temp.target -= step_size;
+        pid_to_apply = &PID_Speed;
+        param_to_apply = &Speed_temp;
+      break;
+
+      case 0x05:
+        if(data2 == 0x01)       Position_temp.kp += step_size;
+        else if(data2 == 0x11)  Position_temp.kp -= step_size;
+        else if(data2 == 0x02)  Position_temp.ki += step_size;
+        else if(data2 == 0x12)  Position_temp.ki -= step_size;
+        else if(data2 == 0x03)  Position_temp.kd += step_size;
+        else if(data2 == 0x13)  Position_temp.kd -= step_size;
+        else if(data2 == 0x04)  Position_temp.target += step_size;
+        else if(data2 == 0x14)  Position_temp.target -= step_size;
+        pid_to_apply = &PID_Position;
+        param_to_apply = &Position_temp;
       break;
 
       default:
       break;
     }
 
-    if (pid_update_required)
+    if ((pid_to_apply != NULL) && (param_to_apply != NULL))
     {
-      PID_param_set(&PID_Speed, Speed_temp.kp, Speed_temp.ki, Speed_temp.kd);
+      UART_ApplyPidParam(pid_to_apply, param_to_apply);
+      UART_PrintPid();
     }
 }
-
 void UART_ProcessInTimer(void)
 {
   UART_Frame_t frame;
@@ -367,13 +444,13 @@ void UART_ProcessInTimer(void)
 
 void UARTTask_Entry(void * argument)
 {
-  Id_temp.kp = 0.0f;
-  Id_temp.ki = 0.0f;
-  Iq_temp.kp = 0.0f;
-  Iq_temp.ki = 0.0f;
+  UART_InitPidTempFromLive();
 
   for(;;)
   {
+    UART_ProcessInTimer();
+    UART_TelemetryTick();
+
     osStatus_t status_uart = osMessageQueueGet(UARTQueueHandle, &drame_task, NULL, 0);
     if (status_uart == osOK)
     {

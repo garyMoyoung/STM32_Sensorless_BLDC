@@ -144,7 +144,7 @@ void MX_FREERTOS_Init(void) {
   LcdTaskHandle = osThreadNew(LcdTask_Entry,NULL,&Lcd_task_attributes);
   // LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, NULL, &LvglTimer_task_attributes);
   // IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
-  // UARTTaskHandle = osThreadNew(UARTTask_Entry, NULL, &UART_task_attributes);
+  UARTTaskHandle = osThreadNew(UARTTask_Entry, NULL, &UART_task_attributes);
   // AngleTaskHandle = osThreadNew(AngleTask_Entry, NULL, &Angle_task_attributes);
 
   /* USER CODE END RTOS_THREADS */

@@ -1,6 +1,8 @@
 #include "AS5600.h"
 #include "timer_utils.h"
 
+static AS5600 *as5600_dma_dev = NULL;
+
 /*
  * Static low level functions to read/write to registers
  */
@@ -57,14 +59,19 @@ uint8_t AS5600_Init(AS5600* dev, I2C_HandleTypeDef* i2c_handle)
 	dev->prev_time_us = micros();
 	dev->regdata[0] = 0;
 	dev->regdata[1] = 0;
+	dev->dma_busy = 0;
+	dev->angle_valid = 0;
 
 	HAL_StatusTypeDef sensor_status = AS5600_CheckSensor(dev, 10);
 
 	if(sensor_status != HAL_OK)
 	{
-		dev->i2cHandle = NULL;
 		return (init_status | AS5600_READY_MSK);
 	}
+
+	dev->prev_raw_angle = AS5600_GetRawAngle_Blocking(dev);
+	dev->total_angle_rad = dev->prev_raw_angle * BIT_TO_RAD;
+	dev->angle_valid = 1;
 
 	/* Check magnet strength */
 	uint8_t magnet_status = 0;
@@ -72,7 +79,6 @@ uint8_t AS5600_Init(AS5600* dev, I2C_HandleTypeDef* i2c_handle)
 	AS5600_ReadRegister(dev, MAGNET_STATUS_REG, &magnet_status);
 	if((magnet_status & MAGNET_OK_MSK) == 0)
 	{
-		dev->i2cHandle = NULL;
 		return (init_status | magnet_status);
 	}
 
@@ -95,32 +101,25 @@ uint16_t AS5600_GetRawAngle_Blocking(AS5600* dev)
 	return raw_angle;
 }
 
-/*
- * @brief Callback to start DMA transaction & update angle value
- */
-void AS5600_UpdateAngle_DMA(AS5600 *dev)
+static void AS5600_ProcessRawAngle(AS5600 *dev)
 {
+	uint16_t raw_angle;
+	int16_t delta;
+
 	if(dev == NULL) {
 		return;
 	}
 
-	HAL_StatusTypeDef status = AS5600_ReadRegisters_DMA(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2);
-
-	/* Return early if register read fails */
-	if(status != HAL_OK) {
+	raw_angle = (((dev->regdata[0] & 0x0F) << 8) | dev->regdata[1]);
+	if(dev->angle_valid == 0) {
+		dev->prev_raw_angle = raw_angle;
+		dev->total_angle_rad = raw_angle * BIT_TO_RAD;
+		dev->angle_valid = 1;
 		return;
 	}
 
-	/* Mask & shift 4 MSB left by 8 and concatenate with 8 LSBs */
-	uint16_t raw_angle = (((dev->regdata[0] & 0x0F) << 8) | dev->regdata[1]);
+	delta = raw_angle - dev->prev_raw_angle;
 
-	/* Calculate angle delta from previous angle */
-	int16_t delta = raw_angle - dev->prev_raw_angle;
-
-	/*
-	 * Positive large delta -> negative overflow
-	 * Negative large delta -> positive overflow
-	 */
 	if(delta > HALF_MAX_RESOLUTION) {
 		dev->total_angle_rad -= (MAX_RESOLUTION - delta) * BIT_TO_RAD;
 	}
@@ -132,6 +131,41 @@ void AS5600_UpdateAngle_DMA(AS5600 *dev)
 	}
 
 	dev->prev_raw_angle = raw_angle;
+}
+
+/*
+ * @brief Start a DMA read. The angle is updated in HAL_I2C_MemRxCpltCallback.
+ */
+void AS5600_UpdateAngle_DMA(AS5600 *dev)
+{
+	if((dev == NULL) || (dev->i2cHandle == NULL) || (dev->dma_busy != 0)) {
+		return;
+	}
+
+	as5600_dma_dev = dev;
+	if(AS5600_ReadRegisters_DMA(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2) == HAL_OK) {
+		dev->dma_busy = 1;
+	}
+	else {
+		as5600_dma_dev = NULL;
+	}
+}
+
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+	if((as5600_dma_dev != NULL) && (hi2c == as5600_dma_dev->i2cHandle)) {
+		AS5600_ProcessRawAngle(as5600_dma_dev);
+		as5600_dma_dev->dma_busy = 0;
+		as5600_dma_dev = NULL;
+	}
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+{
+	if((as5600_dma_dev != NULL) && (hi2c == as5600_dma_dev->i2cHandle)) {
+		as5600_dma_dev->dma_busy = 0;
+		as5600_dma_dev = NULL;
+	}
 }
 
 float AS5600_GetAngle(AS5600* dev)

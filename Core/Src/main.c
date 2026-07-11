@@ -526,13 +526,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
-      UART_ProcessInTimer();
-      
   }
   if (htim->Instance == TIM10) // 1ms tick
   {
+    
     FOC_ControlLoop();
-    Key_read();  // ????????
+    Key_read();
     if(++TIM10_task_CNT >= 1000)
     {
       TIM10_task_CNT = 0;
