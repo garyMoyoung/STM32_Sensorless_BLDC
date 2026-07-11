@@ -136,6 +136,8 @@ extern uint32_t imu_task_counter;  // ???IMU????????
 float pitch = 0.0f;
 float roll = 0.0f;
 float yaw = 0.0f;
+volatile uint32_t TIM9_ISR_CNT = 0;
+volatile uint32_t TIM10_ISR_CNT = 0;
 uint32_t TIM9_100Hz_CNT = 0;  // 100Hz?????????
 uint32_t TIM10_task_CNT = 0;
 float angle = 0.0f;
@@ -471,7 +473,7 @@ float calculate_speed_from_angle(float current_angle, float* prev_angle, uint32_
 
 void angle_proc()
 {
-    AS5600_UpdateAngle_DMA(&M0);
+    AS5600_UpdateAngle(&M0);
     Mech_Angle = AS5600_GetAngle(&M0);
     Mech_RPM = calculate_speed_from_angle(Mech_Angle, &prev_angle, &prev_time);
     Mech_RPM = rad_sec_to_rpm(Mech_RPM);
@@ -526,9 +528,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
   if (htim->Instance == TIM9)
   {
+    TIM9_ISR_CNT++;
   }
   if (htim->Instance == TIM10) // 1ms tick
   {
+    TIM10_ISR_CNT++;
     
     FOC_ControlLoop();
     Key_read();

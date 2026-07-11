@@ -1,8 +1,6 @@
 #include "AS5600.h"
 #include "timer_utils.h"
 
-static AS5600 *as5600_dma_dev = NULL;
-
 /*
  * Static low level functions to read/write to registers
  */
@@ -14,16 +12,6 @@ __STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegister(AS5600 *dev, uint8_t reg, 
 __STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegisters(AS5600 *dev, uint8_t reg, uint8_t *data, uint8_t length)
 {
 	return HAL_I2C_Mem_Read(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, length, 100);
-}
-
-__STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegister_DMA(AS5600 *dev, uint8_t reg, uint8_t *data)
-{
-	return HAL_I2C_Mem_Read_DMA(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, 1);
-}
-
-__STATIC_INLINE HAL_StatusTypeDef AS5600_ReadRegisters_DMA(AS5600 *dev, uint8_t reg, uint8_t *data, uint8_t length)
-{
-	return HAL_I2C_Mem_Read_DMA(dev->i2cHandle, AS5600_I2C_ADD, reg, I2C_MEMADD_SIZE_8BIT, data, length);
 }
 
 __STATIC_INLINE HAL_StatusTypeDef AS5600_CheckSensor(AS5600* dev, uint32_t trials)
@@ -59,7 +47,6 @@ uint8_t AS5600_Init(AS5600* dev, I2C_HandleTypeDef* i2c_handle)
 	dev->prev_time_us = micros();
 	dev->regdata[0] = 0;
 	dev->regdata[1] = 0;
-	dev->dma_busy = 0;
 	dev->angle_valid = 0;
 
 	HAL_StatusTypeDef sensor_status = AS5600_CheckSensor(dev, 10);
@@ -134,37 +121,16 @@ static void AS5600_ProcessRawAngle(AS5600 *dev)
 }
 
 /*
- * @brief Start a DMA read. The angle is updated in HAL_I2C_MemRxCpltCallback.
+ * @brief Read the AS5600 angle through blocking I2C and update the accumulator.
  */
-void AS5600_UpdateAngle_DMA(AS5600 *dev)
+void AS5600_UpdateAngle(AS5600 *dev)
 {
-	if((dev == NULL) || (dev->i2cHandle == NULL) || (dev->dma_busy != 0)) {
+	if((dev == NULL) || (dev->i2cHandle == NULL)) {
 		return;
 	}
 
-	as5600_dma_dev = dev;
-	if(AS5600_ReadRegisters_DMA(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2) == HAL_OK) {
-		dev->dma_busy = 1;
-	}
-	else {
-		as5600_dma_dev = NULL;
-	}
-}
-
-void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-	if((as5600_dma_dev != NULL) && (hi2c == as5600_dma_dev->i2cHandle)) {
-		AS5600_ProcessRawAngle(as5600_dma_dev);
-		as5600_dma_dev->dma_busy = 0;
-		as5600_dma_dev = NULL;
-	}
-}
-
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
-{
-	if((as5600_dma_dev != NULL) && (hi2c == as5600_dma_dev->i2cHandle)) {
-		as5600_dma_dev->dma_busy = 0;
-		as5600_dma_dev = NULL;
+	if(AS5600_ReadRegisters(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2) == HAL_OK) {
+		AS5600_ProcessRawAngle(dev);
 	}
 }
 
@@ -189,7 +155,7 @@ float AS5600_GetVelocity(AS5600* dev)
 	float prev_angle = dev->total_angle_rad;
     printf("Previous angle: %.4f rad\n", prev_angle);
 
-	AS5600_UpdateAngle_DMA(dev);
+	AS5600_UpdateAngle(dev);
 	/* Calculate time delta */
 	float time_delta_s = (now_us - dev->prev_time_us) * 0.000001f;
 	time_delta_s = (time_delta_s > 0.1) ? 0.0001f : time_delta_s;
