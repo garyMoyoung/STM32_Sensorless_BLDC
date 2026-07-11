@@ -8,6 +8,7 @@ void UART_TelemetryTick(void);
 void UART2_SpeedDebugTick(void);
 void UART1_SendByte(uint8_t ch);
 void UART1_SendBytes(const uint8_t *data, uint16_t len);
+void UARTTask_Entry(void *argument);
 
 
 #endif

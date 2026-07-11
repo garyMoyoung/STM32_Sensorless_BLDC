@@ -1,7 +1,7 @@
 Dependencies for Project 'STM32_Sensorless_BLDC', Target 'STM32_Sensorless_BLDC': (DO NOT MODIFY !)
 CompilerVersion: 5060422::V5.06 update 4 (build 422)::ARMCC
 F (startup_stm32f407xx.s)(0x69805CFA)(--cpu Cortex-M4.fp.sp -g --apcs=interwork --pd "__MICROLIB SETA 1" -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../Middlewares/ST/ARM/DSP/Inc -I ..\Drivers\CMSIS\DSP\Include-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"--pd "__UVISION_VERSION SETA 540" --pd "STM32F407xx SETA 1" --pd "_RTE_ SETA 1"--list startup_stm32f407xx.lst --xref -o stm32_sensorless_bldc\startup_stm32f407xx.o --depend stm32_sensorless_bldc\startup_stm32f407xx.d)
-F (../Core/Src/main.c)(0x6A5265DF)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\main.o --omf_browse stm32_sensorless_bldc\main.crf --depend stm32_sensorless_bldc\main.d)
+F (../Core/Src/main.c)(0x6A5266B5)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\main.o --omf_browse stm32_sensorless_bldc\main.crf --depend stm32_sensorless_bldc\main.d)
 I (../Core/Inc/main.h)(0x6A5265DF)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x68CA8383)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x697C52E7)
@@ -207,7 +207,7 @@ I (../App/inc/init_file.h)(0x697C52E7)
 I (../Bsp/inc/foc_drv.h)(0x6A524362)
 I (../Bsp/inc/pid.h)(0x697C52E7)
 I (../Bsp/inc/timer_utils.h)(0x6A524362)
-I (../App/inc/uart_task.h)(0x6A525467)
+I (../App/inc/uart_task.h)(0x6A52679F)
 F (../Core/Src/gpio.c)(0x6A524362)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\gpio.o --omf_browse stm32_sensorless_bldc\gpio.crf --depend stm32_sensorless_bldc\gpio.d)
 I (../Core/Inc/gpio.h)(0x697C52E7)
 I (../Core/Inc/main.h)(0x6A5265DF)
@@ -255,7 +255,7 @@ I (D:\Keil MDK\ARM\ARMCC\include\float.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\limits.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\stdio.h)(0x57F606B8)
 I (D:\Keil MDK\ARM\ARMCC\include\stdbool.h)(0x57F606B8)
-F (../Core/Src/freertos.c)(0x6A524F4D)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\freertos.o --omf_browse stm32_sensorless_bldc\freertos.crf --depend stm32_sensorless_bldc\freertos.d)
+F (../Core/Src/freertos.c)(0x6A5267DF)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\freertos.o --omf_browse stm32_sensorless_bldc\freertos.crf --depend stm32_sensorless_bldc\freertos.d)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x68CA830F)
 I (D:\Keil MDK\ARM\ARMCC\include\stddef.h)(0x57F606B8)
 I (D:\Keil MDK\ARM\ARMCC\include\stdint.h)(0x57F606B8)
@@ -312,10 +312,134 @@ I (D:\Keil MDK\ARM\ARMCC\include\stdio.h)(0x57F606B8)
 I (D:\Keil MDK\ARM\ARMCC\include\stdbool.h)(0x57F606B8)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x68CA830F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h)(0x68CA830F)
-I (../App/inc/lcd_task.h)(0x697C52E7)
+I (../App/inc/lcd_task.h)(0x6A5267AF)
 I (../App/inc/IMU_task.h)(0x697C52E7)
-I (../App/inc/uart_task.h)(0x6A525467)
+I (../App/inc/uart_task.h)(0x6A52679F)
 I (../App/inc/foc_task.h)(0x6A524362)
+I (../LVGL/lvgl.h)(0x697C52E8)
+I (../LVGL/src/misc/lv_log.h)(0x697C52E9)
+I (../LVGL/src/misc/../lv_conf_internal.h)(0x697C52E9)
+I (../LVGL/src/misc/../lv_conf_kconfig.h)(0x697C52E9)
+I (../LVGL/examples/porting/../../lv_conf.h)(0x697C52E8)
+I (../LVGL/src/misc/lv_types.h)(0x697C52E9)
+I (../LVGL/src/misc/lv_timer.h)(0x697C52E9)
+I (../LVGL/src/misc/../hal/lv_hal_tick.h)(0x697C52E9)
+I (../LVGL/src/misc/lv_math.h)(0x697C52E9)
+I (../LVGL/src/misc/lv_mem.h)(0x697C52E9)
+I (../LVGL/src/misc/lv_async.h)(0x697C52E9)
+I (../LVGL/src/misc/lv_anim_timeline.h)(0x697C52E9)
+I (../LVGL/src/misc/lv_anim.h)(0x697C52E9)
+I (../LVGL/src/misc/lv_printf.h)(0x697C52E9)
+I (D:\Keil MDK\ARM\ARMCC\include\stdarg.h)(0x57F606B8)
+I (../LVGL/src/hal/lv_hal.h)(0x697C52E9)
+I (../LVGL/src/hal/lv_hal_disp.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/lv_draw.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/../misc/lv_style.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/../misc/../font/lv_font.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/../misc/../font/lv_symbol_def.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/../misc/../font/../misc/lv_area.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/../misc/lv_color.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/../misc/lv_assert.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/../misc/lv_txt.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/../misc/lv_bidi.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/../misc/lv_style_gen.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/lv_img_decoder.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_img_buf.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/../misc/lv_fs.h)(0x697C52E9)
+I (../LVGL/src/hal/../draw/lv_img_cache.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_rect.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/sw/lv_draw_sw_gradient.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/sw/lv_draw_sw_dither.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/sw/../../core/lv_obj_pos.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_label.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_img.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_line.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_triangle.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_arc.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_mask.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_transform.h)(0x697C52E8)
+I (../LVGL/src/hal/../draw/lv_draw_layer.h)(0x697C52E8)
+I (../LVGL/src/hal/../misc/lv_ll.h)(0x697C52E9)
+I (../LVGL/src/hal/lv_hal_indev.h)(0x697C52E9)
+I (../LVGL/src/core/lv_obj.h)(0x697C52E8)
+I (../LVGL/src/core/lv_obj_tree.h)(0x697C52E8)
+I (../LVGL/src/core/lv_obj_scroll.h)(0x697C52E8)
+I (../LVGL/src/core/lv_obj_style.h)(0x697C52E8)
+I (../LVGL/src/core/lv_obj_style_gen.h)(0x697C52E8)
+I (../LVGL/src/core/lv_obj_draw.h)(0x697C52E8)
+I (../LVGL/src/core/lv_obj_class.h)(0x697C52E8)
+I (../LVGL/src/core/lv_event.h)(0x697C52E8)
+I (../LVGL/src/core/lv_group.h)(0x697C52E8)
+I (../LVGL/src/core/lv_indev.h)(0x697C52E8)
+I (../LVGL/src/core/lv_refr.h)(0x697C52E8)
+I (../LVGL/src/core/lv_disp.h)(0x697C52E8)
+I (../LVGL/src/core/lv_theme.h)(0x697C52E8)
+I (../LVGL/src/font/lv_font_loader.h)(0x697C52E9)
+I (../LVGL/src/font/lv_font_fmt_txt.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_arc.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_btn.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_img.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_label.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_line.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_table.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_checkbox.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_bar.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_slider.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_btnmatrix.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_dropdown.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_roller.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_textarea.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_canvas.h)(0x697C52E9)
+I (../LVGL/src/widgets/lv_switch.h)(0x697C52E9)
+I (../LVGL/src/lv_api_map.h)(0x697C52E9)
+I (../LVGL/src/../lvgl.h)(0x697C52E8)
+I (../LVGL/src/extra/lv_extra.h)(0x697C52E8)
+I (../LVGL/src/extra/layouts/lv_layouts.h)(0x697C52E8)
+I (../LVGL/src/extra/layouts/flex/lv_flex.h)(0x697C52E8)
+I (../LVGL/src/extra/layouts/grid/lv_grid.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/lv_libs.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/bmp/lv_bmp.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/fsdrv/lv_fsdrv.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/png/lv_png.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/gif/lv_gif.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/gif/../../../lvgl.h)(0x697C52E9)
+I (../LVGL/src/extra/libs/qrcode/lv_qrcode.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/sjpg/lv_sjpg.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/freetype/lv_freetype.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/rlottie/lv_rlottie.h)(0x697C52E8)
+I (../LVGL/src/extra/libs/ffmpeg/lv_ffmpeg.h)(0x697C52E8)
+I (../LVGL/src/extra/others/lv_others.h)(0x697C52E9)
+I (../LVGL/src/extra/others/snapshot/lv_snapshot.h)(0x697C52E9)
+I (../LVGL/src/extra/others/monkey/lv_monkey.h)(0x697C52E9)
+I (../LVGL/src/extra/others/gridnav/lv_gridnav.h)(0x697C52E9)
+I (../LVGL/src/extra/others/fragment/lv_fragment.h)(0x697C52E8)
+I (../LVGL/src/extra/others/imgfont/lv_imgfont.h)(0x697C52E9)
+I (../LVGL/src/extra/others/msg/lv_msg.h)(0x697C52E9)
+I (../LVGL/src/extra/others/ime/lv_ime_pinyin.h)(0x697C52E9)
+I (../LVGL/src/extra/themes/lv_themes.h)(0x697C52E9)
+I (../LVGL/src/extra/themes/default/lv_theme_default.h)(0x697C52E9)
+I (../LVGL/src/extra/themes/mono/lv_theme_mono.h)(0x697C52E9)
+I (../LVGL/src/extra/themes/basic/lv_theme_basic.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/lv_widgets.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/animimg/lv_animimg.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/calendar/lv_calendar.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/calendar/lv_calendar_header_arrow.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/calendar/lv_calendar_header_dropdown.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/chart/lv_chart.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/keyboard/lv_keyboard.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/list/lv_list.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/menu/lv_menu.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/msgbox/lv_msgbox.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/meter/lv_meter.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/spinbox/lv_spinbox.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/spinner/lv_spinner.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/tabview/lv_tabview.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/tileview/lv_tileview.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/win/lv_win.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/colorwheel/lv_colorwheel.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/led/lv_led.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/imgbtn/lv_imgbtn.h)(0x697C52E9)
+I (../LVGL/src/extra/widgets/span/lv_span.h)(0x697C52E9)
 F (../Core/Src/adc.c)(0x697C52E7)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\adc.o --omf_browse stm32_sensorless_bldc\adc.crf --depend stm32_sensorless_bldc\adc.d)
 I (../Core/Inc/adc.h)(0x697C52E7)
 I (../Core/Inc/main.h)(0x6A5265DF)
@@ -724,7 +848,7 @@ I (D:\Keil MDK\ARM\ARMCC\include\float.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\limits.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\stdio.h)(0x57F606B8)
 I (D:\Keil MDK\ARM\ARMCC\include\stdbool.h)(0x57F606B8)
-F (../Core/Src/usart.c)(0x6A5259E3)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\usart.o --omf_browse stm32_sensorless_bldc\usart.crf --depend stm32_sensorless_bldc\usart.d)
+F (../Core/Src/usart.c)(0x6A5266B3)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\usart.o --omf_browse stm32_sensorless_bldc\usart.crf --depend stm32_sensorless_bldc\usart.d)
 I (../Core/Inc/usart.h)(0x697C52E7)
 I (../Core/Inc/main.h)(0x6A5265DF)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x68CA8383)
@@ -771,7 +895,7 @@ I (D:\Keil MDK\ARM\ARMCC\include\float.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\limits.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\stdio.h)(0x57F606B8)
 I (D:\Keil MDK\ARM\ARMCC\include\stdbool.h)(0x57F606B8)
-F (../Core/Src/stm32f4xx_it.c)(0x6A525324)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\stm32f4xx_it.o --omf_browse stm32_sensorless_bldc\stm32f4xx_it.crf --depend stm32_sensorless_bldc\stm32f4xx_it.d)
+F (../Core/Src/stm32f4xx_it.c)(0x6A5266B2)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\stm32f4xx_it.o --omf_browse stm32_sensorless_bldc\stm32f4xx_it.crf --depend stm32_sensorless_bldc\stm32f4xx_it.d)
 I (../Core/Inc/main.h)(0x6A5265DF)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x68CA8383)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x697C52E7)
@@ -818,7 +942,7 @@ I (D:\Keil MDK\ARM\ARMCC\include\limits.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\stdio.h)(0x57F606B8)
 I (D:\Keil MDK\ARM\ARMCC\include\stdbool.h)(0x57F606B8)
 I (../Core/Inc/stm32f4xx_it.h)(0x6A525328)
-I (../App/inc/uart_task.h)(0x6A525467)
+I (../App/inc/uart_task.h)(0x6A52679F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x68CA830F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x68CA830F)
 I (../Core/Inc/FreeRTOSConfig.h)(0x697C52E7)
@@ -15521,8 +15645,8 @@ I (D:\Keil MDK\ARM\ARMCC\include\stdbool.h)(0x57F606B8)
 I (..\Algorithm\util\stm32_mpu9250_i2c_fixed.h)(0x697C52E7)
 I (../Core/Inc/i2c.h)(0x697C52E7)
 F (..\Algorithm\util\stm32_mpu9250_i2c_fixed.h)(0x697C52E7)()
-F (..\App\lcd_task.c)(0x6A524F4D)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\lcd_task.o --omf_browse stm32_sensorless_bldc\lcd_task.crf --depend stm32_sensorless_bldc\lcd_task.d)
-I (../App/inc/lcd_task.h)(0x697C52E7)
+F (..\App\lcd_task.c)(0x6A5267C6)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\lcd_task.o --omf_browse stm32_sensorless_bldc\lcd_task.crf --depend stm32_sensorless_bldc\lcd_task.d)
+I (../App/inc/lcd_task.h)(0x6A5267AF)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x68CA830F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x68CA830F)
 I (D:\Keil MDK\ARM\ARMCC\include\stddef.h)(0x57F606B8)
@@ -15708,7 +15832,7 @@ I (../LVGL/src/extra/widgets/span/lv_span.h)(0x697C52E9)
 I (../LVGL/examples/porting/lv_port_disp.h)(0x697C52E8)
 I (../LVGL/examples/porting/lv_port_indev.h)(0x697C52E8)
 I (../Bsp/inc/pic.h)(0x697C52E7)
-F (..\App\inc\lcd_task.h)(0x697C52E7)()
+F (..\App\inc\lcd_task.h)(0x6A5267AF)()
 F (..\App\IMU_task.c)(0x697C52E7)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\imu_task.o --omf_browse stm32_sensorless_bldc\imu_task.crf --depend stm32_sensorless_bldc\imu_task.d)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x68CA830F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x68CA830F)
@@ -15773,7 +15897,7 @@ I (../Bsp/inc/MPU9250_RegisterMap.h)(0x697C52E7)
 I (../App/inc/IMU_task.h)(0x697C52E7)
 F (..\App\inc\IMU_task.h)(0x697C52E7)()
 F (..\App\Init_file.c)(0x697C52E7)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\init_file.o --omf_browse stm32_sensorless_bldc\init_file.crf --depend stm32_sensorless_bldc\init_file.d)
-I (../App/inc/lcd_task.h)(0x697C52E7)
+I (../App/inc/lcd_task.h)(0x6A5267AF)
 I (../Core/Inc/main.h)(0x6A5265DF)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x68CA8383)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x697C52E7)
@@ -15962,7 +16086,7 @@ I (../Algorithm/util/inv_mpu.h)(0x697C52E7)
 I (../Algorithm/util/inv_mpu_dmp_motion_driver.h)(0x697C52E7)
 I (../Bsp/inc/MPU9250_RegisterMap.h)(0x697C52E7)
 F (..\App\inc\init_file.h)(0x697C52E7)()
-F (..\App\uart_task.c)(0x6A5265A3)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\uart_task.o --omf_browse stm32_sensorless_bldc\uart_task.crf --depend stm32_sensorless_bldc\uart_task.d)
+F (..\App\uart_task.c)(0x6A5266B4)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\uart_task.o --omf_browse stm32_sensorless_bldc\uart_task.crf --depend stm32_sensorless_bldc\uart_task.d)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x68CA830F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x68CA830F)
 I (D:\Keil MDK\ARM\ARMCC\include\stddef.h)(0x57F606B8)
@@ -16019,10 +16143,10 @@ I (D:\Keil MDK\ARM\ARMCC\include\float.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\limits.h)(0x57F606B6)
 I (D:\Keil MDK\ARM\ARMCC\include\stdio.h)(0x57F606B8)
 I (D:\Keil MDK\ARM\ARMCC\include\stdbool.h)(0x57F606B8)
-I (../App/inc/uart_task.h)(0x6A525467)
+I (../App/inc/uart_task.h)(0x6A52679F)
 I (../Bsp/inc/pid.h)(0x697C52E7)
 I (D:\Keil MDK\ARM\ARMCC\include\stdlib.h)(0x57F606B8)
-F (..\App\inc\uart_task.h)(0x6A525467)()
+F (..\App\inc\uart_task.h)(0x6A52679F)()
 F (..\App\foc_task.c)(0x6A524362)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Middlewares/Third_Party/FreeRTOS/Source/include -I ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F -I ../Drivers/CMSIS/Include -I ../LVGL -I ../LVGL/src -I ../LVGL/examples/porting -I ../Bsp -I ../Bsp/inc -I ../Algorithm/util -I ../App -I ../App/inc -I ../Middlewares/ST/ARM/DSP/Inc -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include --diag_suppress=2803,1,1035-I.\RTE\_STM32_Sensorless_BLDC-I"D:\Keil MDK\ARM\CMSIS\6.1.0\CMSIS\Core\Include"-D__UVISION_VERSION="540" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx -D__FPU_PRESENT="1U" -DARM_MATH_CM4 -D__CC_ARM -D__TARGET_FPU_VFP-o stm32_sensorless_bldc\foc_task.o --omf_browse stm32_sensorless_bldc\foc_task.crf --depend stm32_sensorless_bldc\foc_task.d)
 I (../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h)(0x68CA830F)
 I (../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h)(0x68CA830F)
