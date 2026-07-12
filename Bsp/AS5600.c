@@ -1,8 +1,40 @@
 #include "AS5600.h"
 #include "timer_utils.h"
-#include "main.h"
 
 static AS5600 *as5600_dma_dev = NULL;
+
+#define AS5600_I2C_TIMEOUT_MS  2U
+
+static void AS5600_CancelPendingTransfer(AS5600 *dev)
+{
+	I2C_HandleTypeDef *hi2c;
+
+	if (dev == NULL)
+	{
+		return;
+	}
+
+	hi2c = dev->i2cHandle;
+	as5600_dma_dev = NULL;
+
+	if ((hi2c == NULL) || (hi2c->State == HAL_I2C_STATE_READY))
+	{
+		return;
+	}
+
+	if (hi2c->hdmarx != NULL)
+	{
+		(void)HAL_DMA_Abort(hi2c->hdmarx);
+	}
+	if (hi2c->hdmatx != NULL)
+	{
+		(void)HAL_DMA_Abort(hi2c->hdmatx);
+	}
+
+	hi2c->State = HAL_I2C_STATE_READY;
+	hi2c->Mode = HAL_I2C_MODE_NONE;
+	hi2c->ErrorCode = HAL_I2C_ERROR_NONE;
+}
 
 /*
  * Static low level functions to read/write to registers
@@ -142,7 +174,10 @@ void AS5600_UpdateAngle(AS5600 *dev)
 		return;
 	}
 
-	if(AS5600_ReadRegisters(dev, RAW_ANGLE_MSB_REG, dev->regdata, 2) == HAL_OK) {
+	AS5600_CancelPendingTransfer(dev);
+
+	if(HAL_I2C_Mem_Read(dev->i2cHandle, AS5600_I2C_ADD, RAW_ANGLE_MSB_REG,
+	                    I2C_MEMADD_SIZE_8BIT, dev->regdata, 2, AS5600_I2C_TIMEOUT_MS) == HAL_OK) {
 		AS5600_ProcessRawAngle(dev);
 	}
 }
@@ -163,7 +198,6 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
 	if((as5600_dma_dev != NULL) && (hi2c == as5600_dma_dev->i2cHandle)) {
 		AS5600_ProcessRawAngle(as5600_dma_dev);
-		MechSpeed_OnNewAngle(as5600_dma_dev->total_angle_rad);
 		as5600_dma_dev = NULL;
 	}
 }

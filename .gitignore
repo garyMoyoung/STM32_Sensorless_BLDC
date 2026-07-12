@@ -1,5 +1,7 @@
 # Keil MDK build output
 MDK-ARM/STM32_Sensorless_BLDC/
+MDK-ARM/Listings/
+MDK-ARM/Objects/
 MDK-ARM/*.lst
 
 # Keil user/local state
@@ -21,7 +23,18 @@ MDK-ARM/.vscode/
 *.lnp
 *.map
 *.o
+*.obj
 *.sct
+
+# STM32CubeIDE / Eclipse local output
+Debug/
+Release/
+.metadata/
+.settings/
+
+# Host-side capture logs
+upmachine/*.csv
+upmachine/*.log
 
 # Logs and temporary files
 *.log
