@@ -98,6 +98,16 @@ void PID_Init(PIDController *pid,float maxOutput, float minOutput, float maxInte
     pid->maxIntegral = maxIntegral;
 }
 
+// 模式切换时清空积分/误差历史,不改增益/限幅/目标值,避免残留积分导致输出突跳
+void PID_Reset(PIDController *pid)
+{
+    pid->error = 0;
+    pid->lastError = 0;
+    pid->preError = 0;
+    pid->integral = 0;
+    pid->output = 0;
+}
+
 float First_order_Filtering(float input)
 {
   float output;

@@ -185,6 +185,14 @@ typedef struct {
     uint8_t data[3];
     uint8_t flag;
 } UART_Frame_t;
+
+typedef enum {
+    FOC_MODE_IDLE = 0,
+    FOC_MODE_OPEN_LOOP = 1,
+    FOC_MODE_CURRENT = 2,
+    FOC_MODE_SPEED = 3,
+    FOC_MODE_POSITION = 4
+} FOC_Mode_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

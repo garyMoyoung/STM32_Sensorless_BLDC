@@ -33,6 +33,17 @@ extern PIDController PID_Current_Q;
 extern PIDController PID_Speed;
 extern PIDController PID_Position;
 
+extern volatile FOC_Mode_t g_foc_mode;
+extern uint16_t Diag_RawAdc[3];
+extern float Diag_RawVolt[3];
+extern uint8_t Diag_CurrentFault;
+extern uint16_t current_adc_offset[3];
+extern float OpenLoop_AlignUd_V;
+extern float OpenLoop_RunUq_V;
+extern float OpenLoop_TargetElecHz;
+extern uint8_t FOC_RequestRecalibration(void);
+extern void FOC_SetMode(uint8_t mode);
+
 static PID_Param_t Id_temp;
 static PID_Param_t Iq_temp;
 static PID_Param_t Speed_temp;
@@ -46,6 +57,10 @@ UART_Frame_t drame_task;
 #define PC_CMD_READ_PID         0x83U
 #define PC_CMD_READ_ALL         0x84U
 #define PC_CMD_READ_DEBUG       0x85U
+#define PC_CMD_READ_RAW_ADC     0x86U
+#define PC_CMD_RECALIBRATE      0x87U
+#define PC_CMD_SET_MODE         0x90U
+#define PC_CMD_DISARM           0x91U
 
 static volatile uint8_t telemetry_stream_enabled = 0;
 static volatile uint16_t telemetry_stream_period_ms = 50;
@@ -83,7 +98,8 @@ float calculate_step_size(uint8_t data_value)
 static void UART_PrintTelemetry(void)
 {
     printf("$TEL,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,"
-           "%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f#\r\n",
+           "%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"
+           "%u,%u,%u,%u,%.4f,%.4f,%.4f,%u#\r\n",
            Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic,
            Iqd_M0.Id, Iqd_M0.Iq,
            Mech_RPM, Mech_Angle, Elec_Angle,
@@ -91,7 +107,20 @@ static void UART_PrintTelemetry(void)
            PID_Current_Q.kp, PID_Current_Q.ki, PID_Current_Q.kd,
            PID_Speed.kp, PID_Speed.ki, PID_Speed.kd,
            PID_Position.kp, PID_Position.ki, PID_Position.kd,
-           PID_Current_Q.target, PID_Speed.target);
+           PID_Current_Q.target, PID_Speed.target,
+           (unsigned int)g_foc_mode,
+           (unsigned int)Diag_RawAdc[0], (unsigned int)Diag_RawAdc[1], (unsigned int)Diag_RawAdc[2],
+           Diag_RawVolt[0], Diag_RawVolt[1], Diag_RawVolt[2],
+           (unsigned int)Diag_CurrentFault);
+}
+
+static void UART_PrintRaw(void)
+{
+    printf("$RAW,%u,%.4f,%u,%u,%.4f,%u,%u,%.4f,%u,%u#\r\n",
+           (unsigned int)Diag_RawAdc[0], Diag_RawVolt[0], (unsigned int)current_adc_offset[0],
+           (unsigned int)Diag_RawAdc[1], Diag_RawVolt[1], (unsigned int)current_adc_offset[1],
+           (unsigned int)Diag_RawAdc[2], Diag_RawVolt[2], (unsigned int)current_adc_offset[2],
+           (unsigned int)Diag_CurrentFault);
 }
 
 static void UART_PrintDebug(void)
@@ -213,6 +242,13 @@ static void UART_ProcessAsciiCommand(char *line)
         return;
     }
 
+    if ((token != NULL) && (strcmp(token, "$MODE") == 0) && (loop != NULL))
+    {
+        FOC_SetMode((uint8_t)atoi(loop));
+        printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+        return;
+    }
+
     printf("$ERR,UNKNOWN_CMD#\r\n");
 }
 
@@ -304,6 +340,32 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
         UART_PrintDebug();
       break;
 
+      case PC_CMD_READ_RAW_ADC:
+        UART_PrintRaw();
+      break;
+
+      case PC_CMD_RECALIBRATE:
+        if (FOC_RequestRecalibration() != 0U)
+        {
+          printf("$ACK,CAL#\r\n");
+          UART_PrintRaw();
+        }
+        else
+        {
+          printf("$ERR,CAL,BUSY#\r\n");
+        }
+      break;
+
+      case PC_CMD_SET_MODE:
+        FOC_SetMode(data2);
+        printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+      break;
+
+      case PC_CMD_DISARM:
+        FOC_SetMode((uint8_t)FOC_MODE_IDLE);
+        printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+      break;
+
       case 0x00:
       break;
 
@@ -364,6 +426,24 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
         else if(data2 == 0x14)  Position_temp.target -= step_size;
         pid_to_apply = &PID_Position;
         param_to_apply = &Position_temp;
+      break;
+
+      case 0x06:
+        if(data2 == 0x01)       OpenLoop_AlignUd_V += step_size;
+        else if(data2 == 0x11)  OpenLoop_AlignUd_V -= step_size;
+        printf("$ACK,OL_UD,%.4f#\r\n", OpenLoop_AlignUd_V);
+      break;
+
+      case 0x07:
+        if(data2 == 0x01)       OpenLoop_RunUq_V += step_size;
+        else if(data2 == 0x11)  OpenLoop_RunUq_V -= step_size;
+        printf("$ACK,OL_UQ,%.4f#\r\n", OpenLoop_RunUq_V);
+      break;
+
+      case 0x08:
+        if(data2 == 0x01)       OpenLoop_TargetElecHz += step_size;
+        else if(data2 == 0x11)  OpenLoop_TargetElecHz -= step_size;
+        printf("$ACK,OL_HZ,%.4f#\r\n", OpenLoop_TargetElecHz);
       break;
 
       default:
@@ -433,12 +513,11 @@ void UART_ProcessInTimer(void)
         break;
 
       case WAIT_data1:
-        if(rx1_frame_buffer[i] <= DOWN_FRAME_LEN_MAX)
-        {
-          frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS] = rx1_frame_buffer[i];
-          frameHandler_one.data[0] = rx1_frame_buffer[i];
-          frameHandler_one.state = WAIT_data2;
-        }
+        /* ARG0 是完整的数据字节(0~255),不是长度字段,不应按 DOWN_FRAME_LEN_MAX 过滤,
+         * 否则 ARG0>30 的命令(例如 0x81 STREAM_ON 默认周期50ms)会卡在此状态永远收不到帧尾 */
+        frameHandler_one.rxBuff[DOWN_FRAME_DATA_POS] = rx1_frame_buffer[i];
+        frameHandler_one.data[0] = rx1_frame_buffer[i];
+        frameHandler_one.state = WAIT_data2;
         break;
 
       case WAIT_data2:

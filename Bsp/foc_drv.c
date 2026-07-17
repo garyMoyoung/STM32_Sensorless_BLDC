@@ -229,6 +229,24 @@ float _normalizeAngle(float angle)
 }
 
 /**
+ * @brief 角度误差归一化到 [-pi, pi]，用于位置环跨 0/2pi 边界时走最短路径
+ * @param error: target - current，任意范围
+ * @retval 归一化后的误差
+ */
+float AngleErrorWrap(float error)
+{
+    while (error > 3.14159265f)
+    {
+        error -= 6.283185307f;
+    }
+    while (error < -3.14159265f)
+    {
+        error += 6.283185307f;
+    }
+    return error;
+}
+
+/**
  * @brief 按键读取
  */
 void Key_read(void)
