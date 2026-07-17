@@ -1778,6 +1778,16 @@
               <FileType>5</FileType>
               <FilePath>..\Bsp\inc\timer_utils.h</FilePath>
             </File>
+            <File>
+              <FileName>current_sense.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\current_sense.c</FilePath>
+            </File>
+            <File>
+              <FileName>current_sense.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\current_sense.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

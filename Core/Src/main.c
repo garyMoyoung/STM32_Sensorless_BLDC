@@ -56,6 +56,8 @@
 #include "pid.h"
 #include "timer_utils.h"
 #include "uart_task.h"
+#include "current_sense.h"
+#include "foc_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,25 +67,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CURRENT_ADC_REF_VOLTAGE      3.3f
-#define CURRENT_ADC_FULL_SCALE       4096.0f
-#define CURRENT_INA240_GAIN          50.0f
-#define CURRENT_SHUNT_RESISTOR_OHM   0.005f
-#define CURRENT_ADC_TO_AMP           (CURRENT_ADC_REF_VOLTAGE / CURRENT_ADC_FULL_SCALE / (CURRENT_INA240_GAIN * CURRENT_SHUNT_RESISTOR_OHM))
-#define CURRENT_OFFSET_DEFAULT_ADC   2048U
-/* 标定出的零电流偏置若偏离 CURRENT_OFFSET_DEFAULT_ADC 超过此阈值(约0.48V),视为该相模拟前端异常 */
-#define CURRENT_OFFSET_FAULT_TOL_ADC 600U
-
-#define OPEN_LOOP_DEBUG_ENABLE       1U
-#define OPEN_LOOP_ALIGN_TIME_MS      500U
-#define OPEN_LOOP_RAMP_TIME_MS       3000U
-#define OPEN_LOOP_ALIGN_UD_V_DEFAULT     1.0f
-#define OPEN_LOOP_RUN_UQ_V_DEFAULT       1.2f
-#define OPEN_LOOP_TARGET_ELEC_HZ_DEFAULT 5.0f
-#define OPEN_LOOP_POLE_PAIRS         7.0f
-#define OPEN_LOOP_UART_PERIOD_MS     50U
-#define OPEN_LOOP_PWM_PERIOD         3360.0f
-#define OPEN_LOOP_TWO_PI             6.283185307f
+/* 电流采样参数/开环调试参数已迁移到 current_sense.h / App/foc_task.c */
 
 /* USER CODE END PD */
 
@@ -107,29 +91,6 @@ AS5600 M0;
 float Udc = 12.6f;
 uint16_t ADC_Value[3] = {0};
 uint32_t ADC_buff[3] = {0};
-uint16_t ad_val_orig[3] = {0};
-volatile uint16_t uart2_adc_raw[3] = {0U, 0U, 0U};
-volatile uint32_t uart2_adc_raw_tick = 0U;
-static uint8_t uart2_adc_tx_buf[48];
-static volatile uint8_t uart2_adc_tx_busy = 0U;
-uint16_t current_adc_offset[3] = {
-  CURRENT_OFFSET_DEFAULT_ADC,
-  CURRENT_OFFSET_DEFAULT_ADC,
-  CURRENT_OFFSET_DEFAULT_ADC
-};
-
-/* 电流采样诊断量: 原始ADC计数/换算电压/零点异常标志(bit0=A,bit1=B,bit2=C), 供上位机 $RAW / $TEL 读取 */
-uint16_t Diag_RawAdc[3] = {0U, 0U, 0U};
-float Diag_RawVolt[3] = {0.0f, 0.0f, 0.0f};
-uint8_t Diag_CurrentFault = 0U;
-
-/* FOC 运行模式(运行时可通过UART切换), 上电默认IDLE(PWM零输出), 避免上电即自动转动 */
-volatile FOC_Mode_t g_foc_mode = FOC_MODE_IDLE;
-
-/* 开环调试参数, 默认值取自 OPEN_LOOP_*_DEFAULT, 可通过UART在线调节(见 ProcessDataFrame case 0x06~0x08) */
-float OpenLoop_AlignUd_V = OPEN_LOOP_ALIGN_UD_V_DEFAULT;
-float OpenLoop_RunUq_V = OPEN_LOOP_RUN_UQ_V_DEFAULT;
-float OpenLoop_TargetElecHz = OPEN_LOOP_TARGET_ELEC_HZ_DEFAULT;
 
 volatile float Mech_Angle = 0.0f;
 float Elec_Angle = 0.0f;
@@ -239,10 +200,6 @@ extern osMessageQueueId_t UARTQueueHandle;
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-static void Current_ReadRaw(uint16_t raw_adc[3]);
-static void Current_CalibrateOffset(uint16_t sample_count);
-static void OpenLoop_Control(void);
-static void Uart2_SendRawAdc(uint32_t tick, const uint16_t raw_adc[3]);
 
 /* Private function prototypes -----------------------------------------------*/
 /* ------------------?????????printf?????????????------------------*/
@@ -255,7 +212,7 @@ void _sys_exit(int x) //??????????????
 {
   x = x;
 }
-//__use_no_semihosting was requested, but _ttywrch was 
+//__use_no_semihosting was requested, but _ttywrch was
 void _ttywrch(int ch)
 {
     ch = ch;
@@ -268,11 +225,11 @@ FILE __stdout;
 
 #endif
 
-#if defined ( __GNUC__ ) && !defined (__clang__) 
+#if defined ( __GNUC__ ) && !defined (__clang__)
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 #else
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif 
+#endif
 PUTCHAR_PROTOTYPE
 {
   UART1_SendByte((uint8_t)ch);
@@ -344,10 +301,10 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim3);
   __HAL_TIM_CLEAR_IT(&htim9,TIM_IT_UPDATE);
   HAL_TIM_Base_Start_IT(&htim9);
-  
+
   HAL_ADCEx_InjectedStart(&hadc1);
   __HAL_ADC_ENABLE_IT(&hadc1,ADC_IT_JEOC);
-  
+
   HAL_ADC_Start_IT(&hadc1);
   HAL_ADC_Start_DMA(&hadc1,(uint32_t *)ADC_buff,12);
   HAL_ADC_PollForConversion(&hadc1, 50);
@@ -380,7 +337,7 @@ int main(void)
   // ?????PID Q ?????????
   __HAL_TIM_CLEAR_IT(&htim10,TIM_IT_UPDATE);
   HAL_TIM_Base_Start_IT(&htim10);
-  
+
 
   /* USER CODE END 2 */
 
@@ -451,382 +408,9 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void PWM_TIM2_Set(uint16_t pwm_a,uint16_t pwm_b,uint16_t pwm_c)
-{
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwm_a);//
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);//
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);//
-}
 
-static uint16_t PWM_LimitCompare(float compare)
-{
-    if (compare < 0.0f)
-    {
-        return 0U;
-    }
-    if (compare > OPEN_LOOP_PWM_PERIOD)
-    {
-        return (uint16_t)OPEN_LOOP_PWM_PERIOD;
-    }
-    return (uint16_t)compare;
-}
-
-/*
- * 注入通道->物理引脚映射(adc.c: rank1=CH2/PA2, rank2=CH3/PA3, rank3=CH4/PA4):
- *   raw_adc[0] (Ia) <- InjectedRank3 <- ADC1_IN4 <- PA4
- *   raw_adc[1] (Ib) <- InjectedRank2 <- ADC1_IN3 <- PA3
- *   raw_adc[2] (Ic) <- InjectedRank1 <- ADC1_IN2 <- PA2
- * 这是当前代码假设的相序对应关系,未与原理图/实物核实过。拿到板子后可用
- * $RAW 诊断帧(逐引脚给出原始计数与电压)配合万用表/示波器逐相验证,
- * 如与实际接线不符,只需调整这里的下标映射,不影响其余算法。
- */
-static void Current_ReadRaw(uint16_t raw_adc[3])
-{
-    raw_adc[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
-    raw_adc[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-    raw_adc[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
-}
-
-static void Uart2_SendRawAdc(uint32_t tick, const uint16_t raw_adc[3])
-{
-#if (OPEN_LOOP_DEBUG_ENABLE != 0U)
-    int len;
-
-    if ((uart2_adc_tx_busy != 0U) || (huart2.gState != HAL_UART_STATE_READY))
-    {
-        return;
-    }
-
-    len = snprintf((char *)uart2_adc_tx_buf, sizeof(uart2_adc_tx_buf),
-                   "$ADC,%lu,%u,%u,%u\r\n",
-                   (unsigned long)tick,
-                   (unsigned int)raw_adc[0],
-                   (unsigned int)raw_adc[1],
-                   (unsigned int)raw_adc[2]);
-
-    if ((len <= 0) || ((uint32_t)len >= sizeof(uart2_adc_tx_buf)))
-    {
-        return;
-    }
-
-    uart2_adc_tx_busy = 1U;
-    if (HAL_UART_Transmit_DMA(&huart2, uart2_adc_tx_buf, (uint16_t)len) != HAL_OK)
-    {
-        uart2_adc_tx_busy = 0U;
-    }
-#else
-    (void)tick;
-    (void)raw_adc;
-#endif
-}
-
-static void Current_CalibrateOffset(uint16_t sample_count)
-{
-    uint32_t sum[3] = {0U, 0U, 0U};
-    uint16_t raw_adc[3] = {0U, 0U, 0U};
-    uint16_t valid_samples = 0U;
-
-    if (sample_count == 0U)
-    {
-        sample_count = 1U;
-    }
-
-    for (uint16_t i = 0U; i < sample_count; i++)
-    {
-        if (HAL_ADCEx_InjectedPollForConversion(&hadc1, 2U) == HAL_OK)
-        {
-            Current_ReadRaw(raw_adc);
-            sum[0] += raw_adc[0];
-            sum[1] += raw_adc[1];
-            sum[2] += raw_adc[2];
-            valid_samples++;
-        }
-    }
-
-    if (valid_samples > 0U)
-    {
-        uint16_t new_offset[3];
-        uint8_t ch;
-
-        new_offset[0] = (uint16_t)(sum[0] / valid_samples);
-        new_offset[1] = (uint16_t)(sum[1] / valid_samples);
-        new_offset[2] = (uint16_t)(sum[2] / valid_samples);
-
-        Diag_CurrentFault = 0U;
-        for (ch = 0U; ch < 3U; ch++)
-        {
-            int32_t dev = (int32_t)new_offset[ch] - (int32_t)CURRENT_OFFSET_DEFAULT_ADC;
-            if ((dev > (int32_t)CURRENT_OFFSET_FAULT_TOL_ADC) || (dev < -(int32_t)CURRENT_OFFSET_FAULT_TOL_ADC))
-            {
-                /* 标定值偏离过大,判定该相模拟前端异常,零点仍用默认值,不采信可疑标定结果 */
-                Diag_CurrentFault |= (uint8_t)(1U << ch);
-            }
-            else
-            {
-                current_adc_offset[ch] = new_offset[ch];
-            }
-        }
-    }
-}
-
-void Current_read()
-{
-    uint8_t ch;
-
-    Current_ReadRaw(ad_val_orig);
-    Iabc_M0.Ia = ((float)ad_val_orig[0] - (float)current_adc_offset[0]) * CURRENT_ADC_TO_AMP;
-    Iabc_M0.Ib = ((float)ad_val_orig[1] - (float)current_adc_offset[1]) * CURRENT_ADC_TO_AMP;
-    Iabc_M0.Ic = ((float)ad_val_orig[2] - (float)current_adc_offset[2]) * CURRENT_ADC_TO_AMP;
-
-    for (ch = 0U; ch < 3U; ch++)
-    {
-        Diag_RawAdc[ch] = ad_val_orig[ch];
-        Diag_RawVolt[ch] = (float)ad_val_orig[ch] * (CURRENT_ADC_REF_VOLTAGE / CURRENT_ADC_FULL_SCALE);
-    }
-}
-
-/**
- * @brief 供UART命令(0x87 RECALIBRATE)调用的重新标零入口
- * @retval 1=已执行标定, 0=当前不在IDLE模式,拒绝执行(避免在电机运行中把工作点当零点)
- */
-uint8_t FOC_RequestRecalibration(void)
-{
-    if (g_foc_mode != FOC_MODE_IDLE)
-    {
-        return 0U;
-    }
-    Current_CalibrateOffset(512U);
-    return 1U;
-}
-
-/**
- * @brief 供UART命令(0x90 SET_MODE / 0x91 DISARM)调用的模式切换入口
- */
-void FOC_SetMode(uint8_t mode)
-{
-    if (mode > (uint8_t)FOC_MODE_POSITION)
-    {
-        return;
-    }
-    g_foc_mode = (FOC_Mode_t)mode;
-}
-
-
-
-void Queue_proc()
-{
-    // osMessageQueueGet(PIDQueueHandle, &Id_pid, NULL, 0);
-    // PID_param_set(&PID_Current_D,0.050f,Id_pid.ki,Id_pid.kd);
-    // osMessageQueueGet(PIDQueueHandle, &Iq_pid, NULL, 0);
-    // PID_param_set(&PID_Current_Q,0.050f,Iq_pid.ki,Iq_pid.kd);
-    osMessageQueueGet(PIDQueueHandle, &Speed_pid, NULL, 0);
-    PID_param_set(&PID_Speed,Speed_pid.kp,Speed_pid.ki,Speed_pid.kd);
-    // PID_Current_Q.target = Iq_pid.target;
-}
-
-#define FOC_LOOP_DT_S  0.001f
-
-static float prev_speed_angle = 0.0f;
-static uint8_t prev_speed_valid = 0U;
-
-static void MechSpeed_Update(float current_angle)
-{
-    float angle_delta;
-
-    if (prev_speed_valid == 0U)
-    {
-        prev_speed_angle = current_angle;
-        prev_speed_valid = 1U;
-        return;
-    }
-
-    angle_delta = current_angle - prev_speed_angle;
-    if (angle_delta > 3.14159f)
-    {
-        angle_delta -= 2.0f * 3.14159f;
-    }
-    else if (angle_delta < -3.14159f)
-    {
-        angle_delta += 2.0f * 3.14159f;
-    }
-
-    Mech_RPM = rad_sec_to_rpm(angle_delta / FOC_LOOP_DT_S);
-    prev_speed_angle = current_angle;
-}
-
-void angle_proc()
-{
-    float raw_angle;
-
-    AS5600_UpdateAngle(&M0);
-    raw_angle = AS5600_GetAngle(&M0);
-    MechSpeed_Update(raw_angle);
-    Mech_Angle = _normalizeAngle(raw_angle);
-    Elec_Angle = 7.0f * Mech_Angle;
-}
-
-
-/* 电流环: 只跑 D/Q 电流PID,不参与速度/位置级联。Id/Iq target 由上位机通过既有
- * PID写命令(二进制0x01/0x02步进 或 ASCII $WPID,ID/IQ,...#)直接设置。 */
-static void FOC_CurrentLoop_Step(void)
-{
-    angle_proc();
-    Current_read();
-    Clarke_transform(&Iabc_M0,&Ialpbe_M0);
-    Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
-
-    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id);
-    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
-    SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-    PWM_TIM2_Set((uint16_t)(3360*SVPWM_M0.tcm1),(uint16_t)(3360*SVPWM_M0.tcm2),(uint16_t)(3360*SVPWM_M0.tcm3));
-}
-
-/* 速度环: 速度PID输出作为Iq目标,再走电流环。SPD target 由上位机设置(PID_Speed.target)。 */
-static void FOC_SpeedLoop_Step(void)
-{
-    angle_proc();
-    Current_read();
-    Clarke_transform(&Iabc_M0,&Ialpbe_M0);
-    Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
-
-    PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM);
-
-    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id);
-    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
-    SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-    PWM_TIM2_Set((uint16_t)(3360*SVPWM_M0.tcm1),(uint16_t)(3360*SVPWM_M0.tcm2),(uint16_t)(3360*SVPWM_M0.tcm3));
-}
-
-/* 位置环: 位置PID(角度误差按最短路径归一化)输出作为速度目标,再走速度环->电流环。
- * POS target 由上位机设置(PID_Position.target,单位: 机械角 rad,范围不限,内部按最短路径归一化)。 */
-static void FOC_PositionLoop_Step(void)
-{
-    float wrapped_err;
-
-    angle_proc();
-    Current_read();
-    Clarke_transform(&Iabc_M0,&Ialpbe_M0);
-    Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
-
-    wrapped_err = AngleErrorWrap(PID_Position.target - Mech_Angle);
-    PID_Speed.target = PID_Position_Calculate(&PID_Position, Mech_Angle + wrapped_err, Mech_Angle);
-
-    PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM);
-
-    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id);
-    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
-    SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-    PWM_TIM2_Set((uint16_t)(3360*SVPWM_M0.tcm1),(uint16_t)(3360*SVPWM_M0.tcm2),(uint16_t)(3360*SVPWM_M0.tcm3));
-}
-
-static void OpenLoop_Control(void)
-{
-    static uint32_t open_loop_tick = 0U;
-    static float open_loop_elec_angle = 0.0f;
-    uint16_t raw_adc[3] = {0U, 0U, 0U};
-    float ramp = 1.0f;
-    float elec_hz = 0.0f;
-
-    Current_ReadRaw(raw_adc);
-    ad_val_orig[0] = raw_adc[0];
-    ad_val_orig[1] = raw_adc[1];
-    ad_val_orig[2] = raw_adc[2];
-    uart2_adc_raw[0] = raw_adc[0];
-    uart2_adc_raw[1] = raw_adc[1];
-    uart2_adc_raw[2] = raw_adc[2];
-    uart2_adc_raw_tick = open_loop_tick;
-
-    if ((open_loop_tick % OPEN_LOOP_UART_PERIOD_MS) == 0U)
-    {
-        Uart2_SendRawAdc(open_loop_tick, raw_adc);
-    }
-
-    if (open_loop_tick < OPEN_LOOP_ALIGN_TIME_MS)
-    {
-        open_loop_elec_angle = 0.0f;
-        Udq_M0.Ud = OpenLoop_AlignUd_V;
-        Udq_M0.Uq = 0.0f;
-        Mech_RPM = 0.0f;
-    }
-    else
-    {
-        uint32_t run_tick = open_loop_tick - OPEN_LOOP_ALIGN_TIME_MS;
-
-        if (run_tick < OPEN_LOOP_RAMP_TIME_MS)
-        {
-            ramp = (float)run_tick / (float)OPEN_LOOP_RAMP_TIME_MS;
-        }
-
-        elec_hz = OpenLoop_TargetElecHz * ramp;
-        Udq_M0.Ud = 0.0f;
-        Udq_M0.Uq = OpenLoop_RunUq_V * ramp;
-        open_loop_elec_angle += OPEN_LOOP_TWO_PI * elec_hz * FOC_LOOP_DT_S;
-        open_loop_elec_angle = _normalizeAngle(open_loop_elec_angle);
-        Mech_RPM = (elec_hz / OPEN_LOOP_POLE_PAIRS) * 60.0f;
-    }
-
-    Elec_Angle = open_loop_elec_angle;
-    SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-    PWM_TIM2_Set(PWM_LimitCompare(OPEN_LOOP_PWM_PERIOD * SVPWM_M0.tcm1),
-                 PWM_LimitCompare(OPEN_LOOP_PWM_PERIOD * SVPWM_M0.tcm2),
-                 PWM_LimitCompare(OPEN_LOOP_PWM_PERIOD * SVPWM_M0.tcm3));
-
-    open_loop_tick++;
-
-    if (open_loop_tick == 0U)
-    {
-        /* 溢出后从对齐阶段重新开始,避免长时间运行后 tick 溢出导致状态错乱 */
-        open_loop_tick = 1U;
-    }
-}
-
-/* PWM 归零(50%对称占空,三相电压差为0),用于IDLE及模式切换瞬间,避免残留占空比造成冲击 */
-static void FOC_OutputZero(void)
-{
-    PWM_TIM2_Set((uint16_t)(OPEN_LOOP_PWM_PERIOD * 0.5f),
-                 (uint16_t)(OPEN_LOOP_PWM_PERIOD * 0.5f),
-                 (uint16_t)(OPEN_LOOP_PWM_PERIOD * 0.5f));
-}
-
-/* 1kHz(TIM10)调用入口: 按 g_foc_mode 分发到对应的调试模式,模式切换瞬间清空四个PID的
- * 积分/误差历史并把PWM归零,避免上一模式残留的积分/目标突变造成电流或转速冲击。 */
-void FOC_ModeDispatch(void)
-{
-    static FOC_Mode_t prev_mode = FOC_MODE_IDLE;
-
-    if (g_foc_mode != prev_mode)
-    {
-        PID_Reset(&PID_Current_D);
-        PID_Reset(&PID_Current_Q);
-        PID_Reset(&PID_Speed);
-        PID_Reset(&PID_Position);
-        FOC_OutputZero();
-        prev_mode = g_foc_mode;
-    }
-
-    switch (g_foc_mode)
-    {
-        case FOC_MODE_OPEN_LOOP:
-            OpenLoop_Control();
-            break;
-        case FOC_MODE_CURRENT:
-            FOC_CurrentLoop_Step();
-            break;
-        case FOC_MODE_SPEED:
-            FOC_SpeedLoop_Step();
-            break;
-        case FOC_MODE_POSITION:
-            FOC_PositionLoop_Step();
-            break;
-        case FOC_MODE_IDLE:
-        default:
-            /* 空闲态仍刷新角度/电流用于监控,但不输出非零电压 */
-            angle_proc();
-            Current_read();
-            FOC_OutputZero();
-            break;
-    }
-}
+/* 以下均为中断回调/事件分发: 具体驱动实现见 Bsp/current_sense.c, Bsp/foc_drv.c,
+ * App/foc_task.c, App/uart_task.c */
 
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
@@ -841,7 +425,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART2)
   {
-      uart2_adc_tx_busy = 0U;
+      UART2_RawAdcTxComplete();
   }
 }
 
@@ -849,7 +433,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART2)
   {
-      uart2_adc_tx_busy = 0U;
+      UART2_RawAdcTxComplete();
   }
 }
 //7ee75574453dedc37120c1ddd948099600afb96d
@@ -879,7 +463,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if(++TIM10_task_CNT >= 1000)
     {
       TIM10_task_CNT = 0;
-      
+
     }
 
     // ????????????????????? +1 ms??
@@ -894,7 +478,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             Key[i].Press_Time_Count = 0;
         }
 
-        
+
 
         // ???????????????????????????????????????????????
         if (Key[i].Time_Count_Flag == 1 && Key[i].Press_Time_Count >= LONG_MS && Key[i].Key_Long_Flag == 0) {

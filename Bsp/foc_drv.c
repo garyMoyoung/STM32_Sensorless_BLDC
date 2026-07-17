@@ -2,9 +2,36 @@
 #include "main.h"
 #include "foc_drv.h"
 #include "arm_math.h"
+#include "tim.h"
 
 extern float Udc;
 extern Key_Struct_init Key[3];
+
+/**
+ * @brief M0三相PWM占空比设置(TIM2 CH2/CH3/CH4)
+ */
+void PWM_TIM2_Set(uint16_t pwm_a,uint16_t pwm_b,uint16_t pwm_c)
+{
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwm_a);
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);
+}
+
+/**
+ * @brief 把浮点占空比限幅到 [0, FOC_PWM_PERIOD] 并转换为定时器比较值
+ */
+uint16_t PWM_LimitCompare(float compare)
+{
+    if (compare < 0.0f)
+    {
+        return 0U;
+    }
+    if (compare > FOC_PWM_PERIOD)
+    {
+        return (uint16_t)FOC_PWM_PERIOD;
+    }
+    return (uint16_t)compare;
+}
 
 /**
  * @brief Clarke变换 - 直接计算（无需矩阵库）

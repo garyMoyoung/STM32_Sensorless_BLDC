@@ -62,10 +62,15 @@ UART_Frame_t drame_task;
 #define PC_CMD_SET_MODE         0x90U
 #define PC_CMD_DISARM           0x91U
 
+#define OPEN_LOOP_DEBUG_ENABLE  1U
+
 static volatile uint8_t telemetry_stream_enabled = 0;
 static volatile uint16_t telemetry_stream_period_ms = 50;
 static uint16_t telemetry_stream_cnt = 0;
 static uint16_t uart2_speed_debug_cnt = 0;
+
+static uint8_t uart2_adc_tx_buf[48];
+static volatile uint8_t uart2_adc_tx_busy = 0U;
 
 void UART1_SendByte(uint8_t ch)
 {
@@ -287,6 +292,44 @@ void UART2_SpeedDebugTick(void)
         uart2_speed_debug_cnt = 0;
         UART2_PrintSpeedDebug();
     }
+}
+
+void UART2_SendRawAdc(uint32_t tick, const uint16_t raw_adc[3])
+{
+#if (OPEN_LOOP_DEBUG_ENABLE != 0U)
+    int len;
+
+    if ((uart2_adc_tx_busy != 0U) || (huart2.gState != HAL_UART_STATE_READY))
+    {
+        return;
+    }
+
+    len = snprintf((char *)uart2_adc_tx_buf, sizeof(uart2_adc_tx_buf),
+                   "$ADC,%lu,%u,%u,%u\r\n",
+                   (unsigned long)tick,
+                   (unsigned int)raw_adc[0],
+                   (unsigned int)raw_adc[1],
+                   (unsigned int)raw_adc[2]);
+
+    if ((len <= 0) || ((uint32_t)len >= sizeof(uart2_adc_tx_buf)))
+    {
+        return;
+    }
+
+    uart2_adc_tx_busy = 1U;
+    if (HAL_UART_Transmit_DMA(&huart2, uart2_adc_tx_buf, (uint16_t)len) != HAL_OK)
+    {
+        uart2_adc_tx_busy = 0U;
+    }
+#else
+    (void)tick;
+    (void)raw_adc;
+#endif
+}
+
+void UART2_RawAdcTxComplete(void)
+{
+    uart2_adc_tx_busy = 0U;
 }
 
 void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
