@@ -31,6 +31,16 @@
   （见下方 PID 帧与 `$WPID` 命令）。位置环 `POS` 的 `target` 单位是机械角 rad，取值不限，固件内部
   按最短路径归一化，跨 0/2π 边界不会反转。
 
+## LCD 遥测屏幕
+
+板载 LCD（ST7789，240x280，`Bsp/lcd.c`/`Bsp/lcd_init.c` 的 `_DMA` 系列函数经 SPI1+DMA 驱动）
+在 `App/lcd_task.c` 里显示当前模式、转速(RPM)、机械角度(度)、三相电流 Ia/Ib/Ic，每 150ms 刷新一次
+数值区域（标签只画一次，不整屏重绘）。这条链路完全独立于 FOC 控制（FOC 在 TIM10 硬件中断里跑，
+不受任务调度影响），LCD 任务本身优先级也调到了 UART 任务之下，不会抢占上位机通信。
+
+默认开机即显示（`g_lcd_enable` 默认 1），可通过 `0x93`（二进制）或 ASCII `$LCD,n#` 运行时开关：
+关闭时背光熄灭且不再触碰 SPI 总线。
+
 ## 上位机 -> 下位机
 
 ### 二进制帧（默认路径）
@@ -56,6 +66,7 @@ FE EF CMD ARG0 ARG1 23 24
 ```text
 $WPID,IQ,2.0,0.05,0.001,0#
 $MODE,3#
+$LCD,0#
 ```
 
 ## 命令表
@@ -72,6 +83,7 @@ $MODE,3#
 | `0x87` | 重新标定电流零点 | 0 | 0 | 仅 IDLE 模式下有效，返回 `$ACK,CAL#` + `$RAW`，忙时返回 `$ERR,CAL,BUSY#` |
 | `0x90` | 设置运行模式 | 模式值(0~4) | 0 | 返回 `$ACK,MODE,<n>#` |
 | `0x91` | 断电/复位为 IDLE | 0 | 0 | 等价于 `0x90 0` |
+| `0x93` | LCD 显示开关 | 0/1 | 0 | 返回 `$ACK,LCD,<n>#`，关闭时背光熄灭且不再刷新 |
 | `0x01` | 调节 Id 环 PID/target | 见下 | 步进档位 | `ARG1`: `0x01/0x11`=kp±，`0x02/0x12`=ki±，`0x03/0x13`=kd±，`0x04/0x14`=target± |
 | `0x02` | 调节 Iq 环 PID/target | 见下 | 步进档位 | 同上 |
 | `0x03` | 快速调节 Iq target | - | `0x01`=+2A，`0x02`=-2A | 粗调 |
@@ -89,7 +101,7 @@ $MODE,3#
 ### 遥测帧
 
 ```text
-$TEL,Ia,Ib,Ic,Id,Iq,RPM,MechAngle,ElecAngle,IdKp,IdKi,IdKd,IqKp,IqKi,IqKd,SpeedKp,SpeedKi,SpeedKd,PosKp,PosKi,PosKd,IqTarget,SpeedTarget,Mode,RawA,RawB,RawC,VoltA,VoltB,VoltC,Fault#\r\n
+$TEL,Ia,Ib,Ic,Id,Iq,RPM,MechAngle,ElecAngle,IdKp,IdKi,IdKd,IqKp,IqKi,IqKd,SpeedKp,SpeedKi,SpeedKd,PosKp,PosKi,PosKd,IqTarget,SpeedTarget,Mode,RawA,RawB,RawC,VoltA,VoltB,VoltC,Fault,LcdEnable#\r\n
 ```
 
 新增字段说明：
@@ -98,6 +110,7 @@ $TEL,Ia,Ib,Ic,Id,Iq,RPM,MechAngle,ElecAngle,IdKp,IdKi,IdKd,IqKp,IqKi,IqKd,SpeedK
 - `RawA/RawB/RawC`：三相电流采样 ADC 原始计数（0~4095），对应 Ia/Ib/Ic
 - `VoltA/VoltB/VoltC`：对应引脚换算后的电压（V）
 - `Fault`：电流零点异常位掩码，bit0/1/2 分别对应 A/B/C 相；置位表示该相标定出的零点偏离 2048 计数超过约 0.48V，怀疑该相模拟前端（INA240 供电/参考电压/接线）有问题
+- `LcdEnable`：LCD 遥测屏幕当前是否开启（0/1）
 
 ### 原始 ADC 帧
 
@@ -144,6 +157,7 @@ $ACK,OL_UD,<v>#\r\n       // 开环对齐电压已更新
 $ACK,OL_UQ,<v>#\r\n       // 开环运行电压已更新
 $ACK,OL_HZ,<v>#\r\n       // 开环目标电角频率已更新
 $ACK,PID,<loop>,...#\r\n  // PID 参数已写入（见现有 $WPID 说明）
+$ACK,LCD,<n>#\r\n         // LCD显示开关已更新
 $ERR,CAL,BUSY#\r\n        // 非IDLE模式下请求重新标定，被拒绝
 $ERR,PID,UNKNOWN_LOOP#\r\n
 $ERR,UNKNOWN_CMD#\r\n
@@ -151,7 +165,7 @@ $ERR,UNKNOWN_CMD#\r\n
 
 ## 硬件相序映射（待与实物核实）
 
-`Core/Src/main.c` 里 `Current_ReadRaw()` 当前假设的映射关系：
+`Bsp/current_sense.c` 里 `Current_ReadRaw()` 当前假设的映射关系：
 
 | 逻辑相 | ADC 注入序列 | STM32 引脚 |
 |---|---|---|
@@ -166,3 +180,9 @@ $ERR,UNKNOWN_CMD#\r\n
 
 - `FOC_UART_Master.exe` 是较早版本的预编译上位机，协议可能落后于本文档；后续调试请使用
   `foc_uart_host.py`（随本次改动一起更新）。
+- LCD 的 SPI/DMA 排查记录：`Bsp/lcd_init.c`/`Bsp/lcd.c` 里实际编译进工程的 `_DMA` 系列函数
+  自始至终用的是真正的 `hspi1`（SPI1，PB3/PB4/PB5，DMA2_Stream3/Channel3 正确对应 SPI1_TX
+  硬件请求线），DMA 路径是通的；`SPI_BAUDRATEPRESCALER_2` 在 PCLK2=84MHz 下给出 SPI1 时钟
+  42MHz，已是 HAL 能配置到的最高档位。曾经怀疑过的 `hspi1.Instance` 错位成 SPI2 导致 DMA
+  挂错请求线的 bug，只存在于 `Bsp/lcd_dma.c`/`Bsp/lcd_init_dma.c` 这两个从未被加入 Keil 工程
+  （`.uvprojx` 里没有注册）的孤儿文件里，已删除，不影响实际运行。

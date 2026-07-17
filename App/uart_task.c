@@ -44,6 +44,9 @@ extern float OpenLoop_TargetElecHz;
 extern uint8_t FOC_RequestRecalibration(void);
 extern void FOC_SetMode(uint8_t mode);
 
+extern volatile uint8_t g_lcd_enable;
+extern void LCD_SetEnable(uint8_t enable);
+
 static PID_Param_t Id_temp;
 static PID_Param_t Iq_temp;
 static PID_Param_t Speed_temp;
@@ -61,6 +64,7 @@ UART_Frame_t drame_task;
 #define PC_CMD_RECALIBRATE      0x87U
 #define PC_CMD_SET_MODE         0x90U
 #define PC_CMD_DISARM           0x91U
+#define PC_CMD_SET_LCD_ENABLE   0x93U
 
 #define OPEN_LOOP_DEBUG_ENABLE  1U
 
@@ -104,7 +108,7 @@ static void UART_PrintTelemetry(void)
 {
     printf("$TEL,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,"
            "%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"
-           "%u,%u,%u,%u,%.4f,%.4f,%.4f,%u#\r\n",
+           "%u,%u,%u,%u,%.4f,%.4f,%.4f,%u,%u#\r\n",
            Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic,
            Iqd_M0.Id, Iqd_M0.Iq,
            Mech_RPM, Mech_Angle, Elec_Angle,
@@ -116,7 +120,8 @@ static void UART_PrintTelemetry(void)
            (unsigned int)g_foc_mode,
            (unsigned int)Diag_RawAdc[0], (unsigned int)Diag_RawAdc[1], (unsigned int)Diag_RawAdc[2],
            Diag_RawVolt[0], Diag_RawVolt[1], Diag_RawVolt[2],
-           (unsigned int)Diag_CurrentFault);
+           (unsigned int)Diag_CurrentFault,
+           (unsigned int)g_lcd_enable);
 }
 
 static void UART_PrintRaw(void)
@@ -251,6 +256,13 @@ static void UART_ProcessAsciiCommand(char *line)
     {
         FOC_SetMode((uint8_t)atoi(loop));
         printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+        return;
+    }
+
+    if ((token != NULL) && (strcmp(token, "$LCD") == 0) && (loop != NULL))
+    {
+        LCD_SetEnable((uint8_t)atoi(loop));
+        printf("$ACK,LCD,%u#\r\n", (unsigned int)g_lcd_enable);
         return;
     }
 
@@ -407,6 +419,11 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       case PC_CMD_DISARM:
         FOC_SetMode((uint8_t)FOC_MODE_IDLE);
         printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+      break;
+
+      case PC_CMD_SET_LCD_ENABLE:
+        LCD_SetEnable(data2);
+        printf("$ACK,LCD,%u#\r\n", (unsigned int)g_lcd_enable);
       break;
 
       case 0x00:

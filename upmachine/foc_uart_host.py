@@ -14,6 +14,7 @@ FOC/BLDC 上位机读取脚本
   python foc_uart_host.py COM6 mode --value speed
   python foc_uart_host.py COM6 disarm
   python foc_uart_host.py COM6 pidset --loop IQ --target 2.0 --kp 0.05 --ki 0.001 --kd 0
+  python foc_uart_host.py COM6 lcd --value on
 """
 import argparse
 import csv
@@ -36,6 +37,9 @@ CMD_READ_RAW_ADC = 0x86
 CMD_RECALIBRATE = 0x87
 CMD_SET_MODE = 0x90
 CMD_DISARM = 0x91
+CMD_SET_LCD_ENABLE = 0x93
+
+LCD_NAMES = {"on": 1, "off": 0, "1": 1, "0": 0}
 
 MODE_NAMES = {
     "idle": 0,
@@ -52,7 +56,7 @@ TEL_FIELDS = [
     "IdKp", "IdKi", "IdKd", "IqKp", "IqKi", "IqKd",
     "SpeedKp", "SpeedKi", "SpeedKd", "PosKp", "PosKi", "PosKd",
     "IqTarget", "SpeedTarget",
-    "Mode", "RawA", "RawB", "RawC", "VoltA", "VoltB", "VoltC", "Fault",
+    "Mode", "RawA", "RawB", "RawC", "VoltA", "VoltB", "VoltC", "Fault", "LcdEnable",
 ]
 
 RAW_FIELDS = [
@@ -114,11 +118,12 @@ def print_line(line: str) -> None:
         row = parse_tel(line)
         if row:
             mode = MODE_LABELS.get(int(row["Mode"]), str(row["Mode"]))
+            lcd_state = "on" if row["LcdEnable"] else "off"
             print(
                 f"[{mode}] Ia={row['Ia']:.3f} Ib={row['Ib']:.3f} Ic={row['Ic']:.3f} "
                 f"Id={row['Id']:.3f} Iq={row['Iq']:.3f} "
                 f"RPM={row['RPM']:.1f} Angle={row['MechAngle']:.3f} "
-                f"Fault={fault_phases(row['Fault'])}"
+                f"Fault={fault_phases(row['Fault'])} LCD={lcd_state}"
             )
         else:
             print(line)
@@ -167,14 +172,15 @@ def main() -> None:
     parser.add_argument("port", help="串口号，例如 COM6")
     parser.add_argument(
         "mode_cmd",
-        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "mode", "disarm", "pidset"],
+        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "mode", "disarm", "pidset", "lcd"],
     )
     parser.add_argument("--baud", type=int, default=115200)
     parser.add_argument("--period", type=int, default=50, help="stream 周期，单位 ms")
     parser.add_argument("--seconds", type=float, default=10, help="读取持续时间；stream 下 0 表示一直读")
     parser.add_argument("--csv", help="保存 TEL 数据到 CSV")
     parser.add_argument(
-        "--value", choices=sorted(MODE_NAMES.keys()), help="mode 子命令: idle/open/current/speed/position"
+        "--value",
+        help="mode 子命令: idle/open/current/speed/position；lcd 子命令: on/off",
     )
     parser.add_argument("--loop", choices=["ID", "IQ", "SPD", "POS"], help="pidset 子命令: 目标环")
     parser.add_argument("--target", type=float, default=0.0, help="pidset 子命令: 目标值")
@@ -209,12 +215,17 @@ def main() -> None:
             send_cmd(ser, CMD_RECALIBRATE)
             read_lines(ser, 1.0, None)
         elif args.mode_cmd == "mode":
-            if not args.value:
+            if not args.value or args.value not in MODE_NAMES:
                 parser.error("mode 子命令需要 --value {idle,open,current,speed,position}")
             send_cmd(ser, CMD_SET_MODE, MODE_NAMES[args.value])
             read_lines(ser, 0.5, None)
         elif args.mode_cmd == "disarm":
             send_cmd(ser, CMD_DISARM)
+            read_lines(ser, 0.5, None)
+        elif args.mode_cmd == "lcd":
+            if not args.value or args.value not in LCD_NAMES:
+                parser.error("lcd 子命令需要 --value {on,off}")
+            send_cmd(ser, CMD_SET_LCD_ENABLE, LCD_NAMES[args.value])
             read_lines(ser, 0.5, None)
         elif args.mode_cmd == "pidset":
             if not args.loop:

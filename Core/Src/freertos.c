@@ -50,7 +50,9 @@ osThreadId_t LcdTaskHandle;
 const osThreadAttr_t Lcd_task_attributes = {
   .name = "LcdTask",
   .stack_size = 1024 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  /* 遥测显示非实时,优先级调低到UART任务之下,避免和FOC相关的UART上位机通信抢占;
+     FOC控制本身跑在TIM10硬件中断里,不受任务优先级影响 */
+  .priority = (osPriority_t) osPriorityLow,
 };
 osThreadId_t LvglTimerTaskHandle;
 const osThreadAttr_t LvglTimer_task_attributes = {
