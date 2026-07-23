@@ -1898,6 +1898,16 @@
               <FileType>5</FileType>
               <FilePath>..\App\inc\foc_task.h</FilePath>
             </File>
+            <File>
+              <FileName>lvgl_demo_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\lvgl_demo_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>lvgl_demo_task.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\App\inc\lvgl_demo_task.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

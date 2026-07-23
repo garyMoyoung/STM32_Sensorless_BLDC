@@ -46,6 +46,8 @@ extern void FOC_SetMode(uint8_t mode);
 
 extern volatile uint8_t g_lcd_enable;
 extern void LCD_SetEnable(uint8_t enable);
+extern volatile uint8_t g_lvgl_demo_enable;
+extern void LvglDemo_SetEnable(uint8_t enable);
 
 static PID_Param_t Id_temp;
 static PID_Param_t Iq_temp;
@@ -65,6 +67,7 @@ UART_Frame_t drame_task;
 #define PC_CMD_SET_MODE         0x90U
 #define PC_CMD_DISARM           0x91U
 #define PC_CMD_SET_LCD_ENABLE   0x93U
+#define PC_CMD_SET_LVGL_ENABLE  0x94U
 
 #define OPEN_LOOP_DEBUG_ENABLE  1U
 
@@ -266,6 +269,13 @@ static void UART_ProcessAsciiCommand(char *line)
         return;
     }
 
+    if ((token != NULL) && (strcmp(token, "$LVGL") == 0) && (loop != NULL))
+    {
+        LvglDemo_SetEnable((uint8_t)atoi(loop));
+        printf("$ACK,LVGL,%u#\r\n", (unsigned int)g_lvgl_demo_enable);
+        return;
+    }
+
     printf("$ERR,UNKNOWN_CMD#\r\n");
 }
 
@@ -424,6 +434,11 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       case PC_CMD_SET_LCD_ENABLE:
         LCD_SetEnable(data2);
         printf("$ACK,LCD,%u#\r\n", (unsigned int)g_lcd_enable);
+      break;
+
+      case PC_CMD_SET_LVGL_ENABLE:
+        LvglDemo_SetEnable(data2);
+        printf("$ACK,LVGL,%u#\r\n", (unsigned int)g_lvgl_demo_enable);
       break;
 
       case 0x00:

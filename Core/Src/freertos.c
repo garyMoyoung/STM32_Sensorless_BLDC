@@ -30,6 +30,7 @@
 #include "uart_task.h"
 #include "foc_task.h"
 #include "lvgl.h"
+#include "lvgl_demo_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +58,8 @@ const osThreadAttr_t Lcd_task_attributes = {
 osThreadId_t LvglTimerTaskHandle;
 const osThreadAttr_t LvglTimer_task_attributes = {
   .name = "LvglTimerTask",
-  .stack_size = 512 * 4,
+  /* LVGL部件绘制(圆弧/字体/动画)比原来的纯字符刷新更吃栈,512字太小容易栈溢出,提到2048字 */
+  .stack_size = 2048 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
 osThreadId_t IMU9250TaskHandle;
@@ -145,7 +147,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   LcdTaskHandle = osThreadNew(LcdTask_Entry,NULL,&Lcd_task_attributes);
-  // LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, NULL, &LvglTimer_task_attributes);
+  LvglTimerTaskHandle = osThreadNew(LvglTimerTask_Entry, NULL, &LvglTimer_task_attributes);
   // IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
   UARTTaskHandle = osThreadNew(UARTTask_Entry, NULL, &UART_task_attributes);
   // AngleTaskHandle = osThreadNew(AngleTask_Entry, NULL, &Angle_task_attributes);
@@ -195,9 +197,10 @@ void LvglTimerTask_Entry(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    /* 调用LVGL定时器处理函数 */
-    lv_timer_handler();
-    
+    /* 由 g_lvgl_demo_enable 开关驱动: 关闭时保持空闲,不初始化LVGL也不碰LCD/SPI;
+       打开时负责与LCD遥测任务互斥切换总线、喂tick、调用lv_timer_handler并统计帧率 */
+    LvglDemo_Process();
+
     /* 延时5ms，实现5ms周期调用 */
     osDelay(5);
   }
