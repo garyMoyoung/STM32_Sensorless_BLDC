@@ -37,7 +37,11 @@ extern PID_Param_t Speed_pid;
 #define OPEN_LOOP_POLE_PAIRS             7.0f
 #define OPEN_LOOP_UART_PERIOD_MS         50U
 #define OPEN_LOOP_TWO_PI                 6.283185307f
-#define FOC_LOOP_DT_S                    0.001f
+/* TIM10实测: 168MHz/(84分频)=2MHz计数时钟, ARR=1000 => 更新频率约2kHz(约0.5ms/拍),
+   而不是注释原来假设的1kHz/1ms, 这里改成与硬件实际节拍一致的值。
+   该值同时喂给下面PID的dt形参和Mech_RPM/开环电角度积分,三处必须与TIM10真实周期保持一致,
+   以后如果改了TIM10的Prescaler/Period,要同步改这里。 */
+#define FOC_LOOP_DT_S                    0.0005f
 
 volatile FOC_Mode_t g_foc_mode = FOC_MODE_IDLE;
 
@@ -77,11 +81,18 @@ void angle_proc(void)
 {
     float raw_angle;
 
-    AS5600_UpdateAngle(&M0);
+    /* 用上一拍已经由I2C2 DMA读回并处理好的角度(AS5600_Init里的一次阻塞读取打底,
+       之后全部走DMA),而不是本拍再去阻塞读I2C——100kHz I2C下一次阻塞读约0.4~0.5ms,
+       几乎占满1ms控制周期的一半。DMA方式把这部分时间从FOC中断里去掉,代价是角度
+       多了约一拍(当前周期下约1ms)的固有延迟,对该级别的电流/速度环带宽可以忽略。
+       本拍处理完就立即为下一拍启动新的非阻塞DMA读取,读完后由
+       HAL_I2C_MemRxCpltCallback(AS5600.c)异步更新到 M0.total_angle_rad。 */
     raw_angle = AS5600_GetAngle(&M0);
     MechSpeed_Update(raw_angle);
     Mech_Angle = _normalizeAngle(raw_angle);
     Elec_Angle = 7.0f * Mech_Angle;
+
+    AS5600_UpdateAngle_DMA(&M0);
 }
 
 /* 电流环: 只跑 D/Q 电流PID,不参与速度/位置级联。Id/Iq target 由上位机通过既有
@@ -93,8 +104,8 @@ static void FOC_CurrentLoop_Step(void)
     Clarke_transform(&Iabc_M0,&Ialpbe_M0);
     Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id);
-    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
+    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
+    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
     PWM_TIM2_Set((uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm1),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm2),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
 }
@@ -107,10 +118,10 @@ static void FOC_SpeedLoop_Step(void)
     Clarke_transform(&Iabc_M0,&Ialpbe_M0);
     Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-    PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM);
+    PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM,FOC_LOOP_DT_S);
 
-    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id);
-    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
+    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
+    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
     PWM_TIM2_Set((uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm1),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm2),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
 }
@@ -127,12 +138,12 @@ static void FOC_PositionLoop_Step(void)
     Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
     wrapped_err = AngleErrorWrap(PID_Position.target - Mech_Angle);
-    PID_Speed.target = PID_Position_Calculate(&PID_Position, Mech_Angle + wrapped_err, Mech_Angle);
+    PID_Speed.target = PID_Position_Calculate(&PID_Position, Mech_Angle + wrapped_err, Mech_Angle, FOC_LOOP_DT_S);
 
-    PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM);
+    PID_Current_Q.target = -PID_Position_Calculate(&PID_Speed,PID_Speed.target,Mech_RPM,FOC_LOOP_DT_S);
 
-    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id);
-    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq);
+    Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
+    Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
     PWM_TIM2_Set((uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm1),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm2),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
 }

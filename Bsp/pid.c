@@ -11,37 +11,44 @@
 #include <string.h>
 #include "pid.h"
 
-// ???PID??
-float PID_Position_Calculate(PIDController *pid, float target, float current) 
+// 位置式PID, 积分/微分项显式按dt折算成标准的"每秒"物理量,
+// 这样调用频率(控制环节拍)变化时不需要重新折算Ki/Kd背后的隐含时间步长
+float PID_Position_Calculate(PIDController *pid, float target, float current, float dt)
 {
-    // ????
-    pid->error = target - current;
-    
-    // ?????
-    pid->integral += pid->error;
+    float derivative;
 
-    // ????
+    // 计算误差
+    pid->error = target - current;
+
+    // 积分项按真实时间累加(而不是每调用一次就加一次error)
+    pid->integral += pid->error * dt;
+
+    // 积分限幅(抗积分饱和)
     if(pid->integral > pid->maxIntegral) {
         pid->integral = pid->maxIntegral;
     }
     else if(pid->integral < -pid->maxIntegral) {
         pid->integral = -pid->maxIntegral;
     }
-    // ???PID??
+
+    // 微分项按真实时间做差分, dt<=0时视为无效调用,微分项直接置0避免除0
+    derivative = (dt > 0.0f) ? ((pid->error - pid->lastError) / dt) : 0.0f;
+
+    // 计算PID输出
     pid->output = pid->kp * pid->error +
                  pid->ki * pid->integral +
-                 pid->kd * (pid->error - pid->lastError);
-    
-    // ????
+                 pid->kd * derivative;
+
+    // 输出限幅
     if(pid->output >= pid->maxOutput) {
         pid->output = pid->maxOutput;
     }
     else if(pid->output <= pid->minOutput) {
         pid->output = pid->minOutput;
     }
-    // ????
+    // 保存本次误差供下次微分计算
     pid->lastError = pid->error;
-    
+
     return pid->output;
 }
 
