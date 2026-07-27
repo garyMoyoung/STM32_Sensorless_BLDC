@@ -71,6 +71,17 @@ extern osMessageQueueId_t UARTQueueHandle;
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+/* 致命异常(NMI/HardFault/MemManage/BusFault/UsageFault)发生后,CPU会停在对应
+ * Handler的while(1)里死循环,TIM10的FOC中断再也不会运行,但TIM2作为通用定时器
+ * 没有类似高级定时器的刹车(BKIN)功能,会继续按最后一次写入的CCR值输出PWM——
+ * 也就是说异常发生前如果正带载,电机会带着定格的占空比一直转下去。
+ * 这里直接清零CH2/3/4的输出使能位,不经过HAL(此时HAL内部状态可能已经损坏),
+ * 让三相输出立即失能。 */
+static void FOC_EmergencyPWMOff(void)
+{
+  TIM2->CCER &= ~(TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E);
+}
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -108,7 +119,7 @@ extern TIM_HandleTypeDef htim5;
 void NMI_Handler(void)
 {
   /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
-
+  FOC_EmergencyPWMOff();
   /* USER CODE END NonMaskableInt_IRQn 0 */
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
    while (1)
@@ -123,7 +134,7 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
+  FOC_EmergencyPWMOff();
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -138,7 +149,7 @@ void HardFault_Handler(void)
 void MemManage_Handler(void)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
-
+  FOC_EmergencyPWMOff();
   /* USER CODE END MemoryManagement_IRQn 0 */
   while (1)
   {
@@ -153,7 +164,7 @@ void MemManage_Handler(void)
 void BusFault_Handler(void)
 {
   /* USER CODE BEGIN BusFault_IRQn 0 */
-
+  FOC_EmergencyPWMOff();
   /* USER CODE END BusFault_IRQn 0 */
   while (1)
   {
@@ -168,7 +179,7 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
-
+  FOC_EmergencyPWMOff();
   /* USER CODE END UsageFault_IRQn 0 */
   while (1)
   {

@@ -318,8 +318,12 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     /* TIM1 interrupt Init */
     HAL_NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(TIM1_BRK_TIM9_IRQn);
-    HAL_NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 6, 0);
-    HAL_NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
+    /* TIM1_UP_TIM10_IRQn 是TIM1更新事件和TIM10共用的中断向量,优先级只在
+       TIM10分支(本文件HAL_TIM_Base_MspInit的TIM10==Instance分支)里设置为4,
+       不要在这里重复设置——之前这里设成6,靠MX_TIM10_Init()在MX_TIM1_Init()
+       之后调用、后设置的值覆盖前面的值才凑巧得到正确的优先级4,一旦初始化
+       顺序被改动(例如CubeMX重新生成),FOC控制环的中断优先级会被悄悄改回6,
+       变得比串口中断(优先级5)还低。 */
   /* USER CODE BEGIN TIM1_MspInit 1 */
 
   /* USER CODE END TIM1_MspInit 1 */

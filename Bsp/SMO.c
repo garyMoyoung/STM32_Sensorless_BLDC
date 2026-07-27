@@ -131,7 +131,10 @@ void SMO(void)
 
 void PLL_SMO(float*Vin)
 {
-	float x , P_Partern , I_Partern ;
+	float x , P_Partern;
+	/* 积分项必须跨调用persist,之前用局部自动变量,每次调用都是栈上垃圾值,
+	   += 读到的是未定义的初值,积分永远不会真正累加,锁相环失效。 */
+	static float I_Partern = 0.0f;
 	x = -cos(Theta_fore_Last)*Vin[0]-sin(Theta_fore_Last)*Vin[1];
 	P_Partern = PLL_Kp*x;
 	I_Partern += PLL_Ki*x;

@@ -107,7 +107,12 @@ static void FOC_CurrentLoop_Step(void)
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-    PWM_TIM2_Set((uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm1),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm2),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
+    /* 闭环路径的Ud/Uq来自PID输出,可能饱和到过调制区,tcm1/2/3不能保证落在[0,1],
+       必须和开环一样过PWM_LimitCompare限幅,否则负值转uint16_t会变成一个极大的
+       比较值,导致该相PWM在计数周期内卡死在全通/全断。 */
+    PWM_TIM2_Set(PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm1),
+                 PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm2),
+                 PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
 }
 
 /* 速度环: 速度PID输出作为Iq目标,再走电流环。SPD target 由上位机设置(PID_Speed.target)。 */
@@ -123,7 +128,12 @@ static void FOC_SpeedLoop_Step(void)
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-    PWM_TIM2_Set((uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm1),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm2),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
+    /* 闭环路径的Ud/Uq来自PID输出,可能饱和到过调制区,tcm1/2/3不能保证落在[0,1],
+       必须和开环一样过PWM_LimitCompare限幅,否则负值转uint16_t会变成一个极大的
+       比较值,导致该相PWM在计数周期内卡死在全通/全断。 */
+    PWM_TIM2_Set(PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm1),
+                 PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm2),
+                 PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
 }
 
 /* 位置环: 位置PID(角度误差按最短路径归一化)输出作为速度目标,再走速度环->电流环。
@@ -145,7 +155,12 @@ static void FOC_PositionLoop_Step(void)
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
-    PWM_TIM2_Set((uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm1),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm2),(uint16_t)(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
+    /* 闭环路径的Ud/Uq来自PID输出,可能饱和到过调制区,tcm1/2/3不能保证落在[0,1],
+       必须和开环一样过PWM_LimitCompare限幅,否则负值转uint16_t会变成一个极大的
+       比较值,导致该相PWM在计数周期内卡死在全通/全断。 */
+    PWM_TIM2_Set(PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm1),
+                 PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm2),
+                 PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
 }
 
 static void OpenLoop_Control(void)

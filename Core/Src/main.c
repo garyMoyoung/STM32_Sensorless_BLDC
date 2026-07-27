@@ -240,6 +240,33 @@ PUTCHAR_PROTOTYPE
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+/* 独立看门狗(IWDG): 之前工程完全没有配置IWDG,固件一旦在某个ISR/任务里死锁或跑飞,
+ * 除了触发HardFault(且HardFault_Handler也只是while(1)空转)之外没有任何自动恢复
+ * 手段,电机可能带着最后一次写入的PWM占空比一直卡死输出。
+ * 直接操作IWDG寄存器而不经HAL,避免还要把stm32f4xx_hal_iwdg.c加入Keil工程。
+ * LSI约32kHz,预分频64 => 计数时钟约500Hz,重载值249 => 超时约500ms。
+ * 在TIM10的1ms(现为0.5ms)FOC中断里每拍喂狗(见HAL_TIM_PeriodElapsedCallback),
+ * 只要该中断还在正常跑就不会触发复位;一旦发生致命异常或FOC中断本身被卡死,
+ * 500ms内没人喂狗,硬件自动复位。 */
+#define IWDG_KR_UNLOCK   0x5555U
+#define IWDG_KR_RELOAD   0xAAAAU
+#define IWDG_KR_ENABLE   0xCCCCU
+#define IWDG_PRESCALER_64_REG 0x04U
+#define IWDG_RELOAD_VALUE     249U
+
+static void IWDG_EmergencyInit(void)
+{
+  IWDG->KR = IWDG_KR_UNLOCK;
+  IWDG->PR = IWDG_PRESCALER_64_REG;
+  IWDG->RLR = IWDG_RELOAD_VALUE;
+  while (IWDG->SR != 0U)
+  {
+    /* 等待PR/RLR写入生效 */
+  }
+  IWDG->KR = IWDG_KR_RELOAD;
+  IWDG->KR = IWDG_KR_ENABLE;
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -338,6 +365,10 @@ int main(void)
   __HAL_TIM_CLEAR_IT(&htim10,TIM_IT_UPDATE);
   HAL_TIM_Base_Start_IT(&htim10);
 
+  /* 放在TIM10中断使能之后再启动看门狗,避免上面AS5600_Init/Current_CalibrateOffset
+   * 等阻塞初始化(最坏情况下可能到几百ms)在看门狗启动前就已完成,不会被误触发复位;
+   * 之后每拍喂狗都在TIM10 ISR里进行,和这里的启动顺序无关。 */
+  IWDG_EmergencyInit();
 
   /* USER CODE END 2 */
 
@@ -436,7 +467,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
       UART2_RawAdcTxComplete();
   }
 }
-//7ee75574453dedc37120c1ddd948099600afb96d
 /* USER CODE END 4 */
 
 /**
@@ -457,6 +487,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   if (htim->Instance == TIM10) // 1ms tick
   {
     TIM10_ISR_CNT++;
+
+    /* 独立看门狗喂狗: 只要FOC控制中断还在正常节拍运行就持续喂狗,
+       一旦发生致命异常(见stm32f4xx_it.c里的FOC_EmergencyPWMOff)或本ISR自身
+       被卡死,500ms内不会再有喂狗,硬件自动复位。 */
+    IWDG->KR = IWDG_KR_RELOAD;
 
     FOC_ModeDispatch();
     Key_read();
