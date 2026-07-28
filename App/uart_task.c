@@ -140,20 +140,19 @@ static void UART_PrintDebug(void)
 {
     printf("$DBG,%lu,%lu#\r\n", (unsigned long)TIM9_ISR_CNT, (unsigned long)TIM10_ISR_CNT);
 }
+
+static void UART_PrintOnePid(const char *name, const PIDController *pid)
+{
+    printf("$PID,%s,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f#\r\n",
+           name, pid->kp, pid->ki, pid->kd, pid->target, pid->output, pid->integral);
+}
+
 static void UART_PrintPid(void)
 {
-    printf("$PID,ID,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f#\r\n",
-           PID_Current_D.kp, PID_Current_D.ki, PID_Current_D.kd,
-           PID_Current_D.target, PID_Current_D.output, PID_Current_D.integral);
-    printf("$PID,IQ,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f#\r\n",
-           PID_Current_Q.kp, PID_Current_Q.ki, PID_Current_Q.kd,
-           PID_Current_Q.target, PID_Current_Q.output, PID_Current_Q.integral);
-    printf("$PID,SPD,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f#\r\n",
-           PID_Speed.kp, PID_Speed.ki, PID_Speed.kd,
-           PID_Speed.target, PID_Speed.output, PID_Speed.integral);
-    printf("$PID,POS,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f#\r\n",
-           PID_Position.kp, PID_Position.ki, PID_Position.kd,
-           PID_Position.target, PID_Position.output, PID_Position.integral);
+    UART_PrintOnePid("ID",  &PID_Current_D);
+    UART_PrintOnePid("IQ",  &PID_Current_Q);
+    UART_PrintOnePid("SPD", &PID_Speed);
+    UART_PrintOnePid("POS", &PID_Position);
 }
 
 static PIDController* UART_GetPidByName(const char *name)
@@ -354,6 +353,35 @@ void UART2_RawAdcTxComplete(void)
     uart2_adc_tx_busy = 0U;
 }
 
+/* field_code 编码: 0x01/0x11 = kp +/-, 0x02/0x12 = ki +/-, 0x03/0x13 = kd +/-, 0x04/0x14 = target +/- */
+static void UART_AdjustPidParam(PID_Param_t *param, uint8_t field_code, float step)
+{
+    switch (field_code)
+    {
+      case 0x01: param->kp     += step; break;
+      case 0x11: param->kp     -= step; break;
+      case 0x02: param->ki     += step; break;
+      case 0x12: param->ki     -= step; break;
+      case 0x03: param->kd     += step; break;
+      case 0x13: param->kd     -= step; break;
+      case 0x04: param->target += step; break;
+      case 0x14: param->target -= step; break;
+      default: break;
+    }
+}
+
+static void UART_AdjustFloatParam(float *value, uint8_t field_code, float step)
+{
+    if (field_code == 0x01)
+    {
+        *value += step;
+    }
+    else if (field_code == 0x11)
+    {
+        *value -= step;
+    }
+}
+
 void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
 {
     uint8_t data2;
@@ -445,27 +473,13 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       break;
 
       case 0x01:
-        if(data2 == 0x01)       Id_temp.kp += step_size;
-        else if(data2 == 0x11)  Id_temp.kp -= step_size;
-        else if(data2 == 0x02)  Id_temp.ki += step_size;
-        else if(data2 == 0x12)  Id_temp.ki -= step_size;
-        else if(data2 == 0x03)  Id_temp.kd += step_size;
-        else if(data2 == 0x13)  Id_temp.kd -= step_size;
-        else if(data2 == 0x04)  Id_temp.target += step_size;
-        else if(data2 == 0x14)  Id_temp.target -= step_size;
+        UART_AdjustPidParam(&Id_temp, data2, step_size);
         pid_to_apply = &PID_Current_D;
         param_to_apply = &Id_temp;
       break;
 
       case 0x02:
-        if(data2 == 0x01)       Iq_temp.kp += step_size;
-        else if(data2 == 0x11)  Iq_temp.kp -= step_size;
-        else if(data2 == 0x02)  Iq_temp.ki += step_size;
-        else if(data2 == 0x12)  Iq_temp.ki -= step_size;
-        else if(data2 == 0x03)  Iq_temp.kd += step_size;
-        else if(data2 == 0x13)  Iq_temp.kd -= step_size;
-        else if(data2 == 0x04)  Iq_temp.target += step_size;
-        else if(data2 == 0x14)  Iq_temp.target -= step_size;
+        UART_AdjustPidParam(&Iq_temp, data2, step_size);
         pid_to_apply = &PID_Current_Q;
         param_to_apply = &Iq_temp;
       break;
@@ -478,46 +492,29 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       break;
 
       case 0x04:
-        if(data2 == 0x01)       Speed_temp.kp += step_size;
-        else if(data2 == 0x11)  Speed_temp.kp -= step_size;
-        else if(data2 == 0x02)  Speed_temp.ki += step_size;
-        else if(data2 == 0x12)  Speed_temp.ki -= step_size;
-        else if(data2 == 0x03)  Speed_temp.kd += step_size;
-        else if(data2 == 0x13)  Speed_temp.kd -= step_size;
-        else if(data2 == 0x04)  Speed_temp.target += step_size;
-        else if(data2 == 0x14)  Speed_temp.target -= step_size;
+        UART_AdjustPidParam(&Speed_temp, data2, step_size);
         pid_to_apply = &PID_Speed;
         param_to_apply = &Speed_temp;
       break;
 
       case 0x05:
-        if(data2 == 0x01)       Position_temp.kp += step_size;
-        else if(data2 == 0x11)  Position_temp.kp -= step_size;
-        else if(data2 == 0x02)  Position_temp.ki += step_size;
-        else if(data2 == 0x12)  Position_temp.ki -= step_size;
-        else if(data2 == 0x03)  Position_temp.kd += step_size;
-        else if(data2 == 0x13)  Position_temp.kd -= step_size;
-        else if(data2 == 0x04)  Position_temp.target += step_size;
-        else if(data2 == 0x14)  Position_temp.target -= step_size;
+        UART_AdjustPidParam(&Position_temp, data2, step_size);
         pid_to_apply = &PID_Position;
         param_to_apply = &Position_temp;
       break;
 
       case 0x06:
-        if(data2 == 0x01)       OpenLoop_AlignUd_V += step_size;
-        else if(data2 == 0x11)  OpenLoop_AlignUd_V -= step_size;
+        UART_AdjustFloatParam(&OpenLoop_AlignUd_V, data2, step_size);
         printf("$ACK,OL_UD,%.4f#\r\n", OpenLoop_AlignUd_V);
       break;
 
       case 0x07:
-        if(data2 == 0x01)       OpenLoop_RunUq_V += step_size;
-        else if(data2 == 0x11)  OpenLoop_RunUq_V -= step_size;
+        UART_AdjustFloatParam(&OpenLoop_RunUq_V, data2, step_size);
         printf("$ACK,OL_UQ,%.4f#\r\n", OpenLoop_RunUq_V);
       break;
 
       case 0x08:
-        if(data2 == 0x01)       OpenLoop_TargetElecHz += step_size;
-        else if(data2 == 0x11)  OpenLoop_TargetElecHz -= step_size;
+        UART_AdjustFloatParam(&OpenLoop_TargetElecHz, data2, step_size);
         printf("$ACK,OL_HZ,%.4f#\r\n", OpenLoop_TargetElecHz);
       break;
 
@@ -531,6 +528,7 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       UART_PrintPid();
     }
 }
+
 void UART_ProcessInTimer(void)
 {
   UART_Frame_t frame;
