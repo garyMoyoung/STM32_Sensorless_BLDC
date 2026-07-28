@@ -15,6 +15,8 @@ FOC/BLDC 上位机读取脚本
   python foc_uart_host.py COM6 disarm
   python foc_uart_host.py COM6 pidset --loop IQ --target 2.0 --kp 0.05 --ki 0.001 --kd 0
   python foc_uart_host.py COM6 lcd --value on
+  python foc_uart_host.py COM6 lvgl --value on
+  python foc_uart_host.py COM6 debug
 """
 import argparse
 import csv
@@ -38,8 +40,10 @@ CMD_RECALIBRATE = 0x87
 CMD_SET_MODE = 0x90
 CMD_DISARM = 0x91
 CMD_SET_LCD_ENABLE = 0x93
+CMD_SET_LVGL_ENABLE = 0x94
 
 LCD_NAMES = {"on": 1, "off": 0, "1": 1, "0": 0}
+LVGL_NAMES = {"on": 1, "off": 0, "1": 1, "0": 0}
 
 MODE_NAMES = {
     "idle": 0,
@@ -172,7 +176,7 @@ def main() -> None:
     parser.add_argument("port", help="串口号，例如 COM6")
     parser.add_argument(
         "mode_cmd",
-        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "mode", "disarm", "pidset", "lcd"],
+        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "debug", "mode", "disarm", "pidset", "lcd", "lvgl"],
     )
     parser.add_argument("--baud", type=int, default=115200)
     parser.add_argument("--period", type=int, default=50, help="stream 周期，单位 ms")
@@ -180,7 +184,7 @@ def main() -> None:
     parser.add_argument("--csv", help="保存 TEL 数据到 CSV")
     parser.add_argument(
         "--value",
-        help="mode 子命令: idle/open/current/speed/position；lcd 子命令: on/off",
+        help="mode 子命令: idle/open/current/speed/position；lcd/lvgl 子命令: on/off",
     )
     parser.add_argument("--loop", choices=["ID", "IQ", "SPD", "POS"], help="pidset 子命令: 目标环")
     parser.add_argument("--target", type=float, default=0.0, help="pidset 子命令: 目标值")
@@ -203,6 +207,8 @@ def main() -> None:
             send_cmd(ser, CMD_READ_ALL)
             read_lines(ser, 1.0, args.csv)
         elif args.mode_cmd == "stream":
+            if not 1 <= args.period <= 255:
+                parser.error("stream 子命令的 --period 必须在 1~255 (ms) 范围内，超出会被截断成错误的周期")
             send_cmd(ser, CMD_STREAM_ON, args.period)
             read_lines(ser, args.seconds, args.csv)
         elif args.mode_cmd == "stop":
@@ -210,6 +216,9 @@ def main() -> None:
             read_lines(ser, 0.5, args.csv)
         elif args.mode_cmd == "raw":
             send_cmd(ser, CMD_READ_RAW_ADC)
+            read_lines(ser, 1.0, None)
+        elif args.mode_cmd == "debug":
+            send_cmd(ser, CMD_READ_DEBUG)
             read_lines(ser, 1.0, None)
         elif args.mode_cmd == "recal":
             send_cmd(ser, CMD_RECALIBRATE)
@@ -226,6 +235,11 @@ def main() -> None:
             if not args.value or args.value not in LCD_NAMES:
                 parser.error("lcd 子命令需要 --value {on,off}")
             send_cmd(ser, CMD_SET_LCD_ENABLE, LCD_NAMES[args.value])
+            read_lines(ser, 0.5, None)
+        elif args.mode_cmd == "lvgl":
+            if not args.value or args.value not in LVGL_NAMES:
+                parser.error("lvgl 子命令需要 --value {on,off}")
+            send_cmd(ser, CMD_SET_LVGL_ENABLE, LVGL_NAMES[args.value])
             read_lines(ser, 0.5, None)
         elif args.mode_cmd == "pidset":
             if not args.loop:
