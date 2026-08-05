@@ -3,6 +3,7 @@
 #include "main.h"
 #include "uart_task.h"
 #include "pid.h"
+#include "pid_storage.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,6 +69,8 @@ UART_Frame_t drame_task;
 #define PC_CMD_DISARM           0x91U
 #define PC_CMD_SET_LCD_ENABLE   0x93U
 #define PC_CMD_SET_LVGL_ENABLE  0x94U
+#define PC_CMD_SAVE_PID         0x88U
+#define PC_CMD_LOAD_PID         0x89U
 
 #define OPEN_LOOP_DEBUG_ENABLE  1U
 
@@ -204,6 +207,46 @@ static void UART_ApplyPidParam(PIDController *pid, const PID_Param_t *param)
     pid->target = param->target;
 }
 
+/* 保存/加载都只在IDLE模式下允许:擦除128KB扇区最坏耗时约2s,期间flash总线被整体占用,
+   电机运行中调用会让FOC ISR失步,与0x87(重新标定)的限制同理 */
+static void UART_SavePid(void)
+{
+    if (g_foc_mode != FOC_MODE_IDLE)
+    {
+        printf("$ERR,PIDSAVE,BUSY#\r\n");
+        return;
+    }
+
+    if (PidStorage_Save() != 0U)
+    {
+        printf("$ACK,PIDSAVE#\r\n");
+    }
+    else
+    {
+        printf("$ERR,PIDSAVE,FAIL#\r\n");
+    }
+}
+
+static void UART_LoadPid(void)
+{
+    if (g_foc_mode != FOC_MODE_IDLE)
+    {
+        printf("$ERR,PIDLOAD,BUSY#\r\n");
+        return;
+    }
+
+    if (PidStorage_Load() != 0U)
+    {
+        pid_temp_initialized = 0;
+        printf("$ACK,PIDLOAD#\r\n");
+        UART_PrintPid();
+    }
+    else
+    {
+        printf("$ERR,PIDLOAD,EMPTY#\r\n");
+    }
+}
+
 static void UART_ProcessAsciiCommand(char *line)
 {
     char *token;
@@ -272,6 +315,18 @@ static void UART_ProcessAsciiCommand(char *line)
     {
         LvglDemo_SetEnable((uint8_t)atoi(loop));
         printf("$ACK,LVGL,%u#\r\n", (unsigned int)g_lvgl_demo_enable);
+        return;
+    }
+
+    if ((token != NULL) && (strcmp(token, "$SAVEPID") == 0))
+    {
+        UART_SavePid();
+        return;
+    }
+
+    if ((token != NULL) && (strcmp(token, "$LOADPID") == 0))
+    {
+        UART_LoadPid();
         return;
     }
 
@@ -467,6 +522,14 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       case PC_CMD_SET_LVGL_ENABLE:
         LvglDemo_SetEnable(data2);
         printf("$ACK,LVGL,%u#\r\n", (unsigned int)g_lvgl_demo_enable);
+      break;
+
+      case PC_CMD_SAVE_PID:
+        UART_SavePid();
+      break;
+
+      case PC_CMD_LOAD_PID:
+        UART_LoadPid();
       break;
 
       case 0x00:

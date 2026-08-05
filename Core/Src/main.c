@@ -58,6 +58,7 @@
 #include "uart_task.h"
 #include "current_sense.h"
 #include "foc_task.h"
+#include "pid_storage.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -351,8 +352,12 @@ int main(void)
   DWT_Init();
   PID_Init(&PID_Current_D,4.0f,-4.0f,100.0f);
   PID_Init(&PID_Current_Q,4.0f,-4.0f,100.0f);
-  PID_Init(&PID_Speed,15.0f,-15.0f,0.0f);
-  PID_Init(&PID_Position,15.0f,-15.0f,0.0f);
+  /* maxIntegral曾经是0.0f: PID_Position_Calculate(Bsp/pid.c)里积分限幅是直接钳位pid->integral到
+     [-maxIntegral,+maxIntegral],0意味着每次调用后积分项都被强制清零,不管上位机把Ki设成多少,
+     速度环/位置环的I都不可能真正累积生效。改成和电流环同一比例(maxOutput*25)的非零值,
+     只是给积分饱和留个安全上限,不代表调好的增益,具体还要上机重新试凑Ki/该限幅。 */
+  PID_Init(&PID_Speed,15.0f,-15.0f,375.0f);
+  PID_Init(&PID_Position,15.0f,-15.0f,375.0f);
   PID_param_set(&PID_Current_D,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Current_Q,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Speed,0.0f,0.0f,0.0f);
@@ -361,6 +366,9 @@ int main(void)
   PID_Current_Q.target = 0.0f;
   PID_Speed.target = 1000.0f;
   PID_Position.target = 0.0f;
+  /* 若Flash里存过上位机保存的PID参数则覆盖上面的编译期默认值;Flash为空/校验失败时PidStorage_Load
+     直接返回0,不改动上面刚设好的默认参数 */
+  PidStorage_Load();
   // ?????PID Q ?????????
   __HAL_TIM_CLEAR_IT(&htim10,TIM_IT_UPDATE);
   HAL_TIM_Base_Start_IT(&htim10);

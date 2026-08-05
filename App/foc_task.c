@@ -163,10 +163,22 @@ static void FOC_PositionLoop_Step(void)
                  PWM_LimitCompare(FOC_PWM_PERIOD*SVPWM_M0.tcm3));
 }
 
+/* 曾经是OpenLoop_Control()内部的函数局部static,只在MCU复位后清零一次:第一次切到OPEN_LOOP
+   正常从对齐阶段(tick=0)开始,但IDLE/其他模式切走再切回来时,这两个变量因为是static而不会重置,
+   open_loop_tick还停在上次退出时的值(通常已经过了对齐+斜坡,ramp=1.0),导致第二次进入OPEN_LOOP
+   会跳过500ms对齐直接以满幅Uq和上次遗留的电角度启动,造成明显的电流冲击/顿挫。改成模块级变量,
+   配合下面OpenLoop_ResetState()在FOC_ModeDispatch检测到"切入OPEN_LOOP"的那一拍主动清零。 */
+static uint32_t open_loop_tick = 0U;
+static float open_loop_elec_angle = 0.0f;
+
+static void OpenLoop_ResetState(void)
+{
+    open_loop_tick = 0U;
+    open_loop_elec_angle = 0.0f;
+}
+
 static void OpenLoop_Control(void)
 {
-    static uint32_t open_loop_tick = 0U;
-    static float open_loop_elec_angle = 0.0f;
     uint16_t raw_adc[3] = {0U, 0U, 0U};
     float ramp = 1.0f;
     float elec_hz = 0.0f;
@@ -239,6 +251,10 @@ void FOC_ModeDispatch(void)
         PID_Reset(&PID_Speed);
         PID_Reset(&PID_Position);
         FOC_OutputZero();
+        if (g_foc_mode == FOC_MODE_OPEN_LOOP)
+        {
+            OpenLoop_ResetState();
+        }
         prev_mode = g_foc_mode;
     }
 

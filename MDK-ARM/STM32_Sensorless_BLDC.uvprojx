@@ -1788,6 +1788,16 @@
               <FileType>5</FileType>
               <FilePath>..\Bsp\inc\current_sense.h</FilePath>
             </File>
+            <File>
+              <FileName>pid_storage.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\pid_storage.c</FilePath>
+            </File>
+            <File>
+              <FileName>pid_storage.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\pid_storage.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -14,6 +14,8 @@ FOC/BLDC 上位机读取脚本
   python foc_uart_host.py COM6 mode --value speed
   python foc_uart_host.py COM6 disarm
   python foc_uart_host.py COM6 pidset --loop IQ --target 2.0 --kp 0.05 --ki 0.001 --kd 0
+  python foc_uart_host.py COM6 pidsave
+  python foc_uart_host.py COM6 pidload
   python foc_uart_host.py COM6 lcd --value on
   python foc_uart_host.py COM6 lvgl --value on
   python foc_uart_host.py COM6 debug
@@ -37,10 +39,17 @@ CMD_READ_ALL = 0x84
 CMD_READ_DEBUG = 0x85
 CMD_READ_RAW_ADC = 0x86
 CMD_RECALIBRATE = 0x87
+CMD_OL_ADJUST_UD = 0x06  # 只在 OPEN_LOOP 模式生效, ARG0=FIELD_STEP_PLUS/MINUS, ARG1=步进档位
+CMD_OL_ADJUST_UQ = 0x07
+CMD_OL_ADJUST_HZ = 0x08
+FIELD_STEP_PLUS = 0x01
+FIELD_STEP_MINUS = 0x11
 CMD_SET_MODE = 0x90
 CMD_DISARM = 0x91
 CMD_SET_LCD_ENABLE = 0x93
 CMD_SET_LVGL_ENABLE = 0x94
+CMD_SAVE_PID = 0x88
+CMD_LOAD_PID = 0x89
 
 LCD_NAMES = {"on": 1, "off": 0, "1": 1, "0": 0}
 LVGL_NAMES = {"on": 1, "off": 0, "1": 1, "0": 0}
@@ -176,7 +185,7 @@ def main() -> None:
     parser.add_argument("port", help="串口号，例如 COM6")
     parser.add_argument(
         "mode_cmd",
-        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "debug", "mode", "disarm", "pidset", "lcd", "lvgl"],
+        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "debug", "mode", "disarm", "pidset", "pidsave", "pidload", "lcd", "lvgl"],
     )
     parser.add_argument("--baud", type=int, default=115200)
     parser.add_argument("--period", type=int, default=50, help="stream 周期，单位 ms")
@@ -246,6 +255,12 @@ def main() -> None:
                 parser.error("pidset 子命令需要 --loop {ID,IQ,SPD,POS}")
             line = f"$WPID,{args.loop},{args.target},{args.kp},{args.ki},{args.kd}#\r\n"
             send_ascii(ser, line)
+            read_lines(ser, 1.0, None)
+        elif args.mode_cmd == "pidsave":
+            send_cmd(ser, CMD_SAVE_PID)
+            read_lines(ser, 1.0, None)
+        elif args.mode_cmd == "pidload":
+            send_cmd(ser, CMD_LOAD_PID)
             read_lines(ser, 1.0, None)
 
 

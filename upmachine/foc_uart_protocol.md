@@ -67,6 +67,8 @@ FE EF CMD ARG0 ARG1 23 24
 $WPID,IQ,2.0,0.05,0.001,0#
 $MODE,3#
 $LCD,0#
+$SAVEPID#
+$LOADPID#
 ```
 
 ## 命令表
@@ -77,6 +79,8 @@ $LCD,0#
 | `0x81` | 开始周期上传 | 周期 ms | 0 | `ARG0=0` 时默认 50 ms |
 | `0x82` | 停止周期上传 | 0 | 0 | 停止 `$TEL` 周期输出 |
 | `0x83` | 读取 PID | 0 | 0 | 返回 4 行 `$PID` |
+| `0x88` | 保存 PID 到 Flash | 0 | 0 | 把当前 4 路 PID(含 target)写入片内 Flash，仅 IDLE 模式下有效 |
+| `0x89` | 从 Flash 加载 PID | 0 | 0 | 用 Flash 里保存的参数覆盖当前 4 路 PID，仅 IDLE 模式下有效，返回 `$PID` x4 |
 | `0x84` | 读取全部 | 0 | 0 | 返回 `$TEL` + `$PID` + `$DBG` |
 | `0x85` | 读取调试计数 | 0 | 0 | 返回 `$DBG` |
 | `0x86` | 读取原始 ADC | 0 | 0 | 返回一帧 `$RAW`（原始计数/电压/标定偏置/故障位） |
@@ -158,10 +162,35 @@ $ACK,OL_UQ,<v>#\r\n       // 开环运行电压已更新
 $ACK,OL_HZ,<v>#\r\n       // 开环目标电角频率已更新
 $ACK,PID,<loop>,...#\r\n  // PID 参数已写入（见现有 $WPID 说明）
 $ACK,LCD,<n>#\r\n         // LCD显示开关已更新
+$ACK,PIDSAVE#\r\n         // PID参数已写入Flash
+$ACK,PIDLOAD#\r\n         // PID参数已从Flash加载(随后跟4行$PID)
 $ERR,CAL,BUSY#\r\n        // 非IDLE模式下请求重新标定，被拒绝
+$ERR,PIDSAVE,BUSY#\r\n    // 非IDLE模式下请求保存PID，被拒绝
+$ERR,PIDSAVE,FAIL#\r\n    // Flash擦除/编程失败
+$ERR,PIDLOAD,BUSY#\r\n    // 非IDLE模式下请求加载PID，被拒绝
+$ERR,PIDLOAD,EMPTY#\r\n   // Flash里没有保存过有效PID参数(magic/校验和不匹配)
 $ERR,PID,UNKNOWN_LOOP#\r\n
 $ERR,UNKNOWN_CMD#\r\n
 ```
+
+## PID 参数持久化（Flash）
+
+固件默认的 PID 增益只是编译期写死的初值，掉电/复位后会丢失上位机现场调好的参数。
+现支持把当前 4 路 PID（Id/Iq/速度/位置，含各自 `target`）保存进片内 Flash 最后一个扇区
+（`Bsp/pid_storage.c`，STM32F407xE 512KB 器件的 Sector 7，地址 `0x08060000`），下次上电时
+`main()` 会自动尝试加载：Flash 里有校验通过的数据就覆盖编译期默认值，没有（第一次用/校验失败）
+则保持默认值不受影响。
+
+- `0x88`/`$SAVEPID#`：保存当前 4 路 PID 到 Flash。
+- `0x89`/`$LOADPID#`：从 Flash 重新加载 4 路 PID（会覆盖当前正在使用的参数）。
+
+**限制**：保存/加载都只允许在 `IDLE` 模式下执行（原因见下方“安全须知”），非 IDLE 时返回
+`$ERR,PIDSAVE,BUSY#` / `$ERR,PIDLOAD,BUSY#`。
+
+**安全须知（重要）**：保存操作要擦除一个 128KB 的 Flash 扇区，STM32F4 是单 bank 器件，擦除/编程
+期间 CPU 无法从 Flash 取指，最坏情况下会卡住 CPU 长达约 2 秒——如果这时电机还在转（FOC 电流环
+跑在 TIM10 硬件中断里），中断会被整体延迟，可能导致失步或过流。因此保存/加载前必须先用
+`0x91`（DISARM）切回 IDLE，确认电机已停转再操作。
 
 ## 硬件相序映射（待与实物核实）
 
@@ -179,7 +208,25 @@ $ERR,UNKNOWN_CMD#\r\n
 ## 备注
 
 - `FOC_UART_Master.exe` 是较早版本的预编译上位机，协议可能落后于本文档；后续调试请使用
-  `foc_uart_host.py`（随本次改动一起更新）。
+  `foc_uart_host.py`（随本次改动一起更新），或同目录下用 `pyinstaller --onefile --console
+  --name foc_uart_host foc_uart_host.py` 重新打包出的 `foc_uart_host.exe`（免装 Python/pyserial，
+  命令行用法与 `.py` 完全一致，改完协议后需要重新打包才能同步）。
+- `foc_uart_gui.py` / `foc_uart_gui.exe`：图形界面版，双击 `.exe` 直接打开窗口即可用，不用敲命令行
+  参数。内部复用 `foc_uart_host.py` 里的协议常量和解析函数，两边协议保持同步。改完协议后用
+  `pyinstaller --onefile --windowed --name foc_uart_gui foc_uart_gui.py` 重新打包。
+  界面观感参照 VOFA+（嵌入式圈常用的串口示波器）重做过：深色主题，左侧是示波器风格的黑底波形区
+  （Tkinter Canvas 手画，无 matplotlib 依赖）+ 波形下方的数字读数条（模式/RPM/角度/Fault/LCD），
+  右侧是通道列表（色块+勾选框+实时数值，对应 Ia/Ib/Ic/Id/Iq/RPM/MechAngle，各通道各自独立归一化
+  到画布高度，所以电流和转速这种量纲差很大的量能同框看趋势）以及 PID/控制两个选项卡（读写PID、
+  存到Flash/从Flash加载、切模式、DISARM、LCD开关），底部是深色终端风格的收发日志。需要先点
+  “开始上传”让 `$TEL` 持续上报波形才有数据。旧版 `FOC_UART_Master.exe`（PyInstaller+Tkinter
+  编译，源码从未提交进本仓库，无法找回）也带波形窗口，这个界面是照其思路、参考 VOFA+ 布局重新
+  实现的替代品。
+  「调试」选项卡另外补了 `0x84`(读取全部)/`0x85`(读调试计数，解析`$DBG`并显示 TIM9/TIM10 中断计数)/
+  `$RAW`结构化表格；「控制」选项卡补了 LVGL 开关(`0x94`)和 OPEN_LOOP 模式下 Ud对齐电压/Uq运行电压/
+  目标电角频率的 +/- 微调(`0x06`/`0x07`/`0x08`，仅支持步进调节，当前值来自设备`$ACK,OL_*`回执，
+  未调整前显示`--`)——这几个命令固件早就支持、CLI版`foc_uart_host.py`也有一部分，但GUI最初漏做了，
+  已核对固件命令表逐条补齐。
 - LCD 的 SPI/DMA 排查记录：`Bsp/lcd_init.c`/`Bsp/lcd.c` 里实际编译进工程的 `_DMA` 系列函数
   自始至终用的是真正的 `hspi1`（SPI1，PB3/PB4/PB5，DMA2_Stream3/Channel3 正确对应 SPI1_TX
   硬件请求线），DMA 路径是通的；`SPI_BAUDRATEPRESCALER_2` 在 PCLK2=84MHz 下给出 SPI1 时钟

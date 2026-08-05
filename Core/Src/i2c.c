@@ -247,10 +247,15 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     __HAL_LINKDMA(i2cHandle,hdmatx,hdma_i2c2_tx);
 
   /* USER CODE BEGIN I2C2_MspInit 1 */
-    /* Must be higher than TIM10 (FOC loop) for blocking reads inside ISR */
-    HAL_NVIC_SetPriority(I2C2_EV_IRQn, 3, 0);
+    /* 曾经设成比TIM10(FOC环,优先级4)更高的3,注释称"给ISR内的阻塞读留余地"——但angle_proc()
+       (App/foc_task.c)早已改成非阻塞DMA读取(AS5600_UpdateAngle_DMA),不存在ISR内阻塞读取这回事了。
+       优先级3意味着每次DMA收完角度后的I2C2事件/STOP收尾中断能抢占正在跑的TIM10 FOC中断,
+       在约2kHz的控制环里几乎每拍都会被插入一次,属于不必要的抖动来源。angle_proc()本来就接受
+       一拍的角度延迟(见其注释),I2C2事件晚一点被服务完全不影响正确性,改成和同一路DMA
+       (DMA1_Stream2,见dma.c)一样的优先级5,让TIM10绝不会被它打断。 */
+    HAL_NVIC_SetPriority(I2C2_EV_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
-    HAL_NVIC_SetPriority(I2C2_ER_IRQn, 3, 0);
+    HAL_NVIC_SetPriority(I2C2_ER_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(I2C2_ER_IRQn);
   /* USER CODE END I2C2_MspInit 1 */
   }
