@@ -18,8 +18,11 @@ import serial.tools.list_ports
 
 import foc_uart_host as proto
 
-LOOP_ORDER = ["ID", "IQ", "SPD", "POS"]
-LOOP_LABELS = {"ID": "电流环 Id", "IQ": "电流环 Iq", "SPD": "速度环", "POS": "位置环"}
+LOOP_ORDER = ["ID", "IQ", "SPD", "POS", "DCSPD", "DCPOS"]
+LOOP_LABELS = {
+    "ID": "电流环 Id", "IQ": "电流环 Iq", "SPD": "速度环", "POS": "位置环",
+    "DCSPD": "速度环(直流电机)", "DCPOS": "位置环(直流电机)",
+}
 MODE_ORDER = ["idle", "open", "current", "speed", "position"]
 MODE_DISPLAY = {
     "idle": "IDLE (空闲)",
@@ -28,12 +31,19 @@ MODE_DISPLAY = {
     "speed": "SPEED (速度环)",
     "position": "POSITION (位置环)",
 }
+DC_MODE_ORDER = ["idle", "speed", "position"]
+DC_MODE_DISPLAY = {
+    "idle": "IDLE (空闲)",
+    "speed": "SPEED (速度环)",
+    "position": "POSITION (位置环)",
+}
 
-WAVE_CHANNELS = ["Ia", "Ib", "Ic", "Id", "Iq", "RPM", "MechAngle"]
+WAVE_CHANNELS = ["Ia", "Ib", "Ic", "Id", "Iq", "RPM", "MechAngle", "DcAngle", "DcRPM", "DcDuty"]
 # 仿示波器/VOFA+ 通道配色：高饱和度，深色背景下辨识度高
 WAVE_COLORS = {
     "Ia": "#ffd400", "Ib": "#00e5ff", "Ic": "#ff4d6d",
     "Id": "#5ec8ff", "Iq": "#ff9d3f", "RPM": "#00ff9c", "MechAngle": "#c792ea",
+    "DcAngle": "#ff6ec7", "DcRPM": "#7cff6e", "DcDuty": "#8ab4ff",
 }
 WAVE_DEFAULT_ON = {"RPM", "Id", "Iq"}
 WAVE_MAXLEN = 300
@@ -134,6 +144,9 @@ class FocGui:
         self.ol_step_var = tk.StringVar(value="0.1")
         self.ol_vars = {"ud": tk.StringVar(value="--"), "uq": tk.StringVar(value="--"),
                          "hz": tk.StringVar(value="--")}
+
+        self.dc_mode_select_var = tk.StringVar(value=DC_MODE_DISPLAY["idle"])
+        self.dc_readout_vars = {k: tk.StringVar(value="--") for k in ("Mode", "Angle", "RPM", "Duty")}
 
         self.wave_buffers = {ch: deque(maxlen=WAVE_MAXLEN) for ch in WAVE_CHANNELS}
         self.wave_enable = {ch: tk.BooleanVar(value=ch in WAVE_DEFAULT_ON) for ch in WAVE_CHANNELS}
@@ -344,6 +357,22 @@ class FocGui:
         ttk.Button(mode_box, text="设置模式", command=self._set_mode).pack(fill="x", padx=6, pady=(0, 4))
         ttk.Button(mode_box, text="DISARM · 回到 IDLE", style="Danger.TButton",
                    command=lambda: self._send_cmd(proto.CMD_DISARM)).pack(fill="x", padx=6, pady=(0, 6))
+
+        dc_box = ttk.LabelFrame(tab, text="直流有刷电机（第二台电机）")
+        dc_box.pack(fill="x", padx=6, pady=5)
+        self.dc_mode_combo = ttk.Combobox(dc_box, textvariable=self.dc_mode_select_var, state="readonly",
+                                           values=[DC_MODE_DISPLAY[m] for m in DC_MODE_ORDER])
+        self.dc_mode_combo.pack(fill="x", padx=6, pady=(6, 4))
+        ttk.Button(dc_box, text="设置模式", command=self._set_dc_mode).pack(fill="x", padx=6, pady=(0, 4))
+        ttk.Button(dc_box, text="DISARM · 回到 IDLE", style="Danger.TButton",
+                   command=lambda: self._send_cmd(proto.CMD_SET_DC_MODE, 0)).pack(fill="x", padx=6, pady=(0, 6))
+        dc_readout = ttk.Frame(dc_box, style="Panel.TFrame")
+        dc_readout.pack(fill="x", padx=6, pady=(0, 6))
+        for label, key in (("模式", "Mode"), ("角度(rad)", "Angle"), ("RPM", "RPM"), ("占空比", "Duty")):
+            cell = ttk.Frame(dc_readout, style="Panel.TFrame")
+            cell.pack(side="left", expand=True, fill="x")
+            ttk.Label(cell, text=label, style="Dim.Panel.TLabel").pack()
+            ttk.Label(cell, textvariable=self.dc_readout_vars[key], style="Panel.TLabel").pack()
 
         lcd_box = ttk.LabelFrame(tab, text="LCD 屏幕")
         lcd_box.pack(fill="x", padx=6, pady=5)
@@ -567,6 +596,13 @@ class FocGui:
             return
         self._send_cmd(proto.CMD_SET_MODE, proto.MODE_NAMES[mode_key])
 
+    def _set_dc_mode(self):
+        display = self.dc_mode_select_var.get()
+        mode_key = next((m for m in DC_MODE_ORDER if DC_MODE_DISPLAY[m] == display), None)
+        if mode_key is None:
+            return
+        self._send_cmd(proto.CMD_SET_DC_MODE, proto.DC_MODE_NAMES[mode_key])
+
     def _set_all_channels(self, value):
         for var in self.wave_enable.values():
             var.set(value)
@@ -602,6 +638,10 @@ class FocGui:
             self.readout_vars["MechAngle"].set(f"{row['MechAngle']:.3f}")
             self.readout_vars["Fault"].set(proto.fault_phases(row["Fault"]))
             self.readout_vars["LcdEnable"].set("开" if row["LcdEnable"] else "关")
+            self.dc_readout_vars["Mode"].set(proto.DC_MODE_LABELS.get(int(row["DcMode"]), str(row["DcMode"])))
+            self.dc_readout_vars["Angle"].set(f"{row['DcAngle']:.3f}")
+            self.dc_readout_vars["RPM"].set(f"{row['DcRPM']:.1f}")
+            self.dc_readout_vars["Duty"].set(f"{row['DcDuty']:.2f}")
             if not self.wave_paused:
                 for ch in WAVE_CHANNELS:
                     self.wave_buffers[ch].append(row[ch])

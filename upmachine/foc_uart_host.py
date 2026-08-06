@@ -19,6 +19,8 @@ FOC/BLDC 上位机读取脚本
   python foc_uart_host.py COM6 lcd --value on
   python foc_uart_host.py COM6 lvgl --value on
   python foc_uart_host.py COM6 debug
+  python foc_uart_host.py COM6 dcmode --value speed
+  python foc_uart_host.py COM6 pidset --loop DCSPD --target 500 --kp 0.01 --ki 0.001 --kd 0
 """
 import argparse
 import csv
@@ -50,6 +52,7 @@ CMD_SET_LCD_ENABLE = 0x93
 CMD_SET_LVGL_ENABLE = 0x94
 CMD_SAVE_PID = 0x88
 CMD_LOAD_PID = 0x89
+CMD_SET_DC_MODE = 0x95  # 直流电机(第二台电机,Bsp/dc_motor.c)模式切换,和主BLDC的CMD_SET_MODE互相独立
 
 LCD_NAMES = {"on": 1, "off": 0, "1": 1, "0": 0}
 LVGL_NAMES = {"on": 1, "off": 0, "1": 1, "0": 0}
@@ -64,12 +67,16 @@ MODE_NAMES = {
 }
 MODE_LABELS = {0: "IDLE", 1: "OPEN_LOOP", 2: "CURRENT", 3: "SPEED", 4: "POSITION"}
 
+DC_MODE_NAMES = {"idle": 0, "speed": 1, "position": 2}
+DC_MODE_LABELS = {0: "IDLE", 1: "SPEED", 2: "POSITION"}
+
 TEL_FIELDS = [
     "Ia", "Ib", "Ic", "Id", "Iq", "RPM", "MechAngle", "ElecAngle",
     "IdKp", "IdKi", "IdKd", "IqKp", "IqKi", "IqKd",
     "SpeedKp", "SpeedKi", "SpeedKd", "PosKp", "PosKi", "PosKd",
     "IqTarget", "SpeedTarget",
     "Mode", "RawA", "RawB", "RawC", "VoltA", "VoltB", "VoltC", "Fault", "LcdEnable",
+    "DcAngle", "DcRPM", "DcDuty", "DcMode",
 ]
 
 RAW_FIELDS = [
@@ -132,11 +139,14 @@ def print_line(line: str) -> None:
         if row:
             mode = MODE_LABELS.get(int(row["Mode"]), str(row["Mode"]))
             lcd_state = "on" if row["LcdEnable"] else "off"
+            dc_mode = DC_MODE_LABELS.get(int(row["DcMode"]), str(row["DcMode"]))
             print(
                 f"[{mode}] Ia={row['Ia']:.3f} Ib={row['Ib']:.3f} Ic={row['Ic']:.3f} "
                 f"Id={row['Id']:.3f} Iq={row['Iq']:.3f} "
                 f"RPM={row['RPM']:.1f} Angle={row['MechAngle']:.3f} "
-                f"Fault={fault_phases(row['Fault'])} LCD={lcd_state}"
+                f"Fault={fault_phases(row['Fault'])} LCD={lcd_state} | "
+                f"DC[{dc_mode}] RPM={row['DcRPM']:.1f} Angle={row['DcAngle']:.3f} "
+                f"Duty={row['DcDuty']:.2f}"
             )
         else:
             print(line)
@@ -185,7 +195,8 @@ def main() -> None:
     parser.add_argument("port", help="串口号，例如 COM6")
     parser.add_argument(
         "mode_cmd",
-        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "debug", "mode", "disarm", "pidset", "pidsave", "pidload", "lcd", "lvgl"],
+        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "debug", "mode", "disarm",
+                 "pidset", "pidsave", "pidload", "lcd", "lvgl", "dcmode"],
     )
     parser.add_argument("--baud", type=int, default=115200)
     parser.add_argument("--period", type=int, default=50, help="stream 周期，单位 ms")
@@ -193,9 +204,11 @@ def main() -> None:
     parser.add_argument("--csv", help="保存 TEL 数据到 CSV")
     parser.add_argument(
         "--value",
-        help="mode 子命令: idle/open/current/speed/position；lcd/lvgl 子命令: on/off",
+        help="mode 子命令: idle/open/current/speed/position；lcd/lvgl 子命令: on/off；"
+             "dcmode 子命令: idle/speed/position",
     )
-    parser.add_argument("--loop", choices=["ID", "IQ", "SPD", "POS"], help="pidset 子命令: 目标环")
+    parser.add_argument("--loop", choices=["ID", "IQ", "SPD", "POS", "DCSPD", "DCPOS"],
+                         help="pidset 子命令: 目标环")
     parser.add_argument("--target", type=float, default=0.0, help="pidset 子命令: 目标值")
     parser.add_argument("--kp", type=float, default=0.0, help="pidset 子命令: Kp")
     parser.add_argument("--ki", type=float, default=0.0, help="pidset 子命令: Ki")
@@ -262,6 +275,11 @@ def main() -> None:
         elif args.mode_cmd == "pidload":
             send_cmd(ser, CMD_LOAD_PID)
             read_lines(ser, 1.0, None)
+        elif args.mode_cmd == "dcmode":
+            if not args.value or args.value not in DC_MODE_NAMES:
+                parser.error("dcmode 子命令需要 --value {idle,speed,position}")
+            send_cmd(ser, CMD_SET_DC_MODE, DC_MODE_NAMES[args.value])
+            read_lines(ser, 0.5, None)
 
 
 if __name__ == "__main__":

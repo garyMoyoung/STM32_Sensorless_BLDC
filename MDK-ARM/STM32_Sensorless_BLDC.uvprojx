@@ -1798,6 +1798,16 @@
               <FileType>5</FileType>
               <FilePath>..\Bsp\inc\pid_storage.h</FilePath>
             </File>
+            <File>
+              <FileName>dc_motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Bsp\dc_motor.c</FilePath>
+            </File>
+            <File>
+              <FileName>dc_motor.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Bsp\inc\dc_motor.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

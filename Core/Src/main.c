@@ -59,6 +59,7 @@
 #include "current_sense.h"
 #include "foc_task.h"
 #include "pid_storage.h"
+#include "dc_motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -148,6 +149,8 @@ PIDController PID_Current_D;
 PIDController PID_Current_Q;
 PIDController PID_Speed;
 PIDController PID_Position;
+PIDController PID_DC_Speed;
+PIDController PID_DC_Position;
 PID_Param_t Id_pid;
 PID_Param_t Iq_pid;
 PID_Param_t Speed_pid;
@@ -311,6 +314,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
   MX_UART4_Init();
   MX_UART5_Init();
   MX_USART1_UART_Init();
@@ -358,14 +362,24 @@ int main(void)
      只是给积分饱和留个安全上限,不代表调好的增益,具体还要上机重新试凑Ki/该限幅。 */
   PID_Init(&PID_Speed,15.0f,-15.0f,375.0f);
   PID_Init(&PID_Position,15.0f,-15.0f,375.0f);
+  /* 直流有刷电机(第二台电机,Bsp/dc_motor.c): PID_DC_Speed输出直接就是占空比,范围[-1,1];
+     PID_DC_Position输出是喂给PID_DC_Speed的转速目标(RPM),和主BLDC位置环同一套限幅惯例
+     (±15/maxIntegral=375),具体量级要按这台直流电机实际的减速比/空载转速上机重新试。 */
+  PID_Init(&PID_DC_Speed,1.0f,-1.0f,25.0f);
+  PID_Init(&PID_DC_Position,15.0f,-15.0f,375.0f);
   PID_param_set(&PID_Current_D,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Current_Q,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Speed,0.0f,0.0f,0.0f);
   PID_param_set(&PID_Position,0.0f,0.0f,0.0f);
+  PID_param_set(&PID_DC_Speed,0.0f,0.0f,0.0f);
+  PID_param_set(&PID_DC_Position,0.0f,0.0f,0.0f);
   PID_Current_D.target = 0.0f;
   PID_Current_Q.target = 0.0f;
   PID_Speed.target = 1000.0f;
   PID_Position.target = 0.0f;
+  PID_DC_Speed.target = 0.0f;
+  PID_DC_Position.target = 0.0f;
+  DCMotor_Init();
   /* 若Flash里存过上位机保存的PID参数则覆盖上面的编译期默认值;Flash为空/校验失败时PidStorage_Load
      直接返回0,不改动上面刚设好的默认参数 */
   PidStorage_Load();
@@ -502,6 +516,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     IWDG->KR = IWDG_KR_RELOAD;
 
     FOC_ModeDispatch();
+    DCMotor_ControlTick();
     Key_read();
     if(++TIM10_task_CNT >= 1000)
     {

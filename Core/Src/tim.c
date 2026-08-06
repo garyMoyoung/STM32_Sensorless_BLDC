@@ -27,6 +27,7 @@
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim10;
 
@@ -196,7 +197,11 @@ void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
+  /* 原来是CubeMX默认的65535(≈1.3kHz,可听见的啸叫频率),这颗定时器之前配置了但从没
+     HAL_TIM_PWM_Start过,是彻底空闲的。现在用CH1/CH2给直流电机H桥做双PWM驱动
+     (Bsp/dc_motor.c),改成84MHz/(4199+1)=20kHz,避开可听见范围,和DC_MOTOR_PWM_PERIOD
+     (dc_motor.c)保持一致,两处要同步改。 */
+  htim3.Init.Period = 4199;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -242,6 +247,52 @@ void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 2 */
   HAL_TIM_MspPostInit(&htim3);
+
+}
+/* TIM4 init function: 直流有刷电机正交编码器(AB两相),编码器输入接PD12/PD13(TIM4_CH1/CH2,AF2)。
+   TIM_ENCODERMODE_TI12对AB两路的上升沿下降沿都计数(4倍频),分辨率是编码器本身线数的4倍。
+   Period给满16位量程,自然回绕由DCMotor_ReadEncoderDelta()按有符号16位差值处理,不依赖不溢出。 */
+void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_Encoder_InitTypeDef sConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 0;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 65535;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
+  sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC1Filter = 6;
+  sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
+  sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC2Filter = 6;
+  if (HAL_TIM_Encoder_Init(&htim4, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
 
 }
 /* TIM9 init function */
@@ -381,6 +432,40 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE END TIM10_MspInit 1 */
   }
 }
+/* TIM_Encoder_Init走的是HAL_TIM_Encoder_MspInit这个独立回调,不是上面HAL_TIM_Base_MspInit,
+   两者是HAL里两套不同的弱函数,即使都叫"MspInit"也不会互相覆盖调用,必须单独实现。 */
+void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* timHandle)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  if (timHandle->Instance == TIM4)
+  {
+    __HAL_RCC_TIM4_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    /**TIM4 GPIO Configuration
+    PD12     ------> TIM4_CH1 (编码器A相)
+    PD13     ------> TIM4_CH2 (编码器B相)
+    上拉: 大多数增量编码器输出是推挽方波,理论上不需要上拉,但接线较长时上拉能提高抗干扰余量,
+    对推挽输出无副作用。
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_12 | GPIO_PIN_13;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  }
+}
+
+void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* timHandle)
+{
+  if (timHandle->Instance == TIM4)
+  {
+    __HAL_RCC_TIM4_CLK_DISABLE();
+    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_12 | GPIO_PIN_13);
+  }
+}
+
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
 {
 

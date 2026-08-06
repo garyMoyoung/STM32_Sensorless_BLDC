@@ -4,6 +4,7 @@
 #include "uart_task.h"
 #include "pid.h"
 #include "pid_storage.h"
+#include "dc_motor.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,8 +34,11 @@ extern PIDController PID_Current_D;
 extern PIDController PID_Current_Q;
 extern PIDController PID_Speed;
 extern PIDController PID_Position;
+extern PIDController PID_DC_Speed;
+extern PIDController PID_DC_Position;
 
 extern volatile FOC_Mode_t g_foc_mode;
+extern volatile DCMotor_Mode_t g_dc_motor_mode;
 extern uint16_t Diag_RawAdc[3];
 extern float Diag_RawVolt[3];
 extern uint8_t Diag_CurrentFault;
@@ -71,6 +75,7 @@ UART_Frame_t drame_task;
 #define PC_CMD_SET_LVGL_ENABLE  0x94U
 #define PC_CMD_SAVE_PID         0x88U
 #define PC_CMD_LOAD_PID         0x89U
+#define PC_CMD_SET_DC_MODE      0x95U
 
 #define OPEN_LOOP_DEBUG_ENABLE  1U
 
@@ -114,7 +119,8 @@ static void UART_PrintTelemetry(void)
 {
     printf("$TEL,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,"
            "%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"
-           "%u,%u,%u,%u,%.4f,%.4f,%.4f,%u,%u#\r\n",
+           "%u,%u,%u,%u,%.4f,%.4f,%.4f,%u,%u,"
+           "%.4f,%.4f,%.4f,%u#\r\n",
            Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic,
            Iqd_M0.Id, Iqd_M0.Iq,
            Mech_RPM, Mech_Angle, Elec_Angle,
@@ -127,7 +133,14 @@ static void UART_PrintTelemetry(void)
            (unsigned int)Diag_RawAdc[0], (unsigned int)Diag_RawAdc[1], (unsigned int)Diag_RawAdc[2],
            Diag_RawVolt[0], Diag_RawVolt[1], Diag_RawVolt[2],
            (unsigned int)Diag_CurrentFault,
-           (unsigned int)g_lcd_enable);
+           (unsigned int)g_lcd_enable,
+           /* 直流有刷电机(第二台电机,Bsp/dc_motor.c)遥测: 追加在原有字段末尾,
+              不改动前面任何已有字段的顺序/含义。注意 upmachine/foc_uart_host.py 的
+              parse_tel() 是按精确字段数校验的(len(values)!=len(TEL_FIELDS)直接判无效),
+              这里加字段后TEL_FIELDS必须同步加上新字段,两边不同步会导致$TEL整行解析失败
+              (不是"忽略新字段"这种宽松兼容,是直接解析不出来)。 */
+           DCMotor_Mech_Angle, DCMotor_Mech_RPM, DCMotor_PWM_Duty,
+           (unsigned int)g_dc_motor_mode);
 }
 
 static void UART_PrintRaw(void)
@@ -156,6 +169,8 @@ static void UART_PrintPid(void)
     UART_PrintOnePid("IQ",  &PID_Current_Q);
     UART_PrintOnePid("SPD", &PID_Speed);
     UART_PrintOnePid("POS", &PID_Position);
+    UART_PrintOnePid("DCSPD", &PID_DC_Speed);
+    UART_PrintOnePid("DCPOS", &PID_DC_Position);
 }
 
 static PIDController* UART_GetPidByName(const char *name)
@@ -171,6 +186,14 @@ static PIDController* UART_GetPidByName(const char *name)
     if (strcmp(name, "SPD") == 0)
     {
         return &PID_Speed;
+    }
+    if (strcmp(name, "DCSPD") == 0)
+    {
+        return &PID_DC_Speed;
+    }
+    if (strcmp(name, "DCPOS") == 0)
+    {
+        return &PID_DC_Position;
     }
     if (strcmp(name, "POS") == 0)
     {
@@ -211,7 +234,10 @@ static void UART_ApplyPidParam(PIDController *pid, const PID_Param_t *param)
    电机运行中调用会让FOC ISR失步,与0x87(重新标定)的限制同理 */
 static void UART_SavePid(void)
 {
-    if (g_foc_mode != FOC_MODE_IDLE)
+    /* 两台电机共用同一颗TIM10定时器节拍(FOC_ModeDispatch/DCMotor_ControlTick都挂在这个ISR里),
+       Flash擦除期间CPU最坏卡住约2s会让这颗ISR整体失步,不管是主BLDC还是直流电机在转都会受影响,
+       所以两边都要求处于IDLE才放行,只查g_foc_mode会漏掉"BLDC空闲但直流电机还在转"这种情况 */
+    if ((g_foc_mode != FOC_MODE_IDLE) || (g_dc_motor_mode != DC_MOTOR_MODE_IDLE))
     {
         printf("$ERR,PIDSAVE,BUSY#\r\n");
         return;
@@ -229,7 +255,7 @@ static void UART_SavePid(void)
 
 static void UART_LoadPid(void)
 {
-    if (g_foc_mode != FOC_MODE_IDLE)
+    if ((g_foc_mode != FOC_MODE_IDLE) || (g_dc_motor_mode != DC_MOTOR_MODE_IDLE))
     {
         printf("$ERR,PIDLOAD,BUSY#\r\n");
         return;
@@ -301,6 +327,13 @@ static void UART_ProcessAsciiCommand(char *line)
     {
         FOC_SetMode((uint8_t)atoi(loop));
         printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+        return;
+    }
+
+    if ((token != NULL) && (strcmp(token, "$DCMODE") == 0) && (loop != NULL))
+    {
+        DCMotor_SetMode((uint8_t)atoi(loop));
+        printf("$ACK,DCMODE,%u#\r\n", (unsigned int)g_dc_motor_mode);
         return;
     }
 
@@ -507,6 +540,11 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       case PC_CMD_SET_MODE:
         FOC_SetMode(data2);
         printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+      break;
+
+      case PC_CMD_SET_DC_MODE:
+        DCMotor_SetMode(data2);
+        printf("$ACK,DCMODE,%u#\r\n", (unsigned int)g_dc_motor_mode);
       break;
 
       case PC_CMD_DISARM:

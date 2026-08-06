@@ -7,12 +7,16 @@ extern PIDController PID_Current_D;
 extern PIDController PID_Current_Q;
 extern PIDController PID_Speed;
 extern PIDController PID_Position;
+extern PIDController PID_DC_Speed;
+extern PIDController PID_DC_Position;
 
 /* Sector 7 = 0x08060000~0x0807FFFF, 512KB器件的最后一个扇区(128KB),
    固件代码目前只用到前面几十KB,离这里很远,不会随代码增长被覆盖。 */
 #define PID_STORAGE_FLASH_ADDR   0x08060000U
 #define PID_STORAGE_FLASH_SECTOR FLASH_SECTOR_7
-#define PID_STORAGE_MAGIC        0x50494431U /* "PID1" */
+/* "PID2": 结构体新增了dc_speed/dc_position两个直流电机PID,布局和"PID1"版本不兼容,
+   magic改了就能保证旧版本(改动前烧录过的)Flash数据不会被误当成新格式解析 */
+#define PID_STORAGE_MAGIC        0x50494432U
 
 typedef struct
 {
@@ -29,6 +33,8 @@ typedef struct
     PidStorage_Loop_t iq;
     PidStorage_Loop_t speed;
     PidStorage_Loop_t position;
+    PidStorage_Loop_t dc_speed;
+    PidStorage_Loop_t dc_position;
     uint32_t checksum;
 } PidStorage_Data_t;
 
@@ -71,6 +77,16 @@ static void PidStorage_FillFromLive(PidStorage_Data_t *data)
     data->position.ki = PID_Position.ki;
     data->position.kd = PID_Position.kd;
     data->position.target = PID_Position.target;
+
+    data->dc_speed.kp = PID_DC_Speed.kp;
+    data->dc_speed.ki = PID_DC_Speed.ki;
+    data->dc_speed.kd = PID_DC_Speed.kd;
+    data->dc_speed.target = PID_DC_Speed.target;
+
+    data->dc_position.kp = PID_DC_Position.kp;
+    data->dc_position.ki = PID_DC_Position.ki;
+    data->dc_position.kd = PID_DC_Position.kd;
+    data->dc_position.target = PID_DC_Position.target;
 
     data->checksum = PidStorage_Checksum(data);
 }
@@ -153,6 +169,12 @@ uint8_t PidStorage_Load(void)
 
     PID_param_set(&PID_Position, data.position.kp, data.position.ki, data.position.kd);
     PID_Position.target = data.position.target;
+
+    PID_param_set(&PID_DC_Speed, data.dc_speed.kp, data.dc_speed.ki, data.dc_speed.kd);
+    PID_DC_Speed.target = data.dc_speed.target;
+
+    PID_param_set(&PID_DC_Position, data.dc_position.kp, data.dc_position.ki, data.dc_position.kd);
+    PID_DC_Position.target = data.dc_position.target;
 
     return 1U;
 }

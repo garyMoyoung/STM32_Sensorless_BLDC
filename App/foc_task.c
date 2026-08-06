@@ -37,11 +37,9 @@ extern PID_Param_t Speed_pid;
 #define OPEN_LOOP_POLE_PAIRS             7.0f
 #define OPEN_LOOP_UART_PERIOD_MS         50U
 #define OPEN_LOOP_TWO_PI                 6.283185307f
-/* TIM10实测: 168MHz/(84分频)=2MHz计数时钟, ARR=1000 => 更新频率约2kHz(约0.5ms/拍),
-   而不是注释原来假设的1kHz/1ms, 这里改成与硬件实际节拍一致的值。
-   该值同时喂给下面PID的dt形参和Mech_RPM/开环电角度积分,三处必须与TIM10真实周期保持一致,
-   以后如果改了TIM10的Prescaler/Period,要同步改这里。 */
-#define FOC_LOOP_DT_S                    0.0005f
+/* FOC_LOOP_DT_S 定义挪到了 foc_task.h(公开),供 Bsp/dc_motor.c 复用——
+   直流电机的控制节拍现在也挂在同一个TIM10中断里,必须用同一个dt常量,不能各自维护一份数值
+   相同但物理上独立的宏,否则以后改TIM10周期容易漏改其中一处。 */
 
 volatile FOC_Mode_t g_foc_mode = FOC_MODE_IDLE;
 
