@@ -355,16 +355,21 @@ int main(void)
 
   AS5600_Init(&M0,&hi2c2);
   DWT_Init();
-  PID_Init(&PID_Current_D,4.0f,-4.0f,100.0f);
-  PID_Init(&PID_Current_Q,4.0f,-4.0f,100.0f);
+  /* maxIntegral是integral项本身的兜底限幅,不是output限幅,但两者需要量级匹配:
+     若maxIntegral远大于maxOutput/ki,integral在触发output限幅前就已经能让ki*integral
+     单独超过maxOutput,等于兜底限幅形同虚设。这里按 maxOutput/ki 的量级来设(4V/0.1≈40),
+     配合PID_Position_Calculate里新加的条件积分抗饱和逻辑,双重防止电流环输出打满时
+     integral还在无意义增长导致的退饱和延迟、Iq大幅超调来回跳变。 */
+  PID_Init(&PID_Current_D,4.0f,-4.0f,40.0f);
+  PID_Init(&PID_Current_Q,4.0f,-4.0f,40.0f);
   /* maxIntegral曾经是0.0f: PID_Position_Calculate(Bsp/pid.c)里积分限幅是直接钳位pid->integral到
      [-maxIntegral,+maxIntegral],0意味着每次调用后积分项都被强制清零,不管上位机把Ki设成多少,
      速度环/位置环的I都不可能真正累积生效。改成和电流环同一比例(maxOutput*25)的非零值,
      只是给积分饱和留个安全上限,不代表调好的增益,具体还要上机重新试凑Ki/该限幅。 */
   PID_Init(&PID_Speed,15.0f,-15.0f,375.0f);
   PID_Init(&PID_Position,15.0f,-15.0f,375.0f);
-  PID_param_set(&PID_Current_D,0.0517f,0.0f,0.0f);
-  PID_param_set(&PID_Current_Q,0.0517f,0.0f,0.0f);
+  PID_param_set(&PID_Current_D,0.0517f,0.1f,0.0f);
+  PID_param_set(&PID_Current_Q,0.0517f,0.1f,0.0f);
   PID_param_set(&PID_Speed,0.0f,0.0f,0.0f);
   PID_param_set(&PID_Position,0.0f,0.0f,0.0f);
   PID_Current_D.target = 0.0f;

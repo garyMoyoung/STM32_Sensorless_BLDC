@@ -16,14 +16,44 @@
 float PID_Position_Calculate(PIDController *pid, float target, float current, float dt)
 {
     float derivative;
+    float p_term;
+    float d_term;
+    float unsat_output;
+    float integral_candidate;
 
     // 计算误差
     pid->error = target - current;
 
-    // 积分项按真实时间累加(而不是每调用一次就加一次error)
-    pid->integral += pid->error * dt;
+    // 微分项按真实时间做差分, dt<=0时视为无效调用,微分项直接置0避免除0
+    derivative = (dt > 0.0f) ? ((pid->error - pid->lastError) / dt) : 0.0f;
 
-    // 积分限幅(抗积分饱和)
+    p_term = pid->kp * pid->error;
+    d_term = pid->kd * derivative;
+
+    /* 抗积分饱和(条件积分法): 先按"若本次积分正常累加"试算integral和output,
+       如果试算output已经超出[minOutput,maxOutput]、且继续累加积分只会让饱和更严重
+       (即误差方向与当前饱和方向一致),就冻结积分不再累加,避免output被输出限幅钳死期间
+       integral还在继续无意义地增长、之后要花很久才能"退出饱和"导致的大幅超调/来回跳变。
+       之前只做integral本身限幅(maxIntegral)是不够的: 只要maxIntegral设得比
+       maxOutput/ki大(本工程electric流环maxIntegral=100远超±4V/ki),integral在触及
+       输出限幅前就已经能让ki*integral本身超过maxOutput,等于没起到抗饱和作用。 */
+    integral_candidate = pid->integral + pid->error * dt;
+    unsat_output = p_term + pid->ki * integral_candidate + d_term;
+
+    if ((unsat_output > pid->maxOutput) && (pid->error > 0.0f))
+    {
+        /* 已上限饱和且误差还在往同方向推,冻结积分 */
+    }
+    else if ((unsat_output < pid->minOutput) && (pid->error < 0.0f))
+    {
+        /* 已下限饱和且误差还在往同方向推,冻结积分 */
+    }
+    else
+    {
+        pid->integral = integral_candidate;
+    }
+
+    // 积分限幅(兜底,防止kp/kd为0等极端参数下integral本身失控增长)
     if(pid->integral > pid->maxIntegral) {
         pid->integral = pid->maxIntegral;
     }
@@ -31,13 +61,8 @@ float PID_Position_Calculate(PIDController *pid, float target, float current, fl
         pid->integral = -pid->maxIntegral;
     }
 
-    // 微分项按真实时间做差分, dt<=0时视为无效调用,微分项直接置0避免除0
-    derivative = (dt > 0.0f) ? ((pid->error - pid->lastError) / dt) : 0.0f;
-
     // 计算PID输出
-    pid->output = pid->kp * pid->error +
-                 pid->ki * pid->integral +
-                 pid->kd * derivative;
+    pid->output = p_term + pid->ki * pid->integral + d_term;
 
     // 输出限幅
     if(pid->output >= pid->maxOutput) {
