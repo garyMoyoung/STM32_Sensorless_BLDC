@@ -77,6 +77,8 @@ TEL_FIELDS = [
     "IqTarget", "SpeedTarget",
     "Mode", "RawA", "RawB", "RawC", "VoltA", "VoltB", "VoltC", "Fault", "LcdEnable",
     "DcAngle", "DcRPM", "DcDuty", "DcMode",
+    # 滑模观测器(SMO)影子估算,和 ElecAngle/RPM 同单位,方便直接对比估算 vs 真实值
+    "SmoTheta", "SmoWe", "SmoRPM", "SmoEa", "SmoEb", "SmoVfA", "SmoVfB",
 ]
 
 RAW_FIELDS = [
@@ -146,7 +148,9 @@ def print_line(line: str) -> None:
                 f"RPM={row['RPM']:.1f} Angle={row['MechAngle']:.3f} "
                 f"Fault={fault_phases(row['Fault'])} LCD={lcd_state} | "
                 f"DC[{dc_mode}] RPM={row['DcRPM']:.1f} Angle={row['DcAngle']:.3f} "
-                f"Duty={row['DcDuty']:.2f}"
+                f"Duty={row['DcDuty']:.2f} | "
+                f"SMO RPM={row['SmoRPM']:.1f} Theta={row['SmoTheta']:.3f} "
+                f"(real Elec={row['ElecAngle']:.3f})"
             )
         else:
             print(line)

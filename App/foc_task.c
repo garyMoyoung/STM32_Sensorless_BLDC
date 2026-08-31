@@ -8,6 +8,7 @@
 #include "uart_task.h"
 #include "timer_utils.h"
 #include "foc_task.h"
+#include "SMO.h"
 
 extern Udq_Struct Udq_M0;
 extern Ualpbe_Struct Ualpbe_M0;
@@ -37,9 +38,6 @@ extern PID_Param_t Speed_pid;
 #define OPEN_LOOP_POLE_PAIRS             7.0f
 #define OPEN_LOOP_UART_PERIOD_MS         50U
 #define OPEN_LOOP_TWO_PI                 6.283185307f
-/* FOC_LOOP_DT_S 定义挪到了 foc_task.h(公开),供 Bsp/dc_motor.c 复用——
-   直流电机的控制节拍现在也挂在同一个TIM10中断里,必须用同一个dt常量,不能各自维护一份数值
-   相同但物理上独立的宏,否则以后改TIM10周期容易漏改其中一处。 */
 
 volatile FOC_Mode_t g_foc_mode = FOC_MODE_IDLE;
 
@@ -105,6 +103,9 @@ static void FOC_CurrentLoop_Step(void)
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
+    /* SMO影子估算: 只喂真实电流/电压/角度进去做估算,不接管上面已经算好的PWM占空比 */
+    SMO_ShadowUpdate(Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta,
+                      Ualpbe_M0.U_alpha, Ualpbe_M0.U_beta, Elec_Angle);
     /* 闭环路径的Ud/Uq来自PID输出,可能饱和到过调制区,tcm1/2/3不能保证落在[0,1],
        必须和开环一样过PWM_LimitCompare限幅,否则负值转uint16_t会变成一个极大的
        比较值,导致该相PWM在计数周期内卡死在全通/全断。 */
@@ -126,6 +127,9 @@ static void FOC_SpeedLoop_Step(void)
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
+    /* SMO影子估算: 只喂真实电流/电压/角度进去做估算,不接管上面已经算好的PWM占空比 */
+    SMO_ShadowUpdate(Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta,
+                      Ualpbe_M0.U_alpha, Ualpbe_M0.U_beta, Elec_Angle);
     /* 闭环路径的Ud/Uq来自PID输出,可能饱和到过调制区,tcm1/2/3不能保证落在[0,1],
        必须和开环一样过PWM_LimitCompare限幅,否则负值转uint16_t会变成一个极大的
        比较值,导致该相PWM在计数周期内卡死在全通/全断。 */
@@ -153,6 +157,9 @@ static void FOC_PositionLoop_Step(void)
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
     SVPWM(Elec_Angle, &Ualpbe_M0, &SVPWM_M0, &Udq_M0);
+    /* SMO影子估算: 只喂真实电流/电压/角度进去做估算,不接管上面已经算好的PWM占空比 */
+    SMO_ShadowUpdate(Ialpbe_M0.I_alpha, Ialpbe_M0.I_beta,
+                      Ualpbe_M0.U_alpha, Ualpbe_M0.U_beta, Elec_Angle);
     /* 闭环路径的Ud/Uq来自PID输出,可能饱和到过调制区,tcm1/2/3不能保证落在[0,1],
        必须和开环一样过PWM_LimitCompare限幅,否则负值转uint16_t会变成一个极大的
        比较值,导致该相PWM在计数周期内卡死在全通/全断。 */

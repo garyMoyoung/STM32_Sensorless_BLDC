@@ -38,12 +38,17 @@ DC_MODE_DISPLAY = {
     "position": "POSITION (位置环)",
 }
 
-WAVE_CHANNELS = ["Ia", "Ib", "Ic", "Id", "Iq", "RPM", "MechAngle", "DcAngle", "DcRPM", "DcDuty"]
+WAVE_CHANNELS = [
+    "Ia", "Ib", "Ic", "Id", "Iq", "RPM", "MechAngle", "DcAngle", "DcRPM", "DcDuty",
+    # 滑模观测器(SMO)影子估算,和RPM/MechAngle/ElecAngle同单位方便叠加对比收敛情况
+    "SmoRPM", "SmoTheta", "SmoEa", "SmoEb",
+]
 # 仿示波器/VOFA+ 通道配色：高饱和度，深色背景下辨识度高
 WAVE_COLORS = {
     "Ia": "#ffd400", "Ib": "#00e5ff", "Ic": "#ff4d6d",
     "Id": "#5ec8ff", "Iq": "#ff9d3f", "RPM": "#00ff9c", "MechAngle": "#c792ea",
     "DcAngle": "#ff6ec7", "DcRPM": "#7cff6e", "DcDuty": "#8ab4ff",
+    "SmoRPM": "#ffffff", "SmoTheta": "#ffb86c", "SmoEa": "#69f0ae", "SmoEb": "#40c4ff",
 }
 WAVE_DEFAULT_ON = {"RPM", "Id", "Iq"}
 WAVE_MAXLEN = 300
@@ -128,7 +133,7 @@ class FocGui:
         self.stream_period_var = tk.StringVar(value="50")
 
         self.readout_vars = {k: tk.StringVar(value="--") for k in (
-            "Mode", "RPM", "MechAngle", "Fault", "LcdEnable")}
+            "Mode", "RPM", "MechAngle", "SmoRPM", "SmoTheta", "Fault", "LcdEnable")}
         self.wave_value_vars = {ch: tk.StringVar(value="--") for ch in WAVE_CHANNELS}
         self.pid_vars = {
             loop: {f: tk.StringVar(value="0") for f in ("kp", "ki", "kd", "target")}
@@ -279,6 +284,8 @@ class FocGui:
         readout.grid(row=2, column=0, sticky="ew", pady=(4, 0))
         items = [("Mode", "模式", ACCENT), ("RPM", "RPM", WAVE_COLORS["RPM"]),
                  ("MechAngle", "角度(rad)", WAVE_COLORS["MechAngle"]),
+                 ("SmoRPM", "SMO RPM(估算)", WAVE_COLORS["SmoRPM"]),
+                 ("SmoTheta", "SMO角度(估算)", WAVE_COLORS["SmoTheta"]),
                  ("Fault", "Fault", DANGER), ("LcdEnable", "LCD", FG_TEXT)]
         for i, (key, cn, color) in enumerate(items):
             cell = tk.Frame(readout, bg=BG_CANVAS)
@@ -636,6 +643,8 @@ class FocGui:
             self.readout_vars["Mode"].set(proto.MODE_LABELS.get(int(row["Mode"]), str(row["Mode"])))
             self.readout_vars["RPM"].set(f"{row['RPM']:.1f}")
             self.readout_vars["MechAngle"].set(f"{row['MechAngle']:.3f}")
+            self.readout_vars["SmoRPM"].set(f"{row['SmoRPM']:.1f}")
+            self.readout_vars["SmoTheta"].set(f"{row['SmoTheta']:.3f}")
             self.readout_vars["Fault"].set(proto.fault_phases(row["Fault"]))
             self.readout_vars["LcdEnable"].set("开" if row["LcdEnable"] else "关")
             self.dc_readout_vars["Mode"].set(proto.DC_MODE_LABELS.get(int(row["DcMode"]), str(row["DcMode"])))

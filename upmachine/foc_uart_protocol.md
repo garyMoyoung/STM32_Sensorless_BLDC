@@ -128,7 +128,7 @@ $WPID,DCSPD,500,0.01,0.001,0#
 ### 遥测帧
 
 ```text
-$TEL,Ia,Ib,Ic,Id,Iq,RPM,MechAngle,ElecAngle,IdKp,IdKi,IdKd,IqKp,IqKi,IqKd,SpeedKp,SpeedKi,SpeedKd,PosKp,PosKi,PosKd,IqTarget,SpeedTarget,Mode,RawA,RawB,RawC,VoltA,VoltB,VoltC,Fault,LcdEnable,DcAngle,DcRPM,DcDuty,DcMode#\r\n
+$TEL,Ia,Ib,Ic,Id,Iq,RPM,MechAngle,ElecAngle,IdKp,IdKi,IdKd,IqKp,IqKi,IqKd,SpeedKp,SpeedKi,SpeedKd,PosKp,PosKi,PosKd,IqTarget,SpeedTarget,Mode,RawA,RawB,RawC,VoltA,VoltB,VoltC,Fault,LcdEnable,DcAngle,DcRPM,DcDuty,DcMode,SmoTheta,SmoWe,SmoRPM,SmoEa,SmoEb,SmoVfA,SmoVfB#\r\n
 ```
 
 新增字段说明：
@@ -141,10 +141,18 @@ $TEL,Ia,Ib,Ic,Id,Iq,RPM,MechAngle,ElecAngle,IdKp,IdKi,IdKd,IqKp,IqKi,IqKd,SpeedK
 - `DcAngle`/`DcRPM`：直流有刷电机（第二台电机）的机械角(rad)/转速(RPM)，编码器实测值
 - `DcDuty`：直流电机当前PWM占空比，`[-1,1]`，正负表示转向
 - `DcMode`：直流电机当前 `DCMotor_Mode_t`（0~2，见上表），和 `Mode` 字段（主BLDC）互相独立
+- `SmoTheta`：滑模观测器（SMO，`Bsp/SMO.c`）估算的电角度（rad，0~2π），和 `ElecAngle`（AS5600实测）同单位可直接对比
+- `SmoWe`：SMO 估算的电角速度（rad/s）
+- `SmoRPM`：`SmoWe` 换算成机械 RPM，和 `RPM` 字段同单位可直接对比
+- `SmoEa`/`SmoEb`：SMO 估算的反电动势 alpha/beta 分量
+- `SmoVfA`/`SmoVfB`：SMO 内部滑模面低通滤波后的值（PLL 输入），用于判断信号是否干净/是否饱和
 
-`DcAngle`/`DcRPM`/`DcDuty`/`DcMode` 是追加在末尾的新字段，`upmachine/foc_uart_host.py` 的
-`parse_tel()` 按精确字段数校验，这四个新字段必须和固件的 `$TEL` 输出同步，两边字段数对不上会导致
-整行解析失败。
+注意：SMO 目前只是"影子"估算（`App/foc_task.c` 里 `SMO_ShadowUpdate()`），用真实电流/电压/AS5600角度
+喂给观测器做估算，但**不参与**实际 PID 闭环输出，纯粹用于和 `ElecAngle`/`RPM` 对比调试用。
+
+`DcAngle`/`DcRPM`/`DcDuty`/`DcMode`/`SmoTheta`/`SmoWe`/`SmoRPM`/`SmoEa`/`SmoEb`/`SmoVfA`/`SmoVfB`
+都是追加在末尾的新字段，`upmachine/foc_uart_host.py` 的 `parse_tel()` 按精确字段数校验，新增字段
+必须和固件的 `$TEL` 输出同步，两边字段数对不上会导致整行解析失败。
 
 ### 原始 ADC 帧
 

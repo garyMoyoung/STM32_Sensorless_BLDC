@@ -4,7 +4,7 @@
 #include "uart_task.h"
 #include "pid.h"
 #include "pid_storage.h"
-#include "dc_motor.h"
+#include "SMO.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,15 +30,19 @@ extern volatile uint8_t recv1_end_flag;
 extern volatile uint32_t TIM9_ISR_CNT;
 extern volatile uint32_t TIM10_ISR_CNT;
 
+/* SMO(滑模观测器)影子估算输出,见 Bsp/SMO.c SMO_ShadowUpdate()——只做估算,
+   不参与实际PID闭环,这里单纯把估算值发给上位机和真实AS5600角度/转速对比。 */
+extern float Theta_fore_New;
+extern float We_fore;
+extern float Eab[2];
+extern float Vab_Filter[2];
+
 extern PIDController PID_Current_D;
 extern PIDController PID_Current_Q;
 extern PIDController PID_Speed;
 extern PIDController PID_Position;
-extern PIDController PID_DC_Speed;
-extern PIDController PID_DC_Position;
 
 extern volatile FOC_Mode_t g_foc_mode;
-extern volatile DCMotor_Mode_t g_dc_motor_mode;
 extern uint16_t Diag_RawAdc[3];
 extern float Diag_RawVolt[3];
 extern uint8_t Diag_CurrentFault;
@@ -75,7 +79,6 @@ UART_Frame_t drame_task;
 #define PC_CMD_SET_LVGL_ENABLE  0x94U
 #define PC_CMD_SAVE_PID         0x88U
 #define PC_CMD_LOAD_PID         0x89U
-#define PC_CMD_SET_DC_MODE      0x95U
 
 #define OPEN_LOOP_DEBUG_ENABLE  1U
 
@@ -117,10 +120,16 @@ float calculate_step_size(uint8_t data_value)
 
 static void UART_PrintTelemetry(void)
 {
+    /* SMO是"影子"估算(见FOC_*Loop_Step里的SMO_ShadowUpdate),不参与控制,
+       这里只是把它估的角度/转速换算成和ElecAngle/RPM同单位,方便上位机直接
+       对比两条曲线看收敛/跟踪效果。 */
+    float smo_rpm = We_fore * 60.0f / (2.0f * 3.1415926f * MOTOR_POLE_PAIRS);
+
     printf("$TEL,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,"
            "%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"
            "%u,%u,%u,%u,%.4f,%.4f,%.4f,%u,%u,"
-           "%.4f,%.4f,%.4f,%u#\r\n",
+           "%.4f,%.4f,%.4f,%u,"
+           "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f#\r\n",
            Iabc_M0.Ia, Iabc_M0.Ib, Iabc_M0.Ic,
            Iqd_M0.Id, Iqd_M0.Iq,
            Mech_RPM, Mech_Angle, Elec_Angle,
@@ -134,13 +143,18 @@ static void UART_PrintTelemetry(void)
            Diag_RawVolt[0], Diag_RawVolt[1], Diag_RawVolt[2],
            (unsigned int)Diag_CurrentFault,
            (unsigned int)g_lcd_enable,
-           /* 直流有刷电机(第二台电机,Bsp/dc_motor.c)遥测: 追加在原有字段末尾,
-              不改动前面任何已有字段的顺序/含义。注意 upmachine/foc_uart_host.py 的
-              parse_tel() 是按精确字段数校验的(len(values)!=len(TEL_FIELDS)直接判无效),
-              这里加字段后TEL_FIELDS必须同步加上新字段,两边不同步会导致$TEL整行解析失败
-              (不是"忽略新字段"这种宽松兼容,是直接解析不出来)。 */
-           DCMotor_Mech_Angle, DCMotor_Mech_RPM, DCMotor_PWM_Duty,
-           (unsigned int)g_dc_motor_mode);
+           /* 第二台直流有刷电机(Bsp/dc_motor.c)当前工程里尚未实现/未接入,
+              这里先占位输出0,只是为了让字段数量对上upmachine的TEL_FIELDS(42个),
+              否则parse_tel()里的长度校验会直接返回None,导致波形区/读数栏永远
+              收不到解析后的数据(哪怕原始$TEL,...文本已经正确收到)。等
+              dc_motor.c真正接入后,把这4个0替换成真实的DcAngle/DcRPM/DcDuty/DcMode。 */
+           0.0f, 0.0f, 0.0f, 0U,
+           /* SMO调试字段(追加在末尾,upmachine两处TEL_FIELDS要同步加):
+              SmoTheta=估计电角度(rad,0~2π) SmoWe=估计电角速度(rad/s)
+              SmoRPM=换算成机械RPM,和RPM字段同单位可直接对比
+              SmoEa/SmoEb=估计反电动势alpha/beta SmoVfA/SmoVfB=PLL输入(滑模面低通后) */
+           Theta_fore_New, We_fore, smo_rpm,
+           Eab[0], Eab[1], Vab_Filter[0], Vab_Filter[1]);
 }
 
 static void UART_PrintRaw(void)
@@ -169,8 +183,6 @@ static void UART_PrintPid(void)
     UART_PrintOnePid("IQ",  &PID_Current_Q);
     UART_PrintOnePid("SPD", &PID_Speed);
     UART_PrintOnePid("POS", &PID_Position);
-    UART_PrintOnePid("DCSPD", &PID_DC_Speed);
-    UART_PrintOnePid("DCPOS", &PID_DC_Position);
 }
 
 static PIDController* UART_GetPidByName(const char *name)
@@ -186,14 +198,6 @@ static PIDController* UART_GetPidByName(const char *name)
     if (strcmp(name, "SPD") == 0)
     {
         return &PID_Speed;
-    }
-    if (strcmp(name, "DCSPD") == 0)
-    {
-        return &PID_DC_Speed;
-    }
-    if (strcmp(name, "DCPOS") == 0)
-    {
-        return &PID_DC_Position;
     }
     if (strcmp(name, "POS") == 0)
     {
@@ -234,10 +238,7 @@ static void UART_ApplyPidParam(PIDController *pid, const PID_Param_t *param)
    电机运行中调用会让FOC ISR失步,与0x87(重新标定)的限制同理 */
 static void UART_SavePid(void)
 {
-    /* 两台电机共用同一颗TIM10定时器节拍(FOC_ModeDispatch/DCMotor_ControlTick都挂在这个ISR里),
-       Flash擦除期间CPU最坏卡住约2s会让这颗ISR整体失步,不管是主BLDC还是直流电机在转都会受影响,
-       所以两边都要求处于IDLE才放行,只查g_foc_mode会漏掉"BLDC空闲但直流电机还在转"这种情况 */
-    if ((g_foc_mode != FOC_MODE_IDLE) || (g_dc_motor_mode != DC_MOTOR_MODE_IDLE))
+    if (g_foc_mode != FOC_MODE_IDLE)
     {
         printf("$ERR,PIDSAVE,BUSY#\r\n");
         return;
@@ -255,7 +256,7 @@ static void UART_SavePid(void)
 
 static void UART_LoadPid(void)
 {
-    if ((g_foc_mode != FOC_MODE_IDLE) || (g_dc_motor_mode != DC_MOTOR_MODE_IDLE))
+    if (g_foc_mode != FOC_MODE_IDLE)
     {
         printf("$ERR,PIDLOAD,BUSY#\r\n");
         return;
@@ -327,13 +328,6 @@ static void UART_ProcessAsciiCommand(char *line)
     {
         FOC_SetMode((uint8_t)atoi(loop));
         printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
-        return;
-    }
-
-    if ((token != NULL) && (strcmp(token, "$DCMODE") == 0) && (loop != NULL))
-    {
-        DCMotor_SetMode((uint8_t)atoi(loop));
-        printf("$ACK,DCMODE,%u#\r\n", (unsigned int)g_dc_motor_mode);
         return;
     }
 
@@ -542,11 +536,6 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
         printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
       break;
 
-      case PC_CMD_SET_DC_MODE:
-        DCMotor_SetMode(data2);
-        printf("$ACK,DCMODE,%u#\r\n", (unsigned int)g_dc_motor_mode);
-      break;
-
       case PC_CMD_DISARM:
         FOC_SetMode((uint8_t)FOC_MODE_IDLE);
         printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
@@ -678,6 +667,16 @@ void UART_ProcessInTimer(void)
           frameHandler_one.rxBuff[DOWN_FRAME_HEAD2_POS] = rx1_frame_buffer[i];
           frameHandler_one.state = WAIT_DEVICE;
         }
+        else if(rx1_frame_buffer[i] == 0xFE)
+        {
+          /* 允许 0xFE 0xFE 0xEF ... 这类帧头重复的情况下重新同步,而不是直接丢帧回到WAIT_HEAD1
+           * 导致这个0xFE被跳过。 */
+          frameHandler_one.state = WAIT_HEAD2;
+        }
+        else
+        {
+          frameHandler_one.state = WAIT_HEAD1;
+        }
         break;
 
       case WAIT_DEVICE:
@@ -706,6 +705,13 @@ void UART_ProcessInTimer(void)
           frameHandler_one.rxBuff[DOWN_FRAME_TAIL1_POS] = rx1_frame_buffer[i];
           frameHandler_one.state = WAIT_TAIL2;
         }
+        else
+        {
+          /* 帧尾1不匹配说明这一帧已经错位,必须重新同步到WAIT_HEAD1,
+           * 否则状态机会永远卡在WAIT_TAIL1,后续所有正确帧都无法被识别,
+           * 只能靠重新上电复位状态机才能恢复通信。 */
+          frameHandler_one.state = WAIT_HEAD1;
+        }
         break;
 
       case WAIT_TAIL2:
@@ -714,6 +720,11 @@ void UART_ProcessInTimer(void)
           frameHandler_one.rxBuff[DOWN_FRAME_TAIL2_POS] = rx1_frame_buffer[i];
           frameHandler_one.frameOK = true;
           frame.flag = 1;
+          frameHandler_one.state = WAIT_HEAD1;
+        }
+        else
+        {
+          /* 同上,帧尾2不匹配也必须复位状态机,避免永久卡死。 */
           frameHandler_one.state = WAIT_HEAD1;
         }
         break;

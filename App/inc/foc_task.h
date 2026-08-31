@@ -3,10 +3,10 @@
 
 #include "main.h"
 
-/* TIM10实测: 168MHz/(84分频)=2MHz计数时钟, ARR=1000 => 更新频率约2kHz(约0.5ms/拍)。
-   该值同时喂给BLDC侧PID的dt形参、Mech_RPM/开环电角度积分,以及Bsp/dc_motor.c(直流电机控制,
-   同样挂在TIM10这拍里)的dt形参和测速积分,以后如果改了TIM10的Prescaler/Period,
-   这一处改了两边都跟着变,不用分别改。 */
+/* TIM10实测: 168MHz/(84分频)=2MHz计数时钟, ARR=1000 => 更新频率约2kHz(约0.5ms/拍),
+   而不是注释原来假设的1kHz/1ms, 这里改成与硬件实际节拍一致的值。
+   该值同时喂给下面PID的dt形参和Mech_RPM/开环电角度积分,三处必须与TIM10真实周期保持一致,
+   以后如果改了TIM10的Prescaler/Period,要同步改这里。 */
 #define FOC_LOOP_DT_S                    0.0005f
 
 /* FOC 运行模式(运行时可通过UART切换), 上电默认IDLE(PWM零输出), 避免上电即自动转动 */

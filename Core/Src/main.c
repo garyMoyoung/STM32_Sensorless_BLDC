@@ -59,7 +59,6 @@
 #include "current_sense.h"
 #include "foc_task.h"
 #include "pid_storage.h"
-#include "dc_motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -121,7 +120,10 @@ float b = 2*3.1415926f*fc*Ts;
 float a=0.1556;//b/(b+1)
 uint8_t SpeedLoopCounter;
 float We;
-float R = 0.6 , Ld = 0.000558 , Lq = 0.000558 , T = 0.0007255 , flux = 0.005753;
+/* T必须和实际调用SMO()的控制节拍(FOC_LOOP_DT_S,当前0.5ms)一致,否则电流预测模型
+   (Iab_fore_New的离散化)和PLL积分步长(We_fore*T)都会和真实拍频对不上,估算失准。
+   之前这里硬编码的0.0007255是历史遗留值,和FOC_LOOP_DT_S对不上。 */
+float R = 0.6 , Ld = 0.000558 , Lq = 0.000558 , T = FOC_LOOP_DT_S , flux = 0.005753;
 float Iab_fore_New[2] , Iab_fore_Last[2];
 float h = 2.5 , Vab[2] , Vab_Filter[2];
 float Eab[2];
@@ -149,8 +151,6 @@ PIDController PID_Current_D;
 PIDController PID_Current_Q;
 PIDController PID_Speed;
 PIDController PID_Position;
-PIDController PID_DC_Speed;
-PIDController PID_DC_Position;
 PID_Param_t Id_pid;
 PID_Param_t Iq_pid;
 PID_Param_t Speed_pid;
@@ -314,7 +314,6 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
-  MX_TIM4_Init();
   MX_UART4_Init();
   MX_UART5_Init();
   MX_USART1_UART_Init();
@@ -328,6 +327,8 @@ int main(void)
   __HAL_UART_ENABLE_IT(&huart1,UART_IT_IDLE);//??????
   // __HAL_UART_ENABLE_IT(&huart1,UART_IT_RXNE);//??????
   HAL_UART_Receive_DMA(&huart1,rx1_buffer,BUFFER_SIZE);
+  printf("$BOOT#\r\n");
+  printf("$BOOT#\r\n");
 
   __HAL_TIM_CLEAR_IT(&htim3,TIM_IT_UPDATE);
   HAL_TIM_Base_Start_IT(&htim3);
@@ -362,24 +363,14 @@ int main(void)
      只是给积分饱和留个安全上限,不代表调好的增益,具体还要上机重新试凑Ki/该限幅。 */
   PID_Init(&PID_Speed,15.0f,-15.0f,375.0f);
   PID_Init(&PID_Position,15.0f,-15.0f,375.0f);
-  /* 直流有刷电机(第二台电机,Bsp/dc_motor.c): PID_DC_Speed输出直接就是占空比,范围[-1,1];
-     PID_DC_Position输出是喂给PID_DC_Speed的转速目标(RPM),和主BLDC位置环同一套限幅惯例
-     (±15/maxIntegral=375),具体量级要按这台直流电机实际的减速比/空载转速上机重新试。 */
-  PID_Init(&PID_DC_Speed,1.0f,-1.0f,25.0f);
-  PID_Init(&PID_DC_Position,15.0f,-15.0f,375.0f);
   PID_param_set(&PID_Current_D,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Current_Q,0.0517f,0.0f,0.0f);
   PID_param_set(&PID_Speed,0.0f,0.0f,0.0f);
   PID_param_set(&PID_Position,0.0f,0.0f,0.0f);
-  PID_param_set(&PID_DC_Speed,0.0f,0.0f,0.0f);
-  PID_param_set(&PID_DC_Position,0.0f,0.0f,0.0f);
   PID_Current_D.target = 0.0f;
   PID_Current_Q.target = 0.0f;
   PID_Speed.target = 1000.0f;
   PID_Position.target = 0.0f;
-  PID_DC_Speed.target = 0.0f;
-  PID_DC_Position.target = 0.0f;
-  DCMotor_Init();
   /* 若Flash里存过上位机保存的PID参数则覆盖上面的编译期默认值;Flash为空/校验失败时PidStorage_Load
      直接返回0,不改动上面刚设好的默认参数 */
   PidStorage_Load();
@@ -390,7 +381,9 @@ int main(void)
   /* 放在TIM10中断使能之后再启动看门狗,避免上面AS5600_Init/Current_CalibrateOffset
    * 等阻塞初始化(最坏情况下可能到几百ms)在看门狗启动前就已完成,不会被误触发复位;
    * 之后每拍喂狗都在TIM10 ISR里进行,和这里的启动顺序无关。 */
-  IWDG_EmergencyInit();
+  /* 临时禁用: 排查"重新启用看门狗后板子卡死不亮"的问题,先确认是否是看门狗导致。
+     确认后记得恢复。 */
+  // IWDG_EmergencyInit();
 
   /* USER CODE END 2 */
 
@@ -516,7 +509,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     IWDG->KR = IWDG_KR_RELOAD;
 
     FOC_ModeDispatch();
-    DCMotor_ControlTick();
     Key_read();
     if(++TIM10_task_CNT >= 1000)
     {
@@ -537,8 +529,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         }
 
 
-
-        // ???????????????????????????????????????????????
         if (Key[i].Time_Count_Flag == 1 && Key[i].Press_Time_Count >= LONG_MS && Key[i].Key_Long_Flag == 0) {
           Key[i].Key_Long_Flag = 1;
           Key[i].mode = 2;

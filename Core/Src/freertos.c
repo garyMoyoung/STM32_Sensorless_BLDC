@@ -31,6 +31,17 @@
 #include "foc_task.h"
 #include "lvgl.h"
 #include "lvgl_demo_task.h"
+#include <stdio.h>
+
+/* 非弱实现:堆分配失败(configTOTAL_HEAP_SIZE不够)时会调用到这里,打印后死循环,
+   比静默返回NULL好排查得多。 */
+void vApplicationMallocFailedHook(void)
+{
+  printf("$ERR,MALLOCFAILED#\r\n");
+  for (;;)
+  {
+  }
+}
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -151,6 +162,15 @@ void MX_FREERTOS_Init(void) {
   // IMU9250TaskHandle = osThreadNew(IMU9250Task_Entry, NULL, &IMU9250_task_attributes);
   UARTTaskHandle = osThreadNew(UARTTask_Entry, NULL, &UART_task_attributes);
   // AngleTaskHandle = osThreadNew(AngleTask_Entry, NULL, &Angle_task_attributes);
+
+  /* configTOTAL_HEAP_SIZE不够时osThreadNew会静默返回NULL(之前排查"能发不能收"就是
+     卡在这里:堆不够,UARTTaskHandle==NULL,UART任务从未运行)。这里显式检查并打印,
+     避免下次再静默失败几个小时都发现不了。 */
+  if ((LcdTaskHandle == NULL) || (LvglTimerTaskHandle == NULL) || (UARTTaskHandle == NULL))
+  {
+    printf("$ERR,TASKCREATE,Lcd=%p,Lvgl=%p,Uart=%p#\r\n",
+           (void *)LcdTaskHandle, (void *)LvglTimerTaskHandle, (void *)UARTTaskHandle);
+  }
 
   /* USER CODE END RTOS_THREADS */
 

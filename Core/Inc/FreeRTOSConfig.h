@@ -68,7 +68,12 @@
 #define configTICK_RATE_HZ                       ((TickType_t)1000)
 #define configMAX_PRIORITIES                     ( 56 )
 #define configMINIMAL_STACK_SIZE                 ((uint16_t)128)
-#define configTOTAL_HEAP_SIZE                    ((size_t)15360)
+/* 15360字节在加入LvglTimerTask的2048*4栈之后已经不够用(Lcd 4096 + LvglTimer 8192 +
+   UART 4096 = 16384,还没算TCB/队列开销),会导致UARTTaskHandle = osThreadNew(...)
+   静默返回NULL(未检查返回值),UART任务从未真正运行,表现为"能发不能收"。上调到
+   24576字节,并在下面开启 configUSE_MALLOC_FAILED_HOOK 以便下次堆不够时能立刻发现。 */
+#define configTOTAL_HEAP_SIZE                    ((size_t)24576)
+#define configUSE_MALLOC_FAILED_HOOK             1
 #define configMAX_TASK_NAME_LEN                  ( 16 )
 #define configUSE_TRACE_FACILITY                 1
 #define configUSE_16_BIT_TICKS                   0
