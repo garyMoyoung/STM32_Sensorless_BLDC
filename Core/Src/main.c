@@ -366,15 +366,16 @@ int main(void)
      [-maxIntegral,+maxIntegral],0意味着每次调用后积分项都被强制清零,不管上位机把Ki设成多少,
      速度环/位置环的I都不可能真正累积生效。改成和电流环同一比例(maxOutput*25)的非零值,
      只是给积分饱和留个安全上限,不代表调好的增益,具体还要上机重新试凑Ki/该限幅。 */
-  PID_Init(&PID_Speed,15.0f,-15.0f,375.0f);
+  /* 速度环输出直接作为Iq目标，限制在已完成台架验证的安全电流范围内。 */
+  PID_Init(&PID_Speed,1.0f,-1.0f,25.0f);
   PID_Init(&PID_Position,15.0f,-15.0f,375.0f);
   PID_param_set(&PID_Current_D,0.0517f,0.1f,0.0f);
   PID_param_set(&PID_Current_Q,0.0517f,0.1f,0.0f);
-  PID_param_set(&PID_Speed,0.0f,0.0f,0.0f);
+  PID_param_set(&PID_Speed,0.008f,0.0f,0.0f);
   PID_param_set(&PID_Position,0.0f,0.0f,0.0f);
   PID_Current_D.target = 0.0f;
   PID_Current_Q.target = 0.0f;
-  PID_Speed.target = 1000.0f;
+  PID_Speed.target = 500.0f;
   PID_Position.target = 0.0f;
   /* 若Flash里存过上位机保存的PID参数则覆盖上面的编译期默认值;Flash为空/校验失败时PidStorage_Load
      直接返回0,不改动上面刚设好的默认参数 */

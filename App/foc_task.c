@@ -38,9 +38,14 @@ extern PID_Param_t Speed_pid;
 static float speed_target_ramped = 0.0f;
 
 #define MOTOR_ELECTRICAL_ANGLE_DIRECTION (-1.0f)
-#define ELECTRICAL_ALIGN_UD_V            0.25f
+#define MOTOR_SPEED_TO_IQ_DIRECTION       (-1.0f)
+#define SPEED_STARTUP_DURATION_MS         300U
+#define SPEED_STARTUP_IQ_A                0.5f
+#define SPEED_STARTUP_TICKS               ((uint32_t)(((float)SPEED_STARTUP_DURATION_MS * 0.001f / FOC_LOOP_DT_S) + 0.5f))
+#define ELECTRICAL_ALIGN_UD_V            0.8f
 #define ELECTRICAL_ALIGN_TICKS            1000U
 #define CURRENT_ADC_SATURATION_MARGIN    8U
+static uint32_t speed_startup_tick = 0U;
 
 typedef enum
 {
@@ -188,6 +193,11 @@ static void FOC_ElectricalAlignment_Step(void)
     {
         electrical_angle_offset = _normalizeAngle(-MOTOR_ELECTRICAL_ANGLE_DIRECTION *
                                                    MOTOR_POLE_PAIRS * Mech_Angle);
+        prev_speed_angle = Mech_Angle;
+        prev_speed_valid = 0U;
+        Mech_RPM = 0.0f;
+        Mech_RPM_Filtered = 0.0f;
+        speed_target_ramped = 0.0f;
         electrical_angle_aligned = 1U;
         electrical_align_state = ELECTRICAL_ALIGN_DONE;
         electrical_align_result_pending = 1U;
@@ -260,12 +270,44 @@ static void FOC_SpeedLoop_Step(void)
     Clarke_transform(&Iabc_M0,&Ialpbe_M0);
     Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
-    speed_target_now = SpeedTargetRamp_Update(PID_Speed.target);
-    /* 这里必须保持和机械正转方向/电流 dq 正定向一致：
-       正转时希望产生正的Iq扭矩，速度误差为正则 PID_Speed.output 也应为正，
-       不能再额外乘一个 '-'，否则在 forward/negative 两个象限中会被强制反向
-       施力，表现为电源负载急剧冲顶/机械方向相反、速度环上下振荡。 */
-    PID_Current_Q.target = PID_Position_Calculate(&PID_Speed,speed_target_now,Mech_RPM_Filtered,FOC_LOOP_DT_S);
+    if (speed_startup_tick < SPEED_STARTUP_TICKS)
+    {
+        /* 起动时先用已验证的恒Iq让转子脱离静摩擦，避免速度反馈尚未稳定时失步。 */
+        PID_Reset(&PID_Speed);
+        if (PID_Speed.target > 0.0f)
+        {
+            PID_Current_Q.target = MOTOR_SPEED_TO_IQ_DIRECTION * SPEED_STARTUP_IQ_A;
+        }
+        else if (PID_Speed.target < 0.0f)
+        {
+            PID_Current_Q.target = -MOTOR_SPEED_TO_IQ_DIRECTION * SPEED_STARTUP_IQ_A;
+        }
+        else
+        {
+            PID_Current_Q.target = 0.0f;
+        }
+        speed_startup_tick++;
+    }
+    else
+    {
+        /* 实测机械正RPM由负Iq产生，因此速度PID输出需要映射到相反的Iq符号。 */
+        if (speed_startup_tick == SPEED_STARTUP_TICKS)
+        {
+            /* 起动扭矩已让转子转动，速度斜坡从实际转速继续，避免PID接管瞬间反向制动。 */
+            speed_target_ramped = Mech_RPM_Filtered;
+            speed_startup_tick++;
+        }
+        speed_target_now = SpeedTargetRamp_Update(PID_Speed.target);
+        if (speed_startup_tick == (SPEED_STARTUP_TICKS + 1U))
+        {
+            /* 首次交给PID时消除微分项的设定值阶跃。 */
+            PID_Speed.lastError = speed_target_now - Mech_RPM_Filtered;
+            speed_startup_tick++;
+        }
+        PID_Current_Q.target = MOTOR_SPEED_TO_IQ_DIRECTION *
+                                PID_Position_Calculate(&PID_Speed, speed_target_now,
+                                                       Mech_RPM_Filtered, FOC_LOOP_DT_S);
+    }
 
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
@@ -300,7 +342,10 @@ static void FOC_PositionLoop_Step(void)
     wrapped_err = AngleErrorWrap(PID_Position.target - Mech_Angle);
     PID_Speed.target = PID_Position_Calculate(&PID_Position, Mech_Angle + wrapped_err, Mech_Angle, FOC_LOOP_DT_S);
 
-    PID_Current_Q.target = PID_Position_Calculate(&PID_Speed,SpeedTargetRamp_Update(PID_Speed.target),Mech_RPM_Filtered,FOC_LOOP_DT_S);
+    PID_Current_Q.target = MOTOR_SPEED_TO_IQ_DIRECTION *
+                            PID_Position_Calculate(&PID_Speed,
+                                                   SpeedTargetRamp_Update(PID_Speed.target),
+                                                   Mech_RPM_Filtered, FOC_LOOP_DT_S);
 
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);
@@ -419,8 +464,22 @@ void FOC_ModeDispatch(void)
         {
             PID_Current_Q.target = 0.0f;
         }
-        speed_target_ramped = Mech_RPM; /* 切换到速度/位置模式时从当前实际转速开始斜坡,避免突变 */
-        Mech_RPM_Filtered = Mech_RPM; /* 同步重置滤波器初值,避免残留旧值导致误差瞬间跳变 */
+        if ((g_foc_mode == FOC_MODE_SPEED) || (g_foc_mode == FOC_MODE_POSITION))
+        {
+            /* 对齐后的转子应从静止起动；不使用对齐/上一模式遗留的瞬时测速值。 */
+            prev_speed_angle = Mech_Angle;
+            prev_speed_valid = 0U;
+            Mech_RPM = 0.0f;
+            Mech_RPM_Filtered = 0.0f;
+            speed_target_ramped = 0.0f;
+            speed_startup_tick = (g_foc_mode == FOC_MODE_SPEED) ? 0U : SPEED_STARTUP_TICKS;
+        }
+        else
+        {
+            speed_target_ramped = Mech_RPM;
+            Mech_RPM_Filtered = Mech_RPM;
+            speed_startup_tick = SPEED_STARTUP_TICKS;
+        }
         FOC_OutputZero();
         if (g_foc_mode == FOC_MODE_OPEN_LOOP)
         {
