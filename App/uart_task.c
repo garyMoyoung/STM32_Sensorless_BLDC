@@ -95,6 +95,11 @@ static uint16_t uart2_speed_debug_cnt = 0;
 static uint8_t uart2_adc_tx_buf[48];
 static volatile uint8_t uart2_adc_tx_busy = 0U;
 
+#define POSITION_TARGET_DEGREE_MAX        360.0f
+#define POSITION_TARGET_DEGREE_TO_RAD     0.01745329252f
+#define POSITION_TARGET_RAD_TO_DEGREE     57.29577951f
+#define POSITION_TARGET_RAD_MAX           6.283185307f
+
 void UART1_SendByte(uint8_t ch)
 {
     (void)HAL_UART_Transmit(&huart1, &ch, 1U, 50U);
@@ -178,8 +183,15 @@ static void UART_PrintDebug(void)
 
 static void UART_PrintOnePid(const char *name, const PIDController *pid)
 {
+    float target = pid->target;
+
+    if (strcmp(name, "POS") == 0)
+    {
+        target *= POSITION_TARGET_RAD_TO_DEGREE;
+    }
+
     printf("$PID,%s,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f#\r\n",
-           name, pid->kp, pid->ki, pid->kd, pid->target, pid->output, pid->integral);
+           name, pid->kp, pid->ki, pid->kd, target, pid->output, pid->integral);
 }
 
 static void UART_PrintPid(void)
@@ -321,8 +333,16 @@ static void UART_ProcessAsciiCommand(char *line)
         ki = (float)atof(ki_str);
         kd = (float)atof(kd_str);
 
+        if ((strcmp(loop, "POS") == 0) &&
+            ((target < 0.0f) || (target > POSITION_TARGET_DEGREE_MAX)))
+        {
+            printf("$ERR,PID,POS_DEG_RANGE#\r\n");
+            return;
+        }
+
         PID_param_set(pid, kp, ki, kd);
-        pid->target = target;
+        pid->target = (strcmp(loop, "POS") == 0) ?
+                      (target * POSITION_TARGET_DEGREE_TO_RAD) : target;
         pid_temp_initialized = 0;
         printf("$ACK,PID,%s,%.5f,%.5f,%.5f,%.5f#\r\n", loop, target, kp, ki, kd);
         UART_PrintPid();
@@ -653,7 +673,23 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
       break;
 
       case 0x05:
-        UART_AdjustPidParam(&Position_temp, data2, step_size);
+        if ((data2 == 0x04) || (data2 == 0x14))
+        {
+          UART_AdjustPidParam(&Position_temp, data2,
+                              step_size * POSITION_TARGET_DEGREE_TO_RAD);
+          if (Position_temp.target < 0.0f)
+          {
+            Position_temp.target += POSITION_TARGET_RAD_MAX;
+          }
+          else if (Position_temp.target > POSITION_TARGET_RAD_MAX)
+          {
+            Position_temp.target -= POSITION_TARGET_RAD_MAX;
+          }
+        }
+        else
+        {
+          UART_AdjustPidParam(&Position_temp, data2, step_size);
+        }
         pid_to_apply = &PID_Position;
         param_to_apply = &Position_temp;
       break;

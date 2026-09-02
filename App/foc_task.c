@@ -42,6 +42,12 @@ static float speed_target_ramped = 0.0f;
 #define SPEED_STARTUP_DURATION_MS         300U
 #define SPEED_STARTUP_IQ_A                0.5f
 #define SPEED_STARTUP_TICKS               ((uint32_t)(((float)SPEED_STARTUP_DURATION_MS * 0.001f / FOC_LOOP_DT_S) + 0.5f))
+#define POSITION_HOLD_DEADBAND_RAD        0.01745329252f
+#define POSITION_HOLD_WINDOW_RAD          0.2617993878f
+#define POSITION_HOLD_IQ_MIN_A            0.7f
+#define POSITION_HOLD_IQ_MAX_A            1.2f
+#define POSITION_HOLD_IQ_PER_RAD          1.5f
+#define POSITION_HOLD_DAMPING_A_PER_RPM   0.005f
 #define ELECTRICAL_ALIGN_UD_V            0.8f
 #define ELECTRICAL_ALIGN_TICKS            1000U
 #define CURRENT_ADC_SATURATION_MARGIN    8U
@@ -255,6 +261,37 @@ static float SpeedTargetRamp_Update(float target)
     return speed_target_ramped;
 }
 
+static float PositionHoldIqTarget(float position_error)
+{
+    float torque_command;
+
+    if (fabsf(position_error) <= POSITION_HOLD_DEADBAND_RAD)
+    {
+        return 0.0f;
+    }
+
+    torque_command = position_error * POSITION_HOLD_IQ_PER_RAD -
+                     Mech_RPM_Filtered * POSITION_HOLD_DAMPING_A_PER_RPM;
+    if (torque_command > POSITION_HOLD_IQ_MAX_A)
+    {
+        torque_command = POSITION_HOLD_IQ_MAX_A;
+    }
+    else if (torque_command < -POSITION_HOLD_IQ_MAX_A)
+    {
+        torque_command = -POSITION_HOLD_IQ_MAX_A;
+    }
+    else if ((torque_command > 0.0f) && (torque_command < POSITION_HOLD_IQ_MIN_A))
+    {
+        torque_command = POSITION_HOLD_IQ_MIN_A;
+    }
+    else if ((torque_command < 0.0f) && (torque_command > -POSITION_HOLD_IQ_MIN_A))
+    {
+        torque_command = -POSITION_HOLD_IQ_MIN_A;
+    }
+
+    return MOTOR_SPEED_TO_IQ_DIRECTION * torque_command;
+}
+
 /* 速度环: 速度PID输出作为Iq目标,再走电流环。SPD target 由上位机设置(PID_Speed.target)。 */
 static void FOC_SpeedLoop_Step(void)
 {
@@ -324,7 +361,7 @@ static void FOC_SpeedLoop_Step(void)
 }
 
 /* 位置环: 位置PID(角度误差按最短路径归一化)输出作为速度目标,再走速度环->电流环。
- * POS target 由上位机设置(PID_Position.target,单位: 机械角 rad,范围不限,内部按最短路径归一化)。 */
+ * POS target 内部单位为机械角rad；UART接口负责把用户输入的0~360度转换为rad。 */
 static void FOC_PositionLoop_Step(void)
 {
     float wrapped_err;
@@ -340,12 +377,23 @@ static void FOC_PositionLoop_Step(void)
     Park_transform(&Iqd_M0,&Ialpbe_M0,Elec_Angle);
 
     wrapped_err = AngleErrorWrap(PID_Position.target - Mech_Angle);
-    PID_Speed.target = PID_Position_Calculate(&PID_Position, Mech_Angle + wrapped_err, Mech_Angle, FOC_LOOP_DT_S);
-
-    PID_Current_Q.target = MOTOR_SPEED_TO_IQ_DIRECTION *
-                            PID_Position_Calculate(&PID_Speed,
-                                                   SpeedTargetRamp_Update(PID_Speed.target),
-                                                   Mech_RPM_Filtered, FOC_LOOP_DT_S);
+    if (fabsf(wrapped_err) <= POSITION_HOLD_WINDOW_RAD)
+    {
+        /* 近目标时直接闭合位置到Iq，保证受外力拨动后仍有足够回正力矩。 */
+        PID_Reset(&PID_Speed);
+        PID_Speed.target = 0.0f;
+        speed_target_ramped = 0.0f;
+        PID_Current_Q.target = PositionHoldIqTarget(wrapped_err);
+    }
+    else
+    {
+        PID_Speed.target = PID_Position_Calculate(&PID_Position, Mech_Angle + wrapped_err,
+                                                   Mech_Angle, FOC_LOOP_DT_S);
+        PID_Current_Q.target = MOTOR_SPEED_TO_IQ_DIRECTION *
+                                PID_Position_Calculate(&PID_Speed,
+                                                       SpeedTargetRamp_Update(PID_Speed.target),
+                                                       Mech_RPM_Filtered, FOC_LOOP_DT_S);
+    }
 
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);
     Udq_M0.Uq = PID_Position_Calculate(&PID_Current_Q,PID_Current_Q.target,Iqd_M0.Iq,FOC_LOOP_DT_S);

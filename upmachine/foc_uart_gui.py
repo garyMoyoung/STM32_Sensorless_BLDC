@@ -332,7 +332,8 @@ class FocGui:
         for r, loop in enumerate(LOOP_ORDER):
             box = ttk.LabelFrame(tab, text=LOOP_LABELS[loop])
             box.pack(fill="x", padx=6, pady=5)
-            fields = [("Kp", "kp"), ("Ki", "ki"), ("Kd", "kd"), ("Target", "target")]
+            target_label = "Target(°)" if loop == "POS" else "Target"
+            fields = [("Kp", "kp"), ("Ki", "ki"), ("Kd", "kd"), (target_label, "target")]
             for c, (label, key) in enumerate(fields):
                 cell = ttk.Frame(box, style="Panel.TFrame")
                 cell.grid(row=0, column=c, padx=3, pady=4)
