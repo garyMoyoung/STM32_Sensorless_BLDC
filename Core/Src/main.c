@@ -372,10 +372,10 @@ int main(void)
   PID_param_set(&PID_Current_D,0.0517f,0.1f,0.0f);
   PID_param_set(&PID_Current_Q,0.0517f,0.1f,0.0f);
   PID_param_set(&PID_Speed,0.008f,0.0f,0.0f);
-  PID_param_set(&PID_Position,0.0f,0.0f,0.0f);
+  PID_param_set(&PID_Position,30.0f,0.0f,0.0f);
   PID_Current_D.target = 0.0f;
   PID_Current_Q.target = 0.0f;
-  PID_Speed.target = 500.0f;
+  PID_Speed.target = 0.0f;
   PID_Position.target = 0.0f;
   /* 若Flash里存过上位机保存的PID参数则覆盖上面的编译期默认值;Flash为空/校验失败时PidStorage_Load
      直接返回0,不改动上面刚设好的默认参数 */
