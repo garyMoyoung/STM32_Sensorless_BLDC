@@ -45,7 +45,7 @@ static float speed_target_ramped = 0.0f;
 #define POSITION_HOLD_DEADBAND_RAD        0.01745329252f
 #define POSITION_HOLD_WINDOW_RAD          0.2617993878f
 #define POSITION_HOLD_IQ_MIN_A            0.7f
-#define POSITION_HOLD_IQ_MAX_A            1.2f
+#define POSITION_HOLD_IQ_MAX_A            2.5f
 #define POSITION_HOLD_IQ_PER_RAD          1.5f
 #define POSITION_HOLD_DAMPING_A_PER_RPM   0.005f
 #define ELECTRICAL_ALIGN_UD_V            0.8f
