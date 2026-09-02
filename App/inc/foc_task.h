@@ -29,6 +29,13 @@ void FOC_SetMode(uint8_t mode);
 /* 供UART命令(0x87 RECALIBRATE)调用的重新标零入口: 1=已执行标定, 0=非IDLE模式,拒绝执行 */
 uint8_t FOC_RequestRecalibration(void);
 
+/* 电角度对齐: 仅允许IDLE状态请求。TIM10控制周期会以受限Ud锁定转子并自动计算偏置。 */
+uint8_t FOC_RequestElectricalAlignment(void);
+uint8_t FOC_IsElectricalAlignmentValid(void);
+uint8_t FOC_TakeElectricalAlignmentResult(float *offset_rad);
+/* 读取并清除最近一次导致闭环关断的 ADC 饱和采样。 */
+uint8_t FOC_TakeCurrentSaturationTrip(uint16_t raw_adc[3]);
+
 void AngleTask_Entry(void *argument);
 
 #endif

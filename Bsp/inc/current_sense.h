@@ -8,11 +8,20 @@
  * INA240A2QPWRQ1, 增益50V/V, VS供电为+3.3V(不是母线电压)。
  * 采样电阻实物焊接为 5mΩ(原理图丝印 R89/R173~R177 标注 1mΩ,与实物不符,以实物为准)。
  */
-#define CURRENT_ADC_REF_VOLTAGE      3.3f
+/*
+ * ADC1 的 VREF+ 接到 U5 产生的独立基准，而不是 3V3。
+ * 板上实测 VREF+=2.61V；因此 ADC 原始码值到电压、电流的换算必须使用此值。
+ */
+#define CURRENT_ADC_REF_VOLTAGE      2.61f
 #define CURRENT_ADC_FULL_SCALE       4096.0f
 #define CURRENT_INA240_GAIN          50.0f
 #define CURRENT_SHUNT_RESISTOR_OHM   0.005f
 #define CURRENT_ADC_TO_AMP           (CURRENT_ADC_REF_VOLTAGE / CURRENT_ADC_FULL_SCALE / (CURRENT_INA240_GAIN * CURRENT_SHUNT_RESISTOR_OHM))
+/*
+ * 板上分流电阻与 INA240 的 IN+/IN- 接法和 FOC 的“相电流流向电机为正”约定相反。
+ * 仅反转三个相电流的符号，保持 ADC 通道与 PWM 相的对应关系不变。
+ */
+#define CURRENT_SENSE_POLARITY        (-1.0f)
 #define CURRENT_OFFSET_DEFAULT_ADC   2048U
 /* 标定出的零电流偏置若偏离 CURRENT_OFFSET_DEFAULT_ADC 超过此阈值(约0.72V),视为该相模拟前端异常。
    实测三相INA240 REF基准点稳定偏在约2736(不是理想VDD/2=2048),且A/B/C三相偏移量一致(约+690),

@@ -441,6 +441,8 @@ class FocGui:
             side="left", expand=True, fill="x", padx=(6, 0))
         ttk.Button(read_box, text="重新标定电流零点",
                    command=lambda: self._send_cmd(proto.CMD_RECALIBRATE)).pack(fill="x", padx=6, pady=(0, 6))
+        ttk.Button(read_box, text="电角度对齐（仅 IDLE）",
+                   command=lambda: self._send_cmd(proto.CMD_ELECTRICAL_ALIGN)).pack(fill="x", padx=6, pady=(0, 6))
 
         dbg_box = ttk.LabelFrame(tab, text="调试计数 ($DBG)")
         dbg_box.pack(fill="x", padx=6, pady=5)

@@ -12,8 +12,9 @@ extern Key_Struct_init Key[3];
  */
 void PWM_TIM2_Set(uint16_t pwm_a,uint16_t pwm_b,uint16_t pwm_c)
 {
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwm_a);
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_b);
+  /* Software A/B exchange: virtual phase A drives physical phase B and vice versa. */
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, pwm_b);
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, pwm_a);
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pwm_c);
 }
 

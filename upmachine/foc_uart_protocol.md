@@ -107,6 +107,7 @@ $WPID,DCSPD,500,0.01,0.001,0#
 | `0x85` | 读取调试计数 | 0 | 0 | 返回 `$DBG` |
 | `0x86` | 读取原始 ADC | 0 | 0 | 返回一帧 `$RAW`（原始计数/电压/标定偏置/故障位） |
 | `0x87` | 重新标定电流零点 | 0 | 0 | 仅 IDLE 模式下有效，返回 `$ACK,CAL#` + `$RAW`，忙时返回 `$ERR,CAL,BUSY#` |
+| `0x92` | 电角度对齐 | 0 | 0 | 仅 IDLE 模式下有效。以 0.25V d 轴电压锁定 500ms 后计算 AS5600 电角度偏置；先返回 `$ACK,ALIGN,START#`，完成后返回 `$ACK,ALIGN,DONE,<offset_rad>#`。采样饱和则返回 `$ERR,ALIGN,ADC_SATURATED#` |
 | `0x90` | 设置运行模式 | 模式值(0~4) | 0 | 返回 `$ACK,MODE,<n>#` |
 | `0x91` | 断电/复位为 IDLE | 0 | 0 | 等价于 `0x90 0` |
 | `0x93` | LCD 显示开关 | 0/1 | 0 | 返回 `$ACK,LCD,<n>#`，关闭时背光熄灭且不再刷新 |
@@ -146,6 +147,11 @@ $TEL,Ia,Ib,Ic,Id,Iq,RPM,MechAngle,ElecAngle,IdKp,IdKi,IdKd,IqKp,IqKi,IqKd,SpeedK
 - `SmoRPM`：`SmoWe` 换算成机械 RPM，和 `RPM` 字段同单位可直接对比
 - `SmoEa`/`SmoEb`：SMO 估算的反电动势 alpha/beta 分量
 - `SmoVfA`/`SmoVfB`：SMO 内部滑模面低通滤波后的值（PLL 输入），用于判断信号是否干净/是否饱和
+
+闭环前必须执行一次 `0x92` 电角度对齐。未完成对齐时，固件会拒绝进入 `CURRENT`、`SPEED` 与
+`POSITION` 模式并返回 `$ERR,MODE,NOT_ALIGNED#`。对齐过程中转子会被锁定，请先空载、限流并确认
+电机可安全转动。闭环运行中若任一相电流 ADC 读数进入 `0~8` 或 `4087~4095`，固件会立即回到
+`IDLE`，避免使用饱和失真的电流反馈继续驱动。
 
 注意：SMO 目前只是"影子"估算（`App/foc_task.c` 里 `SMO_ShadowUpdate()`），用真实电流/电压/AS5600角度
 喂给观测器做估算，但**不参与**实际 PID 闭环输出，纯粹用于和 `ElecAngle`/`RPM` 对比调试用。
@@ -198,6 +204,8 @@ $DBG,TIM9_ISR_CNT,TIM10_ISR_CNT#\r\n
 $ACK,MODE,<n>#\r\n        // 主BLDC模式切换成功
 $ACK,DCMODE,<n>#\r\n      // 直流电机模式切换成功
 $ACK,CAL#\r\n             // 重新标定成功
+$ACK,ALIGN,START#\r\n     // 电角度对齐已启动
+$ACK,ALIGN,DONE,<rad>#\r\n // 电角度偏置已计算并应用
 $ACK,OL_UD,<v>#\r\n       // 开环对齐电压已更新
 $ACK,OL_UQ,<v>#\r\n       // 开环运行电压已更新
 $ACK,OL_HZ,<v>#\r\n       // 开环目标电角频率已更新
@@ -206,6 +214,9 @@ $ACK,LCD,<n>#\r\n         // LCD显示开关已更新
 $ACK,PIDSAVE#\r\n         // PID参数已写入Flash
 $ACK,PIDLOAD#\r\n         // PID参数已从Flash加载(随后跟4行$PID)
 $ERR,CAL,BUSY#\r\n        // 非IDLE模式下请求重新标定，被拒绝
+$ERR,ALIGN,BUSY#\r\n      // 非IDLE模式下请求电角度对齐，被拒绝
+$ERR,ALIGN,ADC_SATURATED#\r\n // 对齐时检测到相电流 ADC 饱和
+$ERR,MODE,NOT_ALIGNED#\r\n // 尚未完成电角度对齐，拒绝闭环模式
 $ERR,PIDSAVE,BUSY#\r\n    // 非IDLE模式下请求保存PID，被拒绝
 $ERR,PIDSAVE,FAIL#\r\n    // Flash擦除/编程失败
 $ERR,PIDLOAD,BUSY#\r\n    // 非IDLE模式下请求加载PID，被拒绝

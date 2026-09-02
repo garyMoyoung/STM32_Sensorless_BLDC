@@ -52,6 +52,10 @@ extern float OpenLoop_RunUq_V;
 extern float OpenLoop_TargetElecHz;
 extern uint8_t FOC_RequestRecalibration(void);
 extern void FOC_SetMode(uint8_t mode);
+extern uint8_t FOC_RequestElectricalAlignment(void);
+extern uint8_t FOC_IsElectricalAlignmentValid(void);
+extern uint8_t FOC_TakeElectricalAlignmentResult(float *offset_rad);
+extern uint8_t FOC_TakeCurrentSaturationTrip(uint16_t raw_adc[3]);
 
 extern volatile uint8_t g_lcd_enable;
 extern void LCD_SetEnable(uint8_t enable);
@@ -73,6 +77,7 @@ UART_Frame_t drame_task;
 #define PC_CMD_READ_DEBUG       0x85U
 #define PC_CMD_READ_RAW_ADC     0x86U
 #define PC_CMD_RECALIBRATE      0x87U
+#define PC_CMD_ELECTRICAL_ALIGN 0x92U
 #define PC_CMD_SET_MODE         0x90U
 #define PC_CMD_DISARM           0x91U
 #define PC_CMD_SET_LCD_ENABLE   0x93U
@@ -327,7 +332,28 @@ static void UART_ProcessAsciiCommand(char *line)
     if ((token != NULL) && (strcmp(token, "$MODE") == 0) && (loop != NULL))
     {
         FOC_SetMode((uint8_t)atoi(loop));
-        printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+        if (((uint8_t)atoi(loop) >= (uint8_t)FOC_MODE_CURRENT) &&
+            (FOC_IsElectricalAlignmentValid() == 0U))
+        {
+            printf("$ERR,MODE,NOT_ALIGNED#\r\n");
+        }
+        else
+        {
+            printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+        }
+        return;
+    }
+
+    if ((token != NULL) && (strcmp(token, "$ALIGN") == 0))
+    {
+        if (FOC_RequestElectricalAlignment() != 0U)
+        {
+            printf("$ACK,ALIGN,START#\r\n");
+        }
+        else
+        {
+            printf("$ERR,ALIGN,BUSY#\r\n");
+        }
         return;
     }
 
@@ -362,6 +388,27 @@ static void UART_ProcessAsciiCommand(char *line)
 
 void UART_TelemetryTick(void)
 {
+    float offset_rad;
+    uint16_t saturation_raw[3];
+    uint8_t align_result = FOC_TakeElectricalAlignmentResult(&offset_rad);
+
+    if (align_result == 1U)
+    {
+        printf("$ACK,ALIGN,DONE,%.5f#\r\n", offset_rad);
+    }
+    else if (align_result == 2U)
+    {
+        printf("$ERR,ALIGN,ADC_SATURATED#\r\n");
+    }
+
+    if (FOC_TakeCurrentSaturationTrip(saturation_raw) != 0U)
+    {
+        printf("$TRIP,ADC_SATURATED,%u,%u,%u#\r\n",
+               (unsigned int)saturation_raw[0],
+               (unsigned int)saturation_raw[1],
+               (unsigned int)saturation_raw[2]);
+    }
+
     if (telemetry_stream_enabled == 0)
     {
         telemetry_stream_cnt = 0;
@@ -531,9 +578,27 @@ void ProcessDataFrame(uint8_t* data, uint8_t Proc_flag)
         }
       break;
 
+      case PC_CMD_ELECTRICAL_ALIGN:
+        if (FOC_RequestElectricalAlignment() != 0U)
+        {
+          printf("$ACK,ALIGN,START#\r\n");
+        }
+        else
+        {
+          printf("$ERR,ALIGN,BUSY#\r\n");
+        }
+      break;
+
       case PC_CMD_SET_MODE:
         FOC_SetMode(data2);
-        printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+        if ((data2 >= (uint8_t)FOC_MODE_CURRENT) && (FOC_IsElectricalAlignmentValid() == 0U))
+        {
+          printf("$ERR,MODE,NOT_ALIGNED#\r\n");
+        }
+        else
+        {
+          printf("$ACK,MODE,%u#\r\n", (unsigned int)g_foc_mode);
+        }
       break;
 
       case PC_CMD_DISARM:

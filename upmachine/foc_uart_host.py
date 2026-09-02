@@ -11,6 +11,7 @@ FOC/BLDC 上位机读取脚本
   python foc_uart_host.py COM6 stop
   python foc_uart_host.py COM6 raw
   python foc_uart_host.py COM6 recal
+  python foc_uart_host.py COM6 align
   python foc_uart_host.py COM6 mode --value speed
   python foc_uart_host.py COM6 disarm
   python foc_uart_host.py COM6 pidset --loop IQ --target 2.0 --kp 0.05 --ki 0.001 --kd 0
@@ -41,6 +42,7 @@ CMD_READ_ALL = 0x84
 CMD_READ_DEBUG = 0x85
 CMD_READ_RAW_ADC = 0x86
 CMD_RECALIBRATE = 0x87
+CMD_ELECTRICAL_ALIGN = 0x92
 CMD_OL_ADJUST_UD = 0x06  # 只在 OPEN_LOOP 模式生效, ARG0=FIELD_STEP_PLUS/MINUS, ARG1=步进档位
 CMD_OL_ADJUST_UQ = 0x07
 CMD_OL_ADJUST_HZ = 0x08
@@ -199,7 +201,7 @@ def main() -> None:
     parser.add_argument("port", help="串口号，例如 COM6")
     parser.add_argument(
         "mode_cmd",
-        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "debug", "mode", "disarm",
+        choices=["once", "pid", "all", "stream", "stop", "raw", "recal", "align", "debug", "mode", "disarm",
                  "pidset", "pidsave", "pidload", "lcd", "lvgl", "dcmode"],
     )
     parser.add_argument("--baud", type=int, default=115200)
@@ -249,6 +251,9 @@ def main() -> None:
         elif args.mode_cmd == "recal":
             send_cmd(ser, CMD_RECALIBRATE)
             read_lines(ser, 1.0, None)
+        elif args.mode_cmd == "align":
+            send_cmd(ser, CMD_ELECTRICAL_ALIGN)
+            read_lines(ser, 1.5, None)
         elif args.mode_cmd == "mode":
             if not args.value or args.value not in MODE_NAMES:
                 parser.error("mode 子命令需要 --value {idle,open,current,speed,position}")

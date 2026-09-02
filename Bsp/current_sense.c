@@ -16,9 +16,11 @@ extern Iabc_Struct Iabc_M0;
 
 /*
  * 注入通道->物理引脚映射(adc.c: rank1=CH2/PA2, rank2=CH3/PA3, rank3=CH4/PA4):
- *   raw_adc[0] (Ia) <- InjectedRank3 <- ADC1_IN4 <- PA4
- *   raw_adc[1] (Ib) <- InjectedRank2 <- ADC1_IN3 <- PA3
+ *   raw_adc[0] (Ia) <- InjectedRank2 <- ADC1_IN3 <- PA3
+ *   raw_adc[1] (Ib) <- InjectedRank3 <- ADC1_IN4 <- PA4
  *   raw_adc[2] (Ic) <- InjectedRank1 <- ADC1_IN2 <- PA2
+ * PWM A/B are exchanged in foc_drv.c, so their feedback channels are exchanged
+ * here as well to keep each virtual current phase paired with its virtual PWM phase.
  * 这是当前代码假设的相序对应关系。对照 FOC_DRIVER_SCH 原理图,TIM2_CH2(即SVPWM第一相/tcm1)
  * 经 M0_IN1 驱动 HO1/LO1 产生 VS1,电流经分流电阻到达电机 M0_A 端,由 U50 采样输出 M0_INA_OUT1,
  * 这组信号是否最终接到 PA2 还是 PA4,取决于 CN20 连接器的具体引脚序,原理图导出文本未能完全
@@ -28,8 +30,8 @@ extern Iabc_Struct Iabc_M0;
 void Current_ReadRaw(uint16_t raw_adc[3])
 {
     raw_adc[2] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_1);
-    raw_adc[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
-    raw_adc[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
+    raw_adc[0] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_2);
+    raw_adc[1] = HAL_ADCEx_InjectedGetValue(&hadc1,ADC_INJECTED_RANK_3);
 }
 
 void Current_CalibrateOffset(uint16_t sample_count)
@@ -86,9 +88,12 @@ void Current_read(void)
     uint8_t ch;
 
     Current_ReadRaw(ad_val_orig);
-    Iabc_M0.Ia = ((float)ad_val_orig[0] - (float)current_adc_offset[0]) * CURRENT_ADC_TO_AMP;
-    Iabc_M0.Ib = ((float)ad_val_orig[1] - (float)current_adc_offset[1]) * CURRENT_ADC_TO_AMP;
-    Iabc_M0.Ic = ((float)ad_val_orig[2] - (float)current_adc_offset[2]) * CURRENT_ADC_TO_AMP;
+    Iabc_M0.Ia = CURRENT_SENSE_POLARITY *
+                 ((float)ad_val_orig[0] - (float)current_adc_offset[0]) * CURRENT_ADC_TO_AMP;
+    Iabc_M0.Ib = CURRENT_SENSE_POLARITY *
+                 ((float)ad_val_orig[1] - (float)current_adc_offset[1]) * CURRENT_ADC_TO_AMP;
+    Iabc_M0.Ic = CURRENT_SENSE_POLARITY *
+                 ((float)ad_val_orig[2] - (float)current_adc_offset[2]) * CURRENT_ADC_TO_AMP;
 
     for (ch = 0U; ch < 3U; ch++)
     {
