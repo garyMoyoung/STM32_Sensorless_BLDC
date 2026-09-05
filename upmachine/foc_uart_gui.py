@@ -157,6 +157,11 @@ class FocGui:
         self.wave_enable = {ch: tk.BooleanVar(value=ch in WAVE_DEFAULT_ON) for ch in WAVE_CHANNELS}
         self.wave_paused = False
         self.wave_dirty = False
+        # 波形canvas item复用: 网格只在尺寸变化时重画一次,每条曲线是一个常驻line item,
+        # 逐帧只用 coords() 挪动点位,不再每帧 delete("all") 后重新创建所有图元
+        # (delete+create全部item + smooth贝塞尔插值是之前卡顿的主因)。
+        self.wave_line_ids = {ch: None for ch in WAVE_CHANNELS}
+        self._wave_grid_size = None
 
         self._setup_style()
         self._build_ui()
@@ -278,7 +283,7 @@ class FocGui:
         self.wave_canvas = tk.Canvas(left, bg=BG_CANVAS, highlightthickness=1,
                                       highlightbackground=BORDER_COLOR)
         self.wave_canvas.grid(row=1, column=0, sticky="nsew")
-        self.wave_canvas.bind("<Configure>", lambda e: self._redraw_wave())
+        self.wave_canvas.bind("<Configure>", self._on_wave_resize)
 
         readout = tk.Frame(left, bg=BG_CANVAS, highlightthickness=1, highlightbackground=BORDER_COLOR)
         readout.grid(row=2, column=0, sticky="ew", pady=(4, 0))
@@ -707,40 +712,78 @@ class FocGui:
             buf.clear()
         self._redraw_wave()
 
+    def _on_wave_resize(self, _event=None):
+        # 尺寸变化时网格和已有曲线的坐标系都要重算,直接整块重建一次
+        self._wave_grid_size = None
+        for ch, item_id in self.wave_line_ids.items():
+            if item_id is not None:
+                self.wave_canvas.delete(item_id)
+                self.wave_line_ids[ch] = None
+        self._redraw_wave()
+
+    def _draw_wave_grid(self, width, height, margin):
+        c = self.wave_canvas
+        c.delete("wavegrid")
+        for i in range(9):
+            x = margin + i * (width - 2 * margin) / 8
+            c.create_line(x, margin, x, height - margin, fill=GRID_COLOR, tags="wavegrid")
+        for i in range(7):
+            y = margin + i * (height - 2 * margin) / 6
+            c.create_line(margin, y, width - margin, y, fill=GRID_COLOR, tags="wavegrid")
+        c.create_rectangle(margin, margin, width - margin, height - margin,
+                            outline=BORDER_COLOR, tags="wavegrid")
+        # 网格线画在最底层,避免盖住之后逐帧更新的曲线
+        c.tag_lower("wavegrid")
+        self._wave_grid_size = (width, height)
+
     def _redraw_wave(self):
         c = self.wave_canvas
-        c.delete("all")
         width = c.winfo_width()
         height = c.winfo_height()
         if width < 20 or height < 20:
             return
         margin = 14
 
-        for i in range(9):
-            x = margin + i * (width - 2 * margin) / 8
-            c.create_line(x, margin, x, height - margin, fill=GRID_COLOR)
-        for i in range(7):
-            y = margin + i * (height - 2 * margin) / 6
-            c.create_line(margin, y, width - margin, y, fill=GRID_COLOR)
-        c.create_rectangle(margin, margin, width - margin, height - margin, outline=BORDER_COLOR)
+        if self._wave_grid_size != (width, height):
+            self._draw_wave_grid(width, height, margin)
 
+        span_x = width - 2 * margin
+        span_y = height - 2 * margin
         for ch in WAVE_CHANNELS:
-            if not self.wave_enable[ch].get():
-                continue
             buf = self.wave_buffers[ch]
             n = len(buf)
-            if n < 2:
+            if not self.wave_enable[ch].get() or n < 2:
+                item_id = self.wave_line_ids[ch]
+                if item_id is not None:
+                    c.delete(item_id)
+                    self.wave_line_ids[ch] = None
                 continue
-            vmin = min(buf)
-            vmax = max(buf)
+
+            # 单次遍历同时求min/max,避免min()/max()各扫一遍buffer
+            it = iter(buf)
+            vmin = vmax = next(it)
+            for v in it:
+                if v < vmin:
+                    vmin = v
+                elif v > vmax:
+                    vmax = v
             if vmax - vmin < 1e-9:
                 vmax = vmin + 1.0
+            scale_x = span_x / (n - 1)
+            scale_y = span_y / (vmax - vmin)
             points = []
             for i, v in enumerate(buf):
-                x = margin + i * (width - 2 * margin) / (n - 1)
-                y = height - margin - (v - vmin) / (vmax - vmin) * (height - 2 * margin)
-                points.extend([x, y])
-            c.create_line(*points, fill=WAVE_COLORS[ch], width=1.6, smooth=True)
+                points.append(margin + i * scale_x)
+                points.append(height - margin - (v - vmin) * scale_y)
+
+            item_id = self.wave_line_ids[ch]
+            if item_id is None:
+                # 不用smooth=True: 贝塞尔插值在高频重绘下是主要的CPU开销之一,
+                # 300点的采样密度本身已经足够平滑,直接连线肉眼看不出差别
+                self.wave_line_ids[ch] = c.create_line(*points, fill=WAVE_COLORS[ch], width=1.6)
+            else:
+                # 复用已有line item,只挪动坐标,免去每帧delete+create整个canvas的开销
+                c.coords(item_id, *points)
 
     # ---------------- 日志 ----------------
     def _log(self, text):
