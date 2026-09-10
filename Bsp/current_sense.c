@@ -88,12 +88,12 @@ void Current_read(void)
     uint8_t ch;
 
     Current_ReadRaw(ad_val_orig);
-    Iabc_M0.Ia = CURRENT_SENSE_POLARITY *
-                 ((float)ad_val_orig[0] - (float)current_adc_offset[0]) * CURRENT_ADC_TO_AMP;
     Iabc_M0.Ib = CURRENT_SENSE_POLARITY *
                  ((float)ad_val_orig[1] - (float)current_adc_offset[1]) * CURRENT_ADC_TO_AMP;
     Iabc_M0.Ic = CURRENT_SENSE_POLARITY *
                  ((float)ad_val_orig[2] - (float)current_adc_offset[2]) * CURRENT_ADC_TO_AMP;
+    /* Reconstruct Ia from the two non-saturated phase measurements. */
+    Iabc_M0.Ia = -(Iabc_M0.Ib + Iabc_M0.Ic);
 
     for (ch = 0U; ch < 3U; ch++)
     {

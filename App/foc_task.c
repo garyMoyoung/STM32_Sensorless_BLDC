@@ -146,7 +146,10 @@ static uint8_t CurrentSample_IsSaturated(void)
 {
     uint8_t ch;
 
-    for (ch = 0U; ch < 3U; ch++)
+    /* Ia is reconstructed from Ib and Ic; only the measured phases can trip
+       this protection, while all three raw values remain available in the
+       diagnostic trip record. */
+    for (ch = 1U; ch < 3U; ch++)
     {
         if ((ad_val_orig[ch] <= CURRENT_ADC_SATURATION_MARGIN) ||
             (ad_val_orig[ch] >= (4095U - CURRENT_ADC_SATURATION_MARGIN)))
