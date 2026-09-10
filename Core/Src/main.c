@@ -123,7 +123,10 @@ float We;
 /* T必须和实际调用SMO()的控制节拍(FOC_LOOP_DT_S,当前0.5ms)一致,否则电流预测模型
    (Iab_fore_New的离散化)和PLL积分步长(We_fore*T)都会和真实拍频对不上,估算失准。
    之前这里硬编码的0.0007255是历史遗留值,和FOC_LOOP_DT_S对不上。 */
-float R = 0.6 , Ld = 0.000558 , Lq = 0.000558 , T = FOC_LOOP_DT_S , flux = 0.005753;
+/* Initial SMO model values for the 720KV motor: Rs≈0.07ohm, Ls≈35uH,
+   and rotor flux linkage≈0.00189Wb. */
+float R = 0.07f, Ld = 0.000035f, Lq = 0.000035f,
+      T = FOC_LOOP_DT_S, flux = 0.00189f;
 float Iab_fore_New[2] , Iab_fore_Last[2];
 float h = 2.5 , Vab[2] , Vab_Filter[2];
 float Eab[2];
@@ -368,11 +371,11 @@ int main(void)
      只是给积分饱和留个安全上限,不代表调好的增益,具体还要上机重新试凑Ki/该限幅。 */
   /* 速度环输出直接作为Iq目标，限制在2A范围内。 */
   PID_Init(&PID_Speed,2.0f,-2.0f,25.0f);
-  PID_Init(&PID_Position,15.0f,-15.0f,375.0f);
+  PID_Init(&PID_Position,200.0f,-200.0f,500.0f);
   PID_param_set(&PID_Current_D,0.0517f,0.1f,0.0f);
   PID_param_set(&PID_Current_Q,0.0517f,0.1f,0.0f);
-  PID_param_set(&PID_Speed,0.008f,0.0f,0.0f);
-  PID_param_set(&PID_Position,30.0f,0.0f,0.0f);
+  PID_param_set(&PID_Speed,0.01f,0.0f,0.0f);
+  PID_param_set(&PID_Position,200.0f,0.0f,0.0f);
   PID_Current_D.target = 0.0f;
   PID_Current_Q.target = 0.0f;
   PID_Speed.target = 0.0f;

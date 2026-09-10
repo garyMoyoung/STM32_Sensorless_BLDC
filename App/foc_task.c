@@ -34,7 +34,7 @@ extern PID_Param_t Speed_pid;
  * 速度PID瞬间要求电流环冲很大的Iq去追赶,导致电源电流瞬间超限。
  * 实际喂给速度PID的目标值(speed_target_ramped)每个控制周期只朝着
  * PID_Speed.target靠近有限的一步,相当于给目标转速做了软启动。 */
-#define SPEED_TARGET_RAMP_RPM_PER_S      50.0f
+#define SPEED_TARGET_RAMP_RPM_PER_S      200.0f
 static float speed_target_ramped = 0.0f;
 
 #define MOTOR_ELECTRICAL_ANGLE_DIRECTION (-1.0f)
@@ -48,6 +48,8 @@ static float speed_target_ramped = 0.0f;
 #define POSITION_HOLD_IQ_MAX_A            2.5f
 #define POSITION_HOLD_IQ_PER_RAD          1.5f
 #define POSITION_HOLD_DAMPING_A_PER_RPM   0.005f
+#define POSITION_STARTUP_IQ_A             1.0f
+#define POSITION_STARTUP_SPEED_RPM       5.0f
 #define ELECTRICAL_ALIGN_UD_V            0.8f
 #define ELECTRICAL_ALIGN_TICKS            1000U
 #define CURRENT_ADC_SATURATION_MARGIN    8U
@@ -146,10 +148,7 @@ static uint8_t CurrentSample_IsSaturated(void)
 {
     uint8_t ch;
 
-    /* Ia is reconstructed from Ib and Ic; only the measured phases can trip
-       this protection, while all three raw values remain available in the
-       diagnostic trip record. */
-    for (ch = 1U; ch < 3U; ch++)
+    for (ch = 0U; ch < 3U; ch++)
     {
         if ((ad_val_orig[ch] <= CURRENT_ADC_SATURATION_MARGIN) ||
             (ad_val_orig[ch] >= (4095U - CURRENT_ADC_SATURATION_MARGIN)))
@@ -364,7 +363,7 @@ static void FOC_SpeedLoop_Step(void)
 }
 
 /* 位置环: 位置PID(角度误差按最短路径归一化)输出作为速度目标,再走速度环->电流环。
- * POS target 内部单位为机械角rad；UART接口负责把用户输入的0~360度转换为rad。 */
+* POS target 使用机械角rad，UART接口也直接使用rad。 */
 static void FOC_PositionLoop_Step(void)
 {
     float wrapped_err;
@@ -396,6 +395,16 @@ static void FOC_PositionLoop_Step(void)
                                 PID_Position_Calculate(&PID_Speed,
                                                        SpeedTargetRamp_Update(PID_Speed.target),
                                                        Mech_RPM_Filtered, FOC_LOOP_DT_S);
+        if ((fabsf(Mech_RPM_Filtered) < POSITION_STARTUP_SPEED_RPM) &&
+            (fabsf(wrapped_err) > POSITION_HOLD_DEADBAND_RAD) &&
+            (fabsf(PID_Current_Q.target) < POSITION_STARTUP_IQ_A))
+        {
+            /* Overcome static friction before handing torque regulation back
+               to the normal position-to-speed cascade. */
+            PID_Current_Q.target = (wrapped_err > 0.0f) ?
+                                   (MOTOR_SPEED_TO_IQ_DIRECTION * POSITION_STARTUP_IQ_A) :
+                                   (-MOTOR_SPEED_TO_IQ_DIRECTION * POSITION_STARTUP_IQ_A);
+        }
     }
 
     Udq_M0.Ud = PID_Position_Calculate(&PID_Current_D,PID_Current_D.target,Iqd_M0.Id,FOC_LOOP_DT_S);

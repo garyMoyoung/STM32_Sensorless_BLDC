@@ -173,6 +173,9 @@ void LvglDemo_Process(void)
                     s_lvgl_ready = 1U;
                 }
 
+                /* LCD task turns the backlight off when it is disabled. */
+                LCD_BLK_Set();
+
                 if (s_scr == NULL)
                 {
                     build_demo_scene();

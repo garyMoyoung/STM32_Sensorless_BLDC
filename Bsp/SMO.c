@@ -50,7 +50,7 @@ float Vab_LPF_Filter(float data, uint8_t ch)
 float We_Filter(float data)
 {
 	static float y , Last_y;
-	static float We_alpha = 0.00028;
+	static float We_alpha = 0.02f;
 	y=We_alpha*data+(1-We_alpha)*Last_y;
 	Last_y = y;
 	return y;
