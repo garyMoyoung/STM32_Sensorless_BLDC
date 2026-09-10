@@ -46,18 +46,39 @@ void LCD_Fill_DMA(u16 xsta,u16 ysta,u16 xend,u16 yend,u16 color)
 
 void LCD_LVGL_Color_Fill(u16 sx, u16 sy, u16 ex, u16 ey, lv_color_t *color)
 {
-	uint32_t y = 0;
-	u16 height, width;
-	width = ex - sx + 1;  //得到填充的宽度
-	height = ey - sy + 1; //高度
+	uint32_t pixel_count;
+	uint32_t offset = 0U;
+	uint32_t i;
+	uint32_t chunk;
+	/* Keep RAM bounded while avoiding one SPI transaction per pixel. */
+	static uint8_t tx_buffer[LCD_W * 10U * 2U];
 
 	LCD_Address_Set(sx, sy, ex, ey);
 
-	for (y = 0; y < width * height; y++)
+	pixel_count = (uint32_t)(ex - sx + 1U) * (uint32_t)(ey - sy + 1U);
+	/* Hold CS for the complete pixel stream and send RGB565 in LCD byte order. */
+	LCD_DC_Set();
+	LCD_CS_Clr();
+
+	while (offset < pixel_count)
 	{
-		LCD_WR_DATA(color->full);
-		color++;
+		chunk = pixel_count - offset;
+		if (chunk > (LCD_W * 10U))
+		{
+			chunk = LCD_W * 10U;
+		}
+
+		for (i = 0U; i < chunk; i++)
+		{
+			u16 value = color[offset + i].full;
+			tx_buffer[i * 2U] = (uint8_t)(value >> 8);
+			tx_buffer[i * 2U + 1U] = (uint8_t)value;
+		}
+
+		(void)HAL_SPI_Transmit(&hspi1, tx_buffer, (uint16_t)(chunk * 2U), 1000U);
+		offset += chunk;
 	}
+	LCD_CS_Set();
 }
 void LCD_LVGL_Color_Fill_DMA(u16 sx, u16 sy, u16 ex, u16 ey, lv_color_t *color)
 {
@@ -767,4 +788,3 @@ void LCD_ShowPicture_DMA(u16 x,u16 y,u16 length,u16 width,const u8 pic[])
 		}
 	}			
 }
-

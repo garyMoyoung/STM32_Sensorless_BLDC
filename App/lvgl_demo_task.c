@@ -40,7 +40,6 @@ static uint32_t s_state_change_tick = 0U;
 static uint8_t s_lvgl_ready = 0U;
 
 static lv_obj_t *s_scr = NULL;
-static lv_obj_t *s_ball = NULL;
 static lv_obj_t *s_fps_label = NULL;
 
 static volatile uint32_t s_frame_count = 0U;
@@ -56,9 +55,13 @@ static void demo_monitor_cb(lv_disp_drv_t *disp_drv, uint32_t time, uint32_t px)
     s_frame_px_sum += px;
 }
 
-static void ball_x_anim_cb(void *obj, int32_t v)
+static void bar_height_anim_cb(void *obj, int32_t v)
 {
-    lv_obj_set_x((lv_obj_t *)obj, v);
+    lv_obj_t *bar = (lv_obj_t *)obj;
+    /* Keep every bar anchored to the same baseline while its height changes. */
+    lv_coord_t base_y = LCD_H / 2 + 35;
+    lv_obj_set_height(bar, (lv_coord_t)v);
+    lv_obj_set_y(bar, base_y - (lv_coord_t)v);
 }
 
 static void build_demo_scene(void)
@@ -72,29 +75,40 @@ static void build_demo_scene(void)
     lv_obj_set_style_text_color(title, lv_color_white(), 0);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 4);
 
-    /* 旋转的圆弧: 只重绘一小块区域,用来观察小面积高频局部刷新的帧率上限 */
-    lv_obj_t *spinner = lv_spinner_create(s_scr, 1000, 90);
-    lv_obj_set_size(spinner, 60, 60);
-    lv_obj_align(spinner, LV_ALIGN_CENTER, 0, -10);
+    /* Staggered bars provide a lightweight animation with small dirty areas. */
+    static const lv_color_t colors[] = {
+        LV_COLOR_MAKE(0x35, 0xD0, 0xBA), LV_COLOR_MAKE(0x54, 0xB8, 0xFF),
+        LV_COLOR_MAKE(0xFF, 0xCC, 0x66), LV_COLOR_MAKE(0xFF, 0x70, 0x90),
+        LV_COLOR_MAKE(0xA9, 0x8B, 0xFF)
+    };
+    static const int32_t min_height[] = {18, 28, 20, 32, 16};
+    static const int32_t max_height[] = {62, 48, 70, 42, 58};
+    static const uint32_t delay[] = {0, 100, 200, 300, 400};
+    static lv_anim_t animations[5];
+    uint8_t i;
 
-    /* 左右弹跳的小球: 每帧都要清旧画新、覆盖较大范围横向移动,是DMA传输速度的压力测试 */
-    s_ball = lv_obj_create(s_scr);
-    lv_obj_remove_style_all(s_ball);
-    lv_obj_set_size(s_ball, 20, 20);
-    lv_obj_set_style_radius(s_ball, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(s_ball, lv_color_hex(0xFFCC00), 0);
-    lv_obj_set_style_bg_opa(s_ball, LV_OPA_COVER, 0);
-    lv_obj_set_pos(s_ball, 0, LCD_H - 40);
+    for (i = 0U; i < 5U; i++)
+    {
+        lv_obj_t *bar = lv_obj_create(s_scr);
+        lv_obj_remove_style_all(bar);
+        lv_obj_set_width(bar, 22);
+        lv_obj_set_height(bar, (lv_coord_t)min_height[i]);
+        lv_obj_set_x(bar, 24 + (lv_coord_t)i * 40);
+        lv_obj_set_y(bar, LCD_H / 2 + 35 - (lv_coord_t)min_height[i]);
+        lv_obj_set_style_radius(bar, 8, 0);
+        lv_obj_set_style_bg_color(bar, colors[i], 0);
+        lv_obj_set_style_bg_opa(bar, LV_OPA_COVER, 0);
 
-    static lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, s_ball);
-    lv_anim_set_exec_cb(&a, ball_x_anim_cb);
-    lv_anim_set_values(&a, 0, LCD_W - 20);
-    lv_anim_set_time(&a, 900);
-    lv_anim_set_playback_time(&a, 900);
-    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_start(&a);
+        lv_anim_init(&animations[i]);
+        lv_anim_set_var(&animations[i], bar);
+        lv_anim_set_exec_cb(&animations[i], bar_height_anim_cb);
+        lv_anim_set_values(&animations[i], min_height[i], max_height[i]);
+        lv_anim_set_time(&animations[i], 650);
+        lv_anim_set_playback_time(&animations[i], 650);
+        lv_anim_set_delay(&animations[i], delay[i]);
+        lv_anim_set_repeat_count(&animations[i], LV_ANIM_REPEAT_INFINITE);
+        lv_anim_start(&animations[i]);
+    }
 
     s_fps_label = lv_label_create(s_scr);
     lv_obj_set_style_text_color(s_fps_label, lv_color_hex(0x00FF66), 0);
@@ -162,6 +176,9 @@ void LvglDemo_Process(void)
             {
                 if (s_lvgl_ready == 0U)
                 {
+                    /* Re-sync the controller after the telemetry task hands
+                       over the SPI/LCD bus. */
+                    LCD_Init();
                     lv_init();
                     lv_port_disp_init();
 
@@ -175,6 +192,7 @@ void LvglDemo_Process(void)
 
                 /* LCD task turns the backlight off when it is disabled. */
                 LCD_BLK_Set();
+                disp_enable_update();
 
                 if (s_scr == NULL)
                 {
@@ -182,6 +200,8 @@ void LvglDemo_Process(void)
                 }
 
                 lv_scr_load(s_scr);
+                lv_obj_invalidate(s_scr);
+                lv_refr_now(lv_disp_get_default());
                 s_frame_count = 0U;
                 s_frame_time_sum_ms = 0U;
                 s_frame_px_sum = 0U;
